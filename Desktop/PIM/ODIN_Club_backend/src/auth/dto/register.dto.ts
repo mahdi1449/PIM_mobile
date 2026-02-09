@@ -22,4 +22,7 @@ export class RegisterDto {
   @IsEnum(UserRole)
   @IsNotEmpty()
   role: UserRole;
+
+  @IsString()
+  position?: string;
 }

@@ -54,6 +54,9 @@ export class User {
   @Prop({ default: false })
   isApprovedByAdmin: boolean;
 
+  @Prop({ required: false })
+  position: string; // Football position: Gardien, Défenseur, Milieu, Attaquant, etc.
+
   createdAt: Date;
   updatedAt: Date;
 }
