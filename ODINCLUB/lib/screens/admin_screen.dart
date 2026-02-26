@@ -109,8 +109,8 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
 
     if (result['success'] && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User approved successfully'),
+        SnackBar(
+          content: const Text('User approved successfully'),
           backgroundColor: AppTheme.primaryGreen,
         ),
       );
@@ -154,8 +154,8 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
 
     if (result['success'] && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User rejected successfully'),
+        SnackBar(
+          content: const Text('User rejected successfully'),
           backgroundColor: AppTheme.blueCiel,
         ),
       );
@@ -198,7 +198,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                     children: [
                       Text(
                         fullName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.darkGrey,
