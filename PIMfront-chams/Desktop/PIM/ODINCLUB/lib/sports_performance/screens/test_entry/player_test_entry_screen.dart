@@ -31,33 +31,33 @@ class _PlayerTestEntryScreenState extends ConsumerState<PlayerTestEntryScreen> {
   
   final List<RoleTestConfig> _attackerConfig = [
     RoleTestConfig(name: 'Finishing', unit: '%', min: 0, max: 100),
-    RoleTestConfig(name: 'Shooting Power', unit: 'km/h', min: 0, max: 150),
-    RoleTestConfig(name: 'Acceleration', unit: 's', min: 3.0, max: 10.0, lowerIsBetter: true),
-    RoleTestConfig(name: 'Dribbling', unit: '/10', min: 1, max: 10),
-    RoleTestConfig(name: 'Off-ball Movement', unit: '/10', min: 1, max: 10),
+    RoleTestConfig(name: 'Shooting Power', unit: 'km/h', min: 50, max: 180),
+    RoleTestConfig(name: 'Acceleration', unit: 's', min: 3.5, max: 10.0, lowerIsBetter: true),
+    RoleTestConfig(name: 'Dribbling', unit: '%', min: 0, max: 100),
+    RoleTestConfig(name: 'Off-ball Movement', unit: '%', min: 0, max: 100),
   ];
 
   final List<RoleTestConfig> _midfielderConfig = [
     RoleTestConfig(name: 'Passing Accuracy', unit: '%', min: 0, max: 100),
-    RoleTestConfig(name: 'Vision', unit: '/10', min: 1, max: 10),
-    RoleTestConfig(name: 'Stamina', unit: 'km', min: 0, max: 15),
-    RoleTestConfig(name: 'Ball Control', unit: '/10', min: 1, max: 10),
-    RoleTestConfig(name: 'Decision Making', unit: '/10', min: 1, max: 10),
+    RoleTestConfig(name: 'Vision', unit: '%', min: 0, max: 100),
+    RoleTestConfig(name: 'Stamina (VMA)', unit: 'km/h', min: 10, max: 25),
+    RoleTestConfig(name: 'Ball Control', unit: '%', min: 0, max: 100),
+    RoleTestConfig(name: 'Decision Making', unit: '%', min: 0, max: 100),
   ];
 
   final List<RoleTestConfig> _defenderConfig = [
     RoleTestConfig(name: 'Tackling', unit: '%', min: 0, max: 100),
-    RoleTestConfig(name: 'Defensive Positioning', unit: '/10', min: 1, max: 10),
-    RoleTestConfig(name: 'Strength', unit: '/10', min: 1, max: 10),
+    RoleTestConfig(name: 'Defensive Positioning', unit: '%', min: 0, max: 100),
+    RoleTestConfig(name: 'Strength', unit: '%', min: 0, max: 100),
     RoleTestConfig(name: 'Aerial Duel', unit: '%', min: 0, max: 100),
-    RoleTestConfig(name: 'Awareness', unit: '/10', min: 1, max: 10),
+    RoleTestConfig(name: 'Awareness', unit: '%', min: 0, max: 100),
   ];
 
   final List<RoleTestConfig> _gkConfig = [
-    RoleTestConfig(name: 'Reflexes', unit: 'ms', min: 100, max: 500, lowerIsBetter: true),
-    RoleTestConfig(name: 'Jump Reach', unit: 'cm', min: 200, max: 350),
+    RoleTestConfig(name: 'Reflexes', unit: 'ms', min: 100, max: 1000, lowerIsBetter: true),
+    RoleTestConfig(name: 'Jump Reach', unit: 'cm', min: 200, max: 360),
     RoleTestConfig(name: 'Handling', unit: '%', min: 0, max: 100),
-    RoleTestConfig(name: 'Reaction Time', unit: 'ms', min: 100, max: 500, lowerIsBetter: true),
+    RoleTestConfig(name: 'Reaction Time', unit: 'ms', min: 100, max: 1000, lowerIsBetter: true),
     RoleTestConfig(name: 'Distribution', unit: '%', min: 0, max: 100),
   ];
 
@@ -130,7 +130,7 @@ class _PlayerTestEntryScreenState extends ConsumerState<PlayerTestEntryScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: SPColors.primaryBlue.withOpacity(0.2),
+              color: SPColors.primaryBlue.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               image: const DecorationImage(
                 image: AssetImage('assets/images/placeholder_player.png'),

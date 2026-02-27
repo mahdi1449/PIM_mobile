@@ -5,6 +5,7 @@ import '../../models/ai_player.dart';
 import '../../services/ai_api_service.dart';
 import 'package:provider/provider.dart';
 import '../../providers/campaign_provider.dart';
+import '../../sports_performance/screens/exercises/generator_form.dart';
 
 /// Deep AI insights: similar players, potential score, development plan.
 class AiPlayerInsightsScreen extends StatefulWidget {
@@ -546,7 +547,7 @@ class _AiPlayerInsightsScreenState extends State<AiPlayerInsightsScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: (isHigh ? AiColors.error : AiColors.warning)
             .withOpacity(0.06),
@@ -555,51 +556,81 @@ class _AiPlayerInsightsScreenState extends State<AiPlayerInsightsScreen> {
             color: (isHigh ? AiColors.error : AiColors.warning)
                 .withOpacity(0.15)),
       ),
-      child: Row(children: [
-        Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: (isHigh ? AiColors.error : AiColors.warning)
-                .withOpacity(0.2),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(priority.toUpperCase(),
-              style: TextStyle(
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                  color: isHigh
-                      ? AiColors.error
-                      : AiColors.warning,
-                  letterSpacing: 0.5)),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(feature.toUpperCase(),
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                      letterSpacing: 0.5)),
-              const SizedBox(height: 2),
-              Text(recommendation,
+      child: Column(
+        children: [
+          Row(children: [
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: (isHigh ? AiColors.error : AiColors.warning)
+                    .withOpacity(0.2),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(priority.toUpperCase(),
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 10)),
-            ],
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                      color: isHigh
+                          ? AiColors.error
+                          : AiColors.warning,
+                      letterSpacing: 0.5)),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(feature.toUpperCase(),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          letterSpacing: 0.5)),
+                  const SizedBox(height: 2),
+                  Text(recommendation,
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.5),
+                          fontSize: 10)),
+                ],
+              ),
+            ),
+            if (target != null)
+              Text(
+                  '${current.toStringAsFixed(0)} → ${target.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                      color: AiColors.warning,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11)),
+          ]),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GeneratorForm(
+                      initialPlayerId: widget.player.id,
+                      initialObjective: feature,
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isHigh ? AiColors.error.withOpacity(0.2) : AiColors.warning.withOpacity(0.2),
+                foregroundColor: isHigh ? AiColors.error : AiColors.warning,
+                elevation: 0,
+                side: BorderSide(color: (isHigh ? AiColors.error : AiColors.warning).withOpacity(0.3)),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('CRÉER EXERCICE CORRECTIF', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
           ),
-        ),
-        if (target != null)
-          Text(
-              '${current.toStringAsFixed(0)} → ${target.toStringAsFixed(0)}',
-              style: const TextStyle(
-                  color: AiColors.warning,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11)),
-      ]),
+        ],
+      ),
     );
   }
 

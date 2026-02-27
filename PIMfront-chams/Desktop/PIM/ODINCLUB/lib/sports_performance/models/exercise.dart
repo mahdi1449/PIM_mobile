@@ -86,8 +86,8 @@ enum PitchPosition {
 
 class TechnicalData {
   final String description;
-  final int sets;
-  final int reps;
+  final String sets;
+  final String reps;
   final List<String> coachingCues;
   final List<String> equipment;
   final List<String> steps; // Added steps
@@ -106,8 +106,8 @@ class TechnicalData {
   factory TechnicalData.fromJson(Map<String, dynamic> json) {
     return TechnicalData(
       description: json['description'] ?? '',
-      sets: json['sets'] ?? 0,
-      reps: json['reps'] ?? 0,
+      sets: json['sets']?.toString() ?? '',
+      reps: json['reps']?.toString() ?? '',
       coachingCues: List<String>.from(json['coachingCues'] ?? []),
       equipment: List<String>.from(json['equipment'] ?? []),
       steps: List<String>.from(json['steps'] ?? []), // Added mapping
@@ -159,6 +159,31 @@ class GenerationContext {
   }
 }
 
+class CompletedSession {
+  final String playerId;
+  final DateTime completedAt;
+  final int durationSeconds;
+  final int lapsCount;
+
+  CompletedSession({
+    required this.playerId,
+    required this.completedAt,
+    required this.durationSeconds,
+    required this.lapsCount,
+  });
+
+  factory CompletedSession.fromJson(Map<String, dynamic> json) {
+    return CompletedSession(
+      playerId: json['playerId'] ?? '',
+      completedAt: json['completedAt'] != null 
+          ? DateTime.parse(json['completedAt']) 
+          : DateTime.now(),
+      durationSeconds: json['durationSeconds'] ?? 0,
+      lapsCount: json['lapsCount'] ?? 0,
+    );
+  }
+}
+
 class Exercise {
   final String id;
   final String name;
@@ -172,6 +197,7 @@ class Exercise {
   final GenerationContext? generationContext;
   final TechnicalData? technicalData;
   final PerformanceImpact? performanceImpact;
+  final List<CompletedSession> completedSessions;
 
   Exercise({
     required this.id,
@@ -186,6 +212,7 @@ class Exercise {
     this.generationContext,
     this.technicalData,
     this.performanceImpact,
+    this.completedSessions = const [],
   });
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
@@ -211,6 +238,10 @@ class Exercise {
       performanceImpact: json['performanceImpact'] != null
           ? PerformanceImpact.fromJson(json['performanceImpact'])
           : null,
+      completedSessions: (json['completedSessions'] as List?)
+              ?.map((s) => CompletedSession.fromJson(s))
+              .toList() ??
+          [],
     );
   }
 }

@@ -69,4 +69,45 @@ class ExercisesService {
       throw Exception('Erreur lors de la récupération des insights joueur: $e');
     }
   }
+
+  // Delete exercise
+  Future<void> deleteExercise(String id) async {
+    try {
+      await _apiClient.delete('/exercises/$id');
+    } catch (e) {
+      throw Exception('Erreur lors de la suppression de l\'exercice: $e');
+    }
+  }
+
+  // Update exercise
+  Future<Exercise> updateExercise(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _apiClient.patch('/exercises/$id', data: data);
+      return Exercise.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Erreur lors de la mise à jour de l\'exercice: $e');
+    }
+  }
+
+  // Record exercise session completion
+  Future<Map<String, dynamic>> recordCompletion(
+    String exerciseId, {
+    required String playerId,
+    required int durationSeconds,
+    required int lapsCount,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/exercises/$exerciseId/complete',
+        data: {
+          'playerId': playerId,
+          'durationSeconds': durationSeconds,
+          'lapsCount': lapsCount,
+        },
+      );
+      return response.data;
+    } catch (e) {
+      throw Exception('Erreur lors de l\'enregistrement de la session: $e');
+    }
+  }
 }

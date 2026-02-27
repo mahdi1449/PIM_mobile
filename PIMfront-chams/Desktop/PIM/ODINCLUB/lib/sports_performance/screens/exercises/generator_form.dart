@@ -10,7 +10,14 @@ import '../../theme/sp_typography.dart';
 import 'stopwatch_performance_screen.dart';
 
 class GeneratorForm extends ConsumerStatefulWidget {
-  const GeneratorForm({Key? key}) : super(key: key);
+  final String? initialPlayerId;
+  final String? initialObjective;
+
+  const GeneratorForm({
+    Key? key,
+    this.initialPlayerId,
+    this.initialObjective,
+  }) : super(key: key);
 
   @override
   ConsumerState<GeneratorForm> createState() => _GeneratorFormState();
@@ -18,26 +25,30 @@ class GeneratorForm extends ConsumerStatefulWidget {
 
 class _GeneratorFormState extends ConsumerState<GeneratorForm> {
   PitchPosition _selectedPosition = PitchPosition.mid;
-  String _selectedAge = 'U17-U19';
-  double _duration = 2.0;
-  String _objective = 'Explosivité & Vitesse';
+  String _selectedAge = 'Professional';
+  double _duration = 10.0;
+  String _objective = '';
   double _fatigueLevel = 30;
   String? _selectedPlayerId;
 
   final TextEditingController _objectiveController = TextEditingController();
 
   final Map<String, double> _durationOptions = {
-    '30 sec': 0.5,
-    '1 min': 1.0,
-    '2 min': 2.0,
-    '4 min': 4.0,
     '5 min': 5.0,
+    '10 min': 10.0,
+    '15 min': 15.0,
+    '20 min': 20.0,
+    '30 min': 30.0,
   };
 
   @override
   void initState() {
     super.initState();
+    _selectedPlayerId = widget.initialPlayerId;
+    _objective = widget.initialObjective ?? '';
     _objectiveController.text = _objective;
+    
+    // Si un joueur est pré-sélectionné, on essaiera de mettre à jour son poste plus tard via le provider
   }
 
   @override
@@ -61,6 +72,8 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (widget.initialObjective != null) _buildPrescriptionBanner(),
+            const SizedBox(height: 16),
             _buildSectionHeader('Poste Cible', Icons.person_pin_circle_outlined),
             const SizedBox(height: 16),
             _buildPositionSelector(),
@@ -85,7 +98,7 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
                       const SizedBox(height: 12),
                       _buildDropdown(
                         value: _selectedAge,
-                        items: ['U13', 'U15', 'U17-U19', 'Senior'],
+                        items: ['Academy (U9-U12)', 'Youth (U13-U16)', 'Elite (U17-U23)', 'Professional'],
                         onChanged: (val) => setState(() => _selectedAge = val!),
                       ),
                     ],
@@ -135,6 +148,8 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
               _buildResultArea(generationState.value!)
             else if (generationState.isLoading)
               _buildLoadingPlaceholder()
+            else if (generationState.hasError)
+              _buildErrorArea(generationState.error.toString())
             else
               _buildEmptyPlaceholder(),
           ],
@@ -157,6 +172,52 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPrescriptionBanner() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: SPColors.primaryBlue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SPColors.primaryBlue.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: SPColors.primaryBlue,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'PRESCRIPTION D\'ACTION IA',
+                  style: SPTypography.overline.copyWith(
+                    color: SPColors.primaryBlue,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Basé sur les dernières analyses de scouting pour corriger : ${widget.initialObjective}',
+                  style: SPTypography.bodySmall.copyWith(color: SPColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -371,48 +432,77 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
                         child: Image.network(
                           exercise.imageUrl!,
                           fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: Colors.white.withOpacity(0.05),
+                            child: const Center(
+                              child: Icon(Icons.broken_image_outlined, color: Colors.white24, size: 40),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    // Overlay Live View
-                    Positioned(
-                      bottom: 12,
-                      left: 12,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
+                    // Overlay Live View (Only for non-static images)
+                    if (_isGif(exercise.imageUrl))
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
                             ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'LOOPING LIVE VIEW',
+                              style: SPTypography.caption.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 8,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    // Tactical Diagram Badge
+                    if (!_isGif(exercise.imageUrl))
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: SPColors.primaryBlue,
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'LOOPING LIVE VIEW',
+                          child: Text(
+                            'STRATÉGIE 2D/3D',
                             style: SPTypography.caption.copyWith(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 8,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    // Replay Indicator
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 70),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: SPColors.primaryBlue.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: SPColors.primaryBlue.withOpacity(0.5)),
                         ),
-                        child: const Icon(Icons.replay_rounded, color: Colors.white, size: 24),
                       ),
-                    ),
+                    // Replay Indicator (Only for GIFs)
+                    if (exercise.imageUrl!.contains('.gif'))
+                      Center(
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 70),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: SPColors.primaryBlue.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: SPColors.primaryBlue.withOpacity(0.5)),
+                          ),
+                          child: const Icon(Icons.replay_rounded, color: Colors.white, size: 24),
+                        ),
+                      ),
                   ],
                 ),
               const SizedBox(height: 24),
@@ -728,6 +818,33 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
     );
   }
 
+  Widget _buildErrorArea(String error) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: SPColors.error.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SPColors.error.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.error_outline, color: SPColors.error, size: 32),
+          const SizedBox(height: 12),
+          Text(
+            'ERREUR IA',
+            style: SPTypography.label.copyWith(color: SPColors.error, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'La génération a échoué. Veuillez vérifier votre connexion ou réessayer.\nDétails: $error',
+            textAlign: TextAlign.center,
+            style: SPTypography.bodySmall.copyWith(color: SPColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLoadingPlaceholder() {
     return Center(
       child: Column(
@@ -766,12 +883,33 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
         final weaknesses = insights['weaknesses'] as String;
         final matchLoad = insights['matchLoad'] as String;
 
-        if (weaknesses.isEmpty && matchLoad.isEmpty) return const SizedBox.shrink();
+        if (weaknesses.isEmpty && matchLoad.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: SPColors.backgroundSecondary,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: SPColors.borderPrimary),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: SPColors.textTertiary, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Profil prêt pour génération. (Aucune lacune spécifique détectée via le scouting)',
+                    style: SPTypography.bodySmall.copyWith(color: SPColors.textTertiary, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
 
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: SPColors.primaryBlue.withOpacity(0.1),
+            color: SPColors.primaryBlue.withOpacity(0.05),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: SPColors.primaryBlue.withOpacity(0.3)),
           ),
@@ -780,41 +918,56 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.psychology_outlined, color: SPColors.primaryBlue, size: 20),
+                  const Icon(Icons.insights_outlined, color: SPColors.primaryBlue, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'VISION IA PERFORMANCE',
-                    style: SPTypography.label.copyWith(color: SPColors.primaryBlue, fontSize: 10),
+                    'DIAGNOSTIC SCOUTING ACTIVE',
+                    style: SPTypography.overline.copyWith(
+                      color: SPColors.primaryBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               if (weaknesses.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    weaknesses,
-                    style: SPTypography.bodySmall.copyWith(color: Colors.white, fontSize: 12),
-                  ),
-                ),
+                _buildInsightItem(Icons.warning_amber_rounded, 'LACUNES', weaknesses, SPColors.warning),
               if (matchLoad.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    matchLoad,
-                    style: SPTypography.bodySmall.copyWith(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold),
-                  ),
-                ),
+                _buildInsightItem(Icons.fitness_center, 'CHARGE PHYSIQUE', matchLoad, SPColors.info),
             ],
           ),
         );
       },
-      loading: () => const LinearProgressIndicator(),
-      error: (e, r) => const SizedBox.shrink(),
+      loading: () => const Center(child: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: LinearProgressIndicator(minHeight: 2),
+      )),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
+
+  Widget _buildInsightItem(IconData icon, String label, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: SPTypography.bodySmall.copyWith(fontSize: 11, color: SPColors.textSecondary),
+                children: [
+                  TextSpan(text: '$label : ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  TextSpan(text: value),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  bool _isGif(String? url) => url != null && (url.contains('giphy.com') || url.contains('.gif'));
 }

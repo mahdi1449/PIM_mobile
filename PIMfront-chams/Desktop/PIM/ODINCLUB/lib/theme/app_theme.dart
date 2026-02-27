@@ -53,8 +53,8 @@ class AppTheme {
                 ]
               : [
                   _lightSurface,
-                  _lightSecondary.withOpacity(0.3),
-                  _lightPrimary.withOpacity(0.1),
+                  _lightSecondary.withValues(alpha: 0.3),
+                  _lightPrimary.withValues(alpha: 0.1),
                 ],
         ),
       );

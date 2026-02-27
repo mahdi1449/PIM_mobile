@@ -7,6 +7,8 @@ import '../../theme/sp_typography.dart';
 import '../../../widgets/exercise_card.dart';
 import 'generator_form.dart';
 import 'stopwatch_performance_screen.dart';
+import '../../providers/players_provider.dart';
+import '../../../screens/players/player_details_screen.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({Key? key}) : super(key: key);
@@ -29,15 +31,270 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         'Cognitive',
       ];
 
+  bool _isGif(String? url) => url != null && (url.contains('giphy.com') || url.contains('.gif'));
+
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
+  // ─── DELETE ────────────────────────────────────────────────────────────────
+  Future<void> _deleteExercise(Exercise exercise) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: SPColors.backgroundSecondary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Supprimer l\'exercice',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+          'Voulez-vous vraiment supprimer "${exercise.name}" ?',
+          style: const TextStyle(color: SPColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler', style: TextStyle(color: SPColors.textTertiary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final service = ref.read(exercisesServiceProvider);
+      await service.deleteExercise(exercise.id!);
+      ref.invalidate(exercisesProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('"${exercise.name}" supprimé'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Erreur: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    }
+  }
+
+  // ─── EDIT ──────────────────────────────────────────────────────────────────
+  Future<void> _editExercise(Exercise exercise) async {
+    final nameCtrl = TextEditingController(text: exercise.name);
+    String selectedCategory = exercise.category.value;
+    int selectedDifficulty = exercise.difficulty;
+    String selectedIntensity = exercise.intensity.value;
+
+    final categories = ['Physical', 'Technical', 'Tactical', 'Cognitive'];
+    final intensities = ['Low', 'Medium', 'High'];
+
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
+            decoration: BoxDecoration(
+              color: SPColors.backgroundSecondary,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              border: Border.all(color: SPColors.primaryBlue.withOpacity(0.2)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('MODIFIER L\'EXERCICE',
+                        style: SPTypography.label.copyWith(
+                            color: SPColors.primaryBlue, letterSpacing: 2)),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: SPColors.textTertiary),
+                      onPressed: () => Navigator.pop(ctx, false),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Nom
+                Text('Nom', style: SPTypography.caption.copyWith(color: SPColors.textTertiary, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: nameCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    fillColor: SPColors.backgroundTertiary,
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: SPColors.borderPrimary),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: SPColors.borderPrimary),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: SPColors.primaryBlue),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Catégorie
+                Text('Catégorie', style: SPTypography.caption.copyWith(color: SPColors.textTertiary, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: categories.map((cat) {
+                    final isSelected = selectedCategory == cat;
+                    return ChoiceChip(
+                      label: Text(cat),
+                      selected: isSelected,
+                      onSelected: (_) => setModalState(() => selectedCategory = cat),
+                      selectedColor: SPColors.primaryBlue,
+                      backgroundColor: SPColors.backgroundTertiary,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : SPColors.textSecondary,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 12,
+                      ),
+                      showCheckmark: false,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+
+                // Difficulté
+                Text('Difficulté : $selectedDifficulty/5',
+                    style: SPTypography.caption.copyWith(color: SPColors.textTertiary, fontWeight: FontWeight.bold)),
+                Slider(
+                  value: selectedDifficulty.toDouble(),
+                  min: 1,
+                  max: 5,
+                  divisions: 4,
+                  activeColor: SPColors.primaryBlue,
+                  inactiveColor: SPColors.backgroundTertiary,
+                  onChanged: (val) => setModalState(() => selectedDifficulty = val.toInt()),
+                ),
+                const SizedBox(height: 8),
+
+                // Intensité
+                Text('Intensité', style: SPTypography.caption.copyWith(color: SPColors.textTertiary, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Row(
+                  children: intensities.map((int) {
+                    final isSelected = selectedIntensity == int;
+                    final color = int == 'Low'
+                        ? Colors.green
+                        : (int == 'Medium' ? Colors.orange : Colors.red);
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => selectedIntensity = int),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected ? color.withOpacity(0.2) : SPColors.backgroundTertiary,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: isSelected ? color : SPColors.borderPrimary),
+                            ),
+                            child: Text(
+                              int,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: isSelected ? color : SPColors.textSecondary,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 28),
+
+                // Save Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: SPColors.primaryBlue,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    icon: const Icon(Icons.save_rounded, color: Colors.white),
+                    label: Text('ENREGISTRER',
+                        style: SPTypography.label.copyWith(
+                            color: Colors.white, letterSpacing: 1.5)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (result != true) return;
+
+    try {
+      final service = ref.read(exercisesServiceProvider);
+      await service.updateExercise(exercise.id!, {
+        'name': nameCtrl.text.trim(),
+        'category': selectedCategory,
+        'difficulty': selectedDifficulty,
+        'intensity': selectedIntensity,
+      });
+      ref.invalidate(exercisesProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Exercice mis à jour ✓'),
+          backgroundColor: SPColors.primaryBlue,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Erreur: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // We use filteredExercisesProvider or exercisesProvider and filter locally
     final exercisesAsync = ref.watch(exercisesProvider);
 
     return Scaffold(
@@ -157,13 +414,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   padding: const EdgeInsets.all(16),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
-                    return ExerciseCard(
-                      exercise: filtered[index],
-                      onTap: () => _showExerciseDetails(context, filtered[index]),
-                      onAdd: () {
-                        // Add to session
-                      },
-                    );
+                    final exercise = filtered[index];
+                    return _buildExerciseItem(exercise);
                   },
                 );
               },
@@ -184,6 +436,87 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         },
         backgroundColor: SPColors.badgeTechnical,
         child: const Icon(Icons.auto_awesome, color: Colors.white),
+      ),
+    );
+  }
+
+  // ─── Exercise Item with CRUD actions ──────────────────────────────────────
+  Widget _buildExerciseItem(Exercise exercise) {
+    return Dismissible(
+      key: Key(exercise.id ?? exercise.name),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade700,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.delete_outline, color: Colors.white, size: 28),
+            SizedBox(height: 4),
+            Text('SUPPRIMER', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+      confirmDismiss: (_) async {
+        await _deleteExercise(exercise);
+        return false; // on gère nous-mêmes via le dialog
+      },
+      child: Stack(
+        children: [
+          ExerciseCard(
+            exercise: exercise,
+            onTap: () => _showExerciseDetails(context, exercise),
+            onAdd: () {},
+          ),
+          // Menu Modifier / Supprimer en haut à droite de la carte
+          Positioned(
+            top: 4,
+            right: 4,
+            child: PopupMenuButton<String>(
+              icon: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.more_vert, color: Colors.white, size: 18),
+              ),
+              color: SPColors.backgroundSecondary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.edit_outlined, color: SPColors.primaryBlue, size: 18),
+                      SizedBox(width: 10),
+                      Text('Modifier', style: TextStyle(color: Colors.white, fontSize: 14)),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, color: Colors.red.shade400, size: 18),
+                      const SizedBox(width: 10),
+                      Text('Supprimer', style: TextStyle(color: Colors.red.shade400, fontSize: 14)),
+                    ],
+                  ),
+                ),
+              ],
+              onSelected: (value) {
+                if (value == 'edit') _editExercise(exercise);
+                if (value == 'delete') _deleteExercise(exercise);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -291,9 +624,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                             fontSize: 12,
                           ),
                         ),
-                        const SizedBox(height: 4),
                         Text(
-                          'MODE GIF ANIMÉ',
+                          _isGif(exercise.imageUrl) ? 'MODE GIF ANIMÉ' : 'MODE SCHÉMA TACTIQUE',
                           style: SPTypography.caption.copyWith(
                             color: SPColors.textTertiary,
                             fontSize: 8,
@@ -302,9 +634,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         ),
                       ],
                     ),
+                    // Edit button in detail view
                     IconButton(
-                      icon: const Icon(Icons.more_vert, color: SPColors.primaryBlue),
-                      onPressed: () {},
+                      icon: const Icon(Icons.edit_outlined, color: SPColors.primaryBlue),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _editExercise(exercise);
+                      },
                     ),
                   ],
                 ),
@@ -337,10 +673,22 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                               child: Image.network(
                                 exercise.imageUrl!,
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  color: SPColors.backgroundSecondary,
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.broken_image_outlined, color: SPColors.primaryBlue.withOpacity(0.5), size: 40),
+                                        const SizedBox(height: 8),
+                                        Text('Image indisponible', style: SPTypography.caption),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                          // Overlay Live View
                           Positioned(
                             bottom: 16,
                             left: 16,
@@ -349,14 +697,21 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                 Container(
                                   width: 8,
                                   height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
+                                  decoration: BoxDecoration(
+                                    color: _isGif(exercise.imageUrl) ? Colors.red : SPColors.primaryBlue,
                                     shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: (_isGif(exercise.imageUrl) ? Colors.red : SPColors.primaryBlue).withOpacity(0.5),
+                                        blurRadius: 4,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'LOOPING LIVE VIEW',
+                                  _isGif(exercise.imageUrl) ? 'LOOPING LIVE VIEW' : 'STRATÉGIE IA 2D/3D',
                                   style: SPTypography.caption.copyWith(
                                     color: Colors.white.withOpacity(0.9),
                                     fontWeight: FontWeight.bold,
@@ -366,7 +721,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                               ],
                             ),
                           ),
-                          // Replay Indicator
                           Center(
                             child: Container(
                               margin: const EdgeInsets.only(top: 80),
@@ -379,7 +733,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                               child: const Icon(Icons.replay_rounded, color: Colors.white, size: 30),
                             ),
                           ),
-                          // Fullscreen icon
                           Positioned(
                             bottom: 12,
                             right: 12,
@@ -395,7 +748,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         ],
                       ),
                     const SizedBox(height: 24),
-                    // Title and Metadata
                     Text(
                       exercise.name,
                       style: SPTypography.h2.copyWith(color: Colors.white, fontSize: 24),
@@ -411,7 +763,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       ],
                     ),
                     const SizedBox(height: 32),
-                    // Steps Section (Card Style)
                     Text(
                       'DÉMARCHE DE L\'EXERCICE',
                       style: SPTypography.label.copyWith(
@@ -486,7 +837,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       );
                     }).toList(),
                     const SizedBox(height: 24),
-                    // Equipment Section
                     Text(
                       'MATÉRIEL REQUIS',
                       style: SPTypography.caption.copyWith(
@@ -519,10 +869,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       }).toList(),
                     ),
                     const SizedBox(height: 32),
+                    _buildHistorySection(exercise),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
-              // Premium Bottom Action Bar (Sticky)
+              // Bottom Action Bar
               Container(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
                 decoration: BoxDecoration(
@@ -538,14 +890,25 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 ),
                 child: Row(
                   children: [
-                    // Nav Icons
-                    _buildNavIcon(Icons.home_outlined, 'Accueil', false),
-                    const SizedBox(width: 20),
-                    _buildNavIcon(Icons.track_changes_rounded, 'Drills', true),
-                    const SizedBox(width: 20),
-                    _buildNavIcon(Icons.bar_chart_rounded, 'Stats', false),
-                    const SizedBox(width: 24),
-                    // Main Action
+                    // Delete button
+                    Container(
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade700.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.shade700.withOpacity(0.4)),
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.delete_outline, color: Colors.red.shade400),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _deleteExercise(exercise);
+                        },
+                        tooltip: 'Supprimer',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Start button
                     Expanded(
                       child: Container(
                         height: 54,
@@ -603,25 +966,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
-  Widget _buildNavIcon(IconData icon, String label, bool isActive) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: isActive ? SPColors.primaryBlue : SPColors.textTertiary, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          label.toUpperCase(),
-          style: TextStyle(
-            color: isActive ? SPColors.primaryBlue : SPColors.textTertiary,
-            fontSize: 7,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSmallMetric(IconData icon, String label) {
     return Row(
       children: [
@@ -631,6 +975,74 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           label,
           style: SPTypography.caption.copyWith(color: SPColors.textSecondary, fontWeight: FontWeight.w500),
         ),
+      ],
+    );
+  }
+
+  Widget _buildHistorySection(Exercise exercise) {
+    if (exercise.completedSessions.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'SESSIONS RÉCENTES',
+          style: SPTypography.label.copyWith(
+            color: SPColors.primaryBlue,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...exercise.completedSessions.reversed.take(5).map((session) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: SPColors.backgroundSecondary.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: SPColors.borderPrimary.withOpacity(0.5)),
+            ),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 14,
+                  backgroundColor: SPColors.backgroundTertiary,
+                  child: Icon(Icons.person, size: 16, color: SPColors.textTertiary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Joueur #${session.playerId.substring(session.playerId.length - 4)}',
+                        style: SPTypography.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '${session.durationSeconds}s • ${session.lapsCount} tours • ${session.completedAt.day}/${session.completedAt.month}',
+                        style: SPTypography.caption.copyWith(color: SPColors.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PlayerDetailsScreen(playerId: session.playerId),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'PROFIL',
+                    style: TextStyle(color: SPColors.primaryBlue, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ],
     );
   }

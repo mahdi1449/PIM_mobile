@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/ai_colors.dart';
 import '../../providers/campaign_provider.dart';
+import 'ai_player_insights_screen.dart';
+import 'package:provider/provider.dart' as prov;
 
 /// Shows archived (non-recruited) players from past sessions.
 class AiArchiveTab extends StatelessWidget {
@@ -70,6 +72,18 @@ class AiArchiveTab extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 10),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => prov.ChangeNotifierProvider<CampaignProvider>.value(
+                        value: provider,
+                        child: AiPlayerInsightsScreen(player: player),
+                      ),
+                    ),
+                  );
+                },
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: Container(
@@ -146,6 +160,7 @@ class AiArchiveTab extends StatelessWidget {
                     ]),
                   ),
                 ),
+              ),
               ),
             );
           },

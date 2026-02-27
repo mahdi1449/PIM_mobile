@@ -79,12 +79,12 @@ class _OdinTestCardState extends State<OdinTestCard> {
         color: SPColors.backgroundSecondary,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: SPColors.primaryBlue.withOpacity(0.1),
+          color: SPColors.primaryBlue.withValues(alpha: 0.1),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -111,7 +111,7 @@ class _OdinTestCardState extends State<OdinTestCard> {
                   Text(
                     widget.testType.categoryLabel,
                     style: SPTypography.overline.copyWith(
-                      color: SPColors.primaryBlue.withOpacity(0.8),
+                      color: SPColors.primaryBlue.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -119,9 +119,9 @@ class _OdinTestCardState extends State<OdinTestCard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getScoreColor().withOpacity(0.1),
+                  color: _getScoreColor().withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _getScoreColor().withOpacity(0.3)),
+                  border: Border.all(color: _getScoreColor().withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   _getRatingText(),
@@ -168,7 +168,7 @@ class _OdinTestCardState extends State<OdinTestCard> {
               inactiveTrackColor: SPColors.backgroundTertiary,
               thumbColor: Colors.white,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
-              overlayColor: SPColors.primaryBlue.withOpacity(0.2),
+              overlayColor: SPColors.primaryBlue.withValues(alpha: 0.2),
               overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
             ),
             child: Slider(

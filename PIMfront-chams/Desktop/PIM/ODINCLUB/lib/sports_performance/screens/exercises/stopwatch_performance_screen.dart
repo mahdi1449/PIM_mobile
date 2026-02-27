@@ -1,22 +1,27 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/exercise.dart';
+import '../../services/exercises_service.dart';
+import '../../providers/exercises_provider.dart';
 import '../../theme/sp_colors.dart';
 import '../../theme/sp_typography.dart';
 
-class StopwatchPerformanceScreen extends StatefulWidget {
+class StopwatchPerformanceScreen extends ConsumerStatefulWidget {
   final Exercise exercise;
+  final String? playerId;
 
   const StopwatchPerformanceScreen({
     Key? key,
     required this.exercise,
+    this.playerId,
   }) : super(key: key);
 
   @override
-  State<StopwatchPerformanceScreen> createState() => _StopwatchPerformanceScreenState();
+  ConsumerState<StopwatchPerformanceScreen> createState() => _StopwatchPerformanceScreenState();
 }
 
-class _StopwatchPerformanceScreenState extends State<StopwatchPerformanceScreen> {
+class _StopwatchPerformanceScreenState extends ConsumerState<StopwatchPerformanceScreen> {
   final Stopwatch _stopwatch = Stopwatch();
   late Timer _timer;
   final List<LapData> _laps = [];
@@ -57,6 +62,124 @@ class _StopwatchPerformanceScreenState extends State<StopwatchPerformanceScreen>
         totalTime: now,
       ));
     });
+  }
+
+  Future<void> _finish() async {
+    _stopwatch.stop();
+    _timer.cancel();
+    final totalSeconds = _stopwatch.elapsed.inSeconds;
+    final lapsCount = _laps.length;
+
+    // Save session to backend if we have a playerId
+    if (widget.playerId != null && widget.exercise.id != null) {
+      try {
+        final service = ref.read(exercisesServiceProvider);
+        await service.recordCompletion(
+          widget.exercise.id!,
+          playerId: widget.playerId!,
+          durationSeconds: totalSeconds,
+          lapsCount: lapsCount,
+        );
+      } catch (_) {
+        // Silently fail — UI still shows the bilan
+      }
+    }
+
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _buildSessionSummaryDialog(totalSeconds, lapsCount),
+    );
+    if (mounted) Navigator.pop(context);
+  }
+
+  Widget _buildSessionSummaryDialog(int totalSeconds, int lapsCount) {
+    final mins = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final secs = (totalSeconds % 60).toString().padLeft(2, '0');
+    return Dialog(
+      backgroundColor: SPColors.backgroundPrimary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: SPColors.primaryBlue.withOpacity(0.3)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 48),
+            const SizedBox(height: 16),
+            Text('SESSION TERMINÉE',
+                style: SPTypography.label.copyWith(
+                    color: SPColors.primaryBlue,
+                    letterSpacing: 2,
+                    fontSize: 14)),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _bilanCell('⏱ Durée', '$mins:$secs'),
+                _bilanCell('🔄 Laps', '$lapsCount'),
+                _bilanCell('💪 Intensité', widget.exercise.intensity.value),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: SPColors.primaryBlue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                widget.playerId != null
+                    ? '✅ Session enregistrée dans le profil joueur.'
+                    : '⚠️ Sélectionnez un joueur pour sauvegarder la session.',
+                style: SPTypography.bodySmall.copyWith(
+                    color: SPColors.textSecondary, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SPColors.primaryBlue,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('RETOUR À LA BIBLIOTHÈQUE',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        letterSpacing: 1.2)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _bilanCell(String label, String value) {
+    return Column(
+      children: [
+        Text(value,
+            style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20)),
+        const SizedBox(height: 4),
+        Text(label,
+            style: TextStyle(
+                color: SPColors.textTertiary,
+                fontSize: 10,
+                letterSpacing: 0.5)),
+      ],
+    );
   }
 
   String _formatDuration(Duration duration) {
@@ -309,7 +432,7 @@ class _StopwatchPerformanceScreenState extends State<StopwatchPerformanceScreen>
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () => Navigator.pop(context),
+                          onTap: _finish,
                           borderRadius: BorderRadius.circular(12),
                           child: Center(
                             child: Text(
