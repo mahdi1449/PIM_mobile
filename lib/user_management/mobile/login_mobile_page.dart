@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/user_management_api.dart';
 import '../models/user_management_models.dart';
+import 'auth_theme_mobile.dart';
 
 class LoginMobilePage extends StatefulWidget {
   const LoginMobilePage({
@@ -23,16 +25,46 @@ class _LoginMobilePageState extends State<LoginMobilePage> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _rememberMe = true;
   bool _loading = false;
   bool _hidePassword = true;
   String? _error;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedUser();
+  }
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRememberedUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final remember = prefs.getBool('remember_me') ?? false;
+    final email = prefs.getString('remembered_email') ?? '';
+    if (!mounted) return;
+    setState(() {
+      _rememberMe = remember;
+      if (remember && email.isNotEmpty) {
+        _email.text = email;
+      }
+    });
+  }
+
+  Future<void> _persistRememberedUser(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      await prefs.setBool('remember_me', true);
+      await prefs.setString('remembered_email', email);
+    } else {
+      await prefs.setBool('remember_me', false);
+      await prefs.remove('remembered_email');
+    }
   }
 
   Future<void> _login() async {
@@ -50,8 +82,300 @@ class _LoginMobilePageState extends State<LoginMobilePage> {
         _email.text.trim(),
         _password.text,
       );
+      await _persistRememberedUser(_email.text.trim());
       widget.onSession(session);
     } catch (error) {
+      if (mounted) {
+        setState(
+          () => _error = error.toString().replaceFirst('Exception: ', ''),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _openForgotPasswordPage() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _ForgotPasswordMobilePage(
+          api: widget.api,
+          initialEmail: _email.text.trim(),
+        ),
+      ),
+    );
+  }
+
+  void _showSnack(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFF091A2E),
+        content: Text(message, style: const TextStyle(color: AuthPalette.text)),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AuthBackground(
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(22, 24, 22, 28),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Center(
+                            child: AuthBrandHero(
+                              title: 'ODIN',
+                            ),
+                          ),
+                          const SizedBox(height: 34),
+                          AuthGlassCard(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: _email,
+                                  keyboardType: TextInputType.emailAddress,
+                                  style: const TextStyle(
+                                    color: AuthPalette.text,
+                                  ),
+                                  cursorColor: AuthPalette.neonBlue,
+                                  decoration: authInputDecoration(
+                                    label: 'Email Address',
+                                    hint: 'name@example.com',
+                                  ),
+                                  validator: (value) {
+                                    final v = value?.trim() ?? '';
+                                    if (v.isEmpty || !v.contains('@')) {
+                                      return 'Please enter a valid email address';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 14),
+                                TextFormField(
+                                  controller: _password,
+                                  obscureText: _hidePassword,
+                                  style: const TextStyle(
+                                    color: AuthPalette.text,
+                                  ),
+                                  cursorColor: AuthPalette.neonBlue,
+                                  decoration: authInputDecoration(
+                                    label: 'Password',
+                                    hint: 'Enter your password',
+                                    suffixIcon: IconButton(
+                                      onPressed: () => setState(
+                                        () => _hidePassword = !_hidePassword,
+                                      ),
+                                      icon: Icon(
+                                        _hidePassword
+                                            ? Icons.visibility_off_rounded
+                                            : Icons.visibility_rounded,
+                                        color: AuthPalette.muted,
+                                      ),
+                                    ),
+                                  ),
+                                validator: (value) {
+                                  if ((value ?? '').length < 6) {
+                                    return 'Password is too short';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: (value) {
+                                      setState(
+                                        () => _rememberMe = value ?? false,
+                                      );
+                                    },
+                                    activeColor: AuthPalette.electric,
+                                    checkColor: Colors.white,
+                                    side: BorderSide(
+                                      color: AuthPalette.border.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                    ),
+                                  ),
+                                  const Text(
+                                    'Remember me',
+                                    style: TextStyle(color: AuthPalette.muted),
+                                  ),
+                                ],
+                              ),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                    onPressed: _openForgotPasswordPage,
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AuthPalette.electric,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 0,
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Forgot Password?',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (_error != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _error!,
+                                    style: const TextStyle(
+                                      color: AuthPalette.danger,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                AuthPrimaryButton(
+                                  label: 'Login ',
+                                  loading: _loading,
+                                  icon: Icons.arrow_forward_rounded,
+                                  onPressed: _login,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 26),
+                          AuthLinkText(
+                            prefix: "Don't have an account? ",
+                            link: 'Sign up',
+                            onTap: widget.onShowRegister,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ForgotPasswordMobilePage extends StatefulWidget {
+  const _ForgotPasswordMobilePage({
+    required this.api,
+    required this.initialEmail,
+  });
+
+  final UserManagementApi api;
+  final String initialEmail;
+
+  @override
+  State<_ForgotPasswordMobilePage> createState() =>
+      _ForgotPasswordMobilePageState();
+}
+
+class _ForgotPasswordMobilePageState extends State<_ForgotPasswordMobilePage> {
+  late final TextEditingController _email = TextEditingController(
+    text: widget.initialEmail,
+  );
+  final TextEditingController _code = TextEditingController();
+  final TextEditingController _newPassword = TextEditingController();
+  final TextEditingController _confirmPassword = TextEditingController();
+
+  bool _codeRequested = false;
+  bool _loading = false;
+  bool _hideNewPassword = true;
+  bool _hideConfirmPassword = true;
+  String? _error;
+  String? _success;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _code.dispose();
+    _newPassword.dispose();
+    _confirmPassword.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final email = _email.text.trim();
+    if (!email.contains('@')) {
+      setState(() => _error = 'Please enter a valid email address');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+      _success = null;
+    });
+
+    try {
+      if (!_codeRequested) {
+        await widget.api.requestForgotPassword(email);
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _codeRequested = true;
+          _success = 'Reset code sent. Check your inbox and enter the OTP.';
+        });
+        return;
+      }
+
+      if (_code.text.trim().length != 6) {
+        throw Exception('OTP code must contain 6 digits');
+      }
+      if (_newPassword.text.length < 8) {
+        throw Exception('New password must contain at least 8 characters');
+      }
+      if (_newPassword.text != _confirmPassword.text) {
+        throw Exception('Password confirmation does not match');
+      }
+
+      await widget.api.resetForgotPassword(
+        email: email,
+        code: _code.text.trim(),
+        newPassword: _newPassword.text,
+      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password reset successfully. You can log in now.'),
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
       setState(() => _error = error.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) {
@@ -60,472 +384,169 @@ class _LoginMobilePageState extends State<LoginMobilePage> {
     }
   }
 
-  Future<void> _openForgotPasswordDialog() async {
-    final emailController = TextEditingController(text: _email.text.trim());
-    final codeController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-
-    var codeRequested = false;
-    var loading = false;
-    String? localError;
-
-    await showDialog<void>(
-      context: context,
-      builder: (context) {
-        final dark = Theme.of(context).brightness == Brightness.dark;
-        final dialogBg = dark ? const Color(0xFF0F2A86) : Colors.white;
-        final textColor = dark ? Colors.white : const Color(0xFF0B1F3B);
-        final errorColor = dark
-            ? const Color(0xFFFFA5AB)
-            : const Color(0xFFD64545);
-
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            Future<void> requestCode() async {
-              final email = emailController.text.trim();
-              if (!email.contains('@')) {
-                setDialogState(() => localError = 'Email invalide.');
-                return;
-              }
-
-              setDialogState(() {
-                loading = true;
-                localError = null;
-              });
-
-              try {
-                await widget.api.requestForgotPassword(email);
-                setDialogState(() {
-                  codeRequested = true;
-                  loading = false;
-                });
-              } catch (error) {
-                setDialogState(() {
-                  loading = false;
-                  localError = error.toString().replaceFirst('Exception: ', '');
-                });
-              }
-            }
-
-            Future<void> resetPassword() async {
-              final email = emailController.text.trim();
-              if (!email.contains('@')) {
-                setDialogState(() => localError = 'Email invalide.');
-                return;
-              }
-
-              if (codeController.text.trim().length != 6) {
-                setDialogState(
-                  () => localError = 'Le code OTP doit contenir 6 chiffres.',
-                );
-                return;
-              }
-
-              if (newPasswordController.text.length < 8) {
-                setDialogState(
-                  () => localError =
-                      'Le mot de passe doit contenir au moins 8 caracteres.',
-                );
-                return;
-              }
-
-              if (newPasswordController.text !=
-                  confirmPasswordController.text) {
-                setDialogState(
-                  () => localError =
-                      'La confirmation du mot de passe ne correspond pas.',
-                );
-                return;
-              }
-
-              setDialogState(() {
-                loading = true;
-                localError = null;
-              });
-
-              try {
-                await widget.api.resetForgotPassword(
-                  email: email,
-                  code: codeController.text.trim(),
-                  newPassword: newPasswordController.text,
-                );
-
-                if (!mounted) {
-                  return;
-                }
-
-                Navigator.of(this.context).pop();
-                ScaffoldMessenger.of(this.context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Mot de passe reinitialise avec succes.'),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AuthBackground(
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(22, 22, 22, 28),
+            children: [
+              Row(
+                children: [
+                  AuthCircleBackButton(
+                    onTap: () => Navigator.of(context).pop(),
                   ),
-                );
-              } catch (error) {
-                setDialogState(() {
-                  loading = false;
-                  localError = error.toString().replaceFirst('Exception: ', '');
-                });
-              }
-            }
-
-            return AlertDialog(
-              backgroundColor: dialogBg,
-              title: Text(
-                'Forgot password',
-                style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      style: TextStyle(color: textColor),
-                      decoration: _inputDecoration(context, 'Email'),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'ODIN ',
+                      style: TextStyle(
+                        color: AuthPalette.text,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    if (codeRequested) ...[
+                  ),
+                ],
+              ),
+              const SizedBox(height: 44),
+              const Text(
+                'Reset Password',
+                style: TextStyle(
+                  color: AuthPalette.text,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _codeRequested
+                    ? 'Enter the 6-digit OTP and choose a new password.'
+                    : "Enter your email address and we'll send you instructions to reset your password.",
+                style: const TextStyle(
+                  color: AuthPalette.muted,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 26),
+              AuthGlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'EMAIL ADDRESS',
+                      style: TextStyle(
+                        color: AuthPalette.label,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.2,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: AuthPalette.text),
+                      cursorColor: AuthPalette.neonBlue,
+                      decoration: authInputDecoration(
+                        label: 'Email Address',
+                        hint: 'name@example.com',
+                      ),
+                    ),
+                    if (_codeRequested) ...[
+                      const SizedBox(height: 14),
                       TextField(
-                        controller: codeController,
+                        controller: _code,
                         keyboardType: TextInputType.number,
-                        style: TextStyle(color: textColor),
-                        decoration: _inputDecoration(
-                          context,
-                          'Code OTP (6 chiffres)',
+                        style: const TextStyle(color: AuthPalette.text),
+                        cursorColor: AuthPalette.neonBlue,
+                        decoration: authInputDecoration(
+                          label: 'OTP Code',
+                          hint: '6-digit code',
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       TextField(
-                        controller: newPasswordController,
-                        obscureText: true,
-                        style: TextStyle(color: textColor),
-                        decoration: _inputDecoration(
-                          context,
-                          'Nouveau mot de passe',
+                        controller: _newPassword,
+                        obscureText: _hideNewPassword,
+                        style: const TextStyle(color: AuthPalette.text),
+                        cursorColor: AuthPalette.neonBlue,
+                        decoration: authInputDecoration(
+                          label: 'New Password',
+                          suffixIcon: IconButton(
+                            onPressed: () => setState(
+                              () => _hideNewPassword = !_hideNewPassword,
+                            ),
+                            icon: Icon(
+                              _hideNewPassword
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                              color: AuthPalette.muted,
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       TextField(
-                        controller: confirmPasswordController,
-                        obscureText: true,
-                        style: TextStyle(color: textColor),
-                        decoration: _inputDecoration(
-                          context,
-                          'Confirmer mot de passe',
+                        controller: _confirmPassword,
+                        obscureText: _hideConfirmPassword,
+                        style: const TextStyle(color: AuthPalette.text),
+                        cursorColor: AuthPalette.neonBlue,
+                        decoration: authInputDecoration(
+                          label: 'Confirm Password',
+                          suffixIcon: IconButton(
+                            onPressed: () => setState(
+                              () =>
+                                  _hideConfirmPassword = !_hideConfirmPassword,
+                            ),
+                            icon: Icon(
+                              _hideConfirmPassword
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                              color: AuthPalette.muted,
+                            ),
+                          ),
                         ),
                       ),
                     ],
-                    if (localError != null) ...[
+                    if (_error != null) ...[
                       const SizedBox(height: 12),
-                      Text(localError!, style: TextStyle(color: errorColor)),
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: AuthPalette.danger),
+                      ),
                     ],
+                    if (_success != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _success!,
+                        style: const TextStyle(color: AuthPalette.success),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    AuthPrimaryButton(
+                      label: _codeRequested
+                          ? 'Reset Password'
+                          : 'Send Reset Link',
+                      loading: _loading,
+                      icon: Icons.arrow_forward_rounded,
+                      onPressed: _submit,
+                    ),
                   ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: loading ? null : () => Navigator.of(context).pop(),
-                  child: Text(
-                    'Fermer',
-                    style: TextStyle(
-                      color: dark
-                          ? const Color(0xFFD4E1FF)
-                          : const Color(0xFF1D7BEA),
-                    ),
-                  ),
-                ),
-                FilledButton(
-                  onPressed: loading
-                      ? null
-                      : (codeRequested ? resetPassword : requestCode),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: dark
-                        ? const Color(0xFF3E66E1)
-                        : const Color(0xFF1D7BEA),
-                  ),
-                  child: Text(
-                    loading
-                        ? 'En cours...'
-                        : (codeRequested ? 'Reset password' : 'Envoyer code'),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    emailController.dispose();
-    codeController.dispose();
-    newPasswordController.dispose();
-    confirmPasswordController.dispose();
-  }
-
-  InputDecoration _inputDecoration(BuildContext context, String hint) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final hintColor = dark ? const Color(0xFFA2B8E7) : const Color(0xFF6A769A);
-    final borderColor = dark
-        ? const Color(0x6688A7E1)
-        : const Color(0xFFCCD7EF);
-    final focusColor = dark ? const Color(0xFF5A8FFF) : const Color(0xFF1D7BEA);
-
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: hintColor),
-      enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: borderColor),
-      ),
-      focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: focusColor, width: 1.4),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final fg = dark ? Colors.white : const Color(0xFF0B1F3B);
-    final muted = dark ? const Color(0xFF9CB2E3) : const Color(0xFF6A769A);
-    final softBorder = dark ? const Color(0x335A82CB) : const Color(0xFFCDD8EE);
-    final action = dark ? const Color(0xFF4E83FF) : const Color(0xFF1D7BEA);
-    final primaryButton = dark
-        ? const Color(0xFF3D66E0)
-        : const Color(0xFF1D7BEA);
-    final errorText = dark ? const Color(0xFFFF9FA6) : const Color(0xFFD64545);
-    final gradientColors = dark
-        ? const [Color(0xFF173A97), Color(0xFF0D1F70), Color(0xFF061754)]
-        : const [Color(0xFFF9FBFF), Color(0xFFF1F6FF), Color(0xFFEAF3FF)];
-
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradientColors,
+              const SizedBox(height: 18),
+              AuthLinkText(
+                prefix: 'Remember your password? ',
+                link: 'Log in',
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ],
           ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -120,
-              left: -40,
-              right: -40,
-              child: Transform.rotate(
-                angle: -0.35,
-                child: Container(
-                  height: 240,
-                  color: dark
-                      ? const Color(0x222E58BF)
-                      : const Color(0x22BFD2F6),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 40,
-              left: -80,
-              right: -80,
-              child: Transform.rotate(
-                angle: -0.35,
-                child: Container(
-                  height: 120,
-                  color: dark
-                      ? const Color(0x223E6BE8)
-                      : const Color(0x2292B4F7),
-                ),
-              ),
-            ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(28, 22, 28, 18),
-                child: Form(
-                  key: _formKey,
-                  child: ListView(
-                    children: [
-                      const SizedBox(height: 26),
-                      Text(
-                        'Login',
-                        style: TextStyle(
-                          color: fg,
-                          fontSize: 48,
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                      const SizedBox(height: 42),
-                      TextFormField(
-                        controller: _email,
-                        keyboardType: TextInputType.emailAddress,
-                        style: TextStyle(color: fg),
-                        decoration: _inputDecoration(context, 'Email'),
-                        validator: (v) => (v == null || !v.contains('@'))
-                            ? 'Email invalide'
-                            : null,
-                      ),
-                      const SizedBox(height: 18),
-                      TextFormField(
-                        controller: _password,
-                        obscureText: _hidePassword,
-                        style: TextStyle(color: fg),
-                        decoration: _inputDecoration(context, 'Password')
-                            .copyWith(
-                              suffixIcon: IconButton(
-                                onPressed: () => setState(
-                                  () => _hidePassword = !_hidePassword,
-                                ),
-                                icon: Icon(
-                                  _hidePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  color: muted,
-                                  size: 20,
-                                ),
-                              ),
-                              suffix: GestureDetector(
-                                onTap: _openForgotPasswordDialog,
-                                child: Text(
-                                  'Forgot?',
-                                  style: TextStyle(color: action, fontSize: 14),
-                                ),
-                              ),
-                            ),
-                        validator: (v) => (v == null || v.length < 6)
-                            ? 'Mot de passe invalide'
-                            : null,
-                      ),
-                      const SizedBox(height: 18),
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Checkbox(
-                              value: _rememberMe,
-                              onChanged: (value) =>
-                                  setState(() => _rememberMe = value ?? true),
-                              side: BorderSide(
-                                color: dark
-                                    ? const Color(0xFF7EA2EA)
-                                    : const Color(0xFF94A7D9),
-                              ),
-                              fillColor: WidgetStatePropertyAll(primaryButton),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text('Remember me', style: TextStyle(color: muted)),
-                        ],
-                      ),
-                      if (_error != null) ...[
-                        const SizedBox(height: 10),
-                        Text(_error!, style: TextStyle(color: errorText)),
-                      ],
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: _loading ? null : _login,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: primaryButton,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          child: Text(_loading ? 'Loading...' : 'Login'),
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: softBorder)),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('OR', style: TextStyle(color: muted)),
-                          ),
-                          Expanded(child: Divider(color: softBorder)),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: null,
-                              icon: const Text(
-                                'f',
-                                style: TextStyle(
-                                  color: Color(0xFF9CB2E3),
-                                  fontSize: 18,
-                                ),
-                              ),
-                              label: const Text('Facebook'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: fg,
-                                disabledForegroundColor: fg,
-                                side: BorderSide(
-                                  color: dark
-                                      ? const Color(0x556D90CF)
-                                      : const Color(0xFFB8C6E8),
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: null,
-                              icon: const Text(
-                                'G',
-                                style: TextStyle(
-                                  color: Color(0xFF9CB2E3),
-                                  fontSize: 16,
-                                ),
-                              ),
-                              label: const Text('Google'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: fg,
-                                disabledForegroundColor: fg,
-                                side: BorderSide(
-                                  color: dark
-                                      ? const Color(0x556D90CF)
-                                      : const Color(0xFFB8C6E8),
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 30),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('New user? ', style: TextStyle(color: muted)),
-                          GestureDetector(
-                            onTap: widget.onShowRegister,
-                            child: Text(
-                              'Register',
-                              style: TextStyle(
-                                color: action,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

@@ -3,18 +3,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/finance_theme.dart';
 
-String formatCompactMoney(double value, {String symbol = r'$'}) {
+String formatCompactMoney(double value, {String symbol = 'DT'}) {
   final abs = value.abs();
+  String formatted;
   if (abs >= 1000000000) {
-    return '$symbol${(value / 1000000000).toStringAsFixed(1)}B';
+    formatted = '${(value / 1000000000).toStringAsFixed(1)}B';
+  } else if (abs >= 1000000) {
+    formatted = '${(value / 1000000).toStringAsFixed(1)}M';
+  } else if (abs >= 1000) {
+    formatted = '${(value / 1000).toStringAsFixed(1)}K';
+  } else {
+    formatted = value.toStringAsFixed(0);
   }
-  if (abs >= 1000000) {
-    return '$symbol${(value / 1000000).toStringAsFixed(1)}M';
-  }
-  if (abs >= 1000) {
-    return '$symbol${(value / 1000).toStringAsFixed(1)}K';
-  }
-  return '$symbol${value.toStringAsFixed(0)}';
+  if (symbol.isEmpty) return formatted;
+  return '$formatted $symbol';
 }
 
 class GradientShell extends StatelessWidget {

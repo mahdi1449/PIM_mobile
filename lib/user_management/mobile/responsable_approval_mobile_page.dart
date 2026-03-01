@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../finance/theme/finance_theme.dart';
 import '../api/user_management_api.dart';
 import '../models/user_management_models.dart';
 
@@ -9,11 +10,13 @@ class ResponsableApprovalMobilePage extends StatefulWidget {
     required this.api,
     required this.session,
     required this.onLogout,
+    required this.onOpenMessages,
   });
 
   final UserManagementApi api;
   final SessionModel? session;
   final VoidCallback onLogout;
+  final VoidCallback onOpenMessages;
 
   @override
   State<ResponsableApprovalMobilePage> createState() =>
@@ -28,6 +31,7 @@ class _ResponsableApprovalMobilePageState
     'STAFF_TECHNIQUE',
     'STAFF_MEDICAL',
     'FINANCIER',
+    'SCOUT',
   ];
 
   bool _loading = false;
@@ -148,9 +152,7 @@ class _ResponsableApprovalMobilePageState
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final subtitleColor = dark
-        ? const Color(0xFFA9B4D9)
-        : const Color(0xFF0B1F3B).withValues(alpha: 0.64);
+    final subtitleColor = FinancePalette.muted;
 
     final session = widget.session;
 
@@ -178,14 +180,13 @@ class _ResponsableApprovalMobilePageState
     final activeUsers = _users.where((u) => u.status == 'ACTIVE').length;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: dark
-                ? const [Color(0xFF070E33), Color(0xFF0A123B)]
-                : const [Color(0xFFEAF3FF), Color(0xFFF8FAFE)],
+            colors: [FinancePalette.navy, FinancePalette.scaffold],
           ),
         ),
         child: Stack(
@@ -195,7 +196,7 @@ class _ResponsableApprovalMobilePageState
               left: -80,
               child: _orb(
                 260,
-                dark ? const Color(0x223E63F0) : const Color(0x224B7CF6),
+                FinancePalette.blue.withValues(alpha: dark ? 0.14 : 0.09),
               ),
             ),
             Positioned(
@@ -203,7 +204,7 @@ class _ResponsableApprovalMobilePageState
               right: -120,
               child: _orb(
                 340,
-                dark ? const Color(0x1F1B2F7C) : const Color(0x1F0A2C5E),
+                FinancePalette.cyan.withValues(alpha: dark ? 0.07 : 0.05),
               ),
             ),
             SafeArea(
@@ -218,6 +219,7 @@ class _ResponsableApprovalMobilePageState
                         children: [
                           Row(
                             children: [
+                              const SizedBox(width: 50),
                               Expanded(
                                 child: Text(
                                   'Approve User Requests',
@@ -233,9 +235,18 @@ class _ResponsableApprovalMobilePageState
                                 icon: const Icon(Icons.refresh_rounded),
                               ),
                               IconButton(
-                                tooltip: 'Logout',
-                                onPressed: widget.onLogout,
-                                icon: const Icon(Icons.logout_rounded),
+                                tooltip: 'Messages',
+                                onPressed: widget.onOpenMessages,
+                                icon: const Icon(
+                                  Icons.chat_bubble_outline_rounded,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Notifications',
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.notifications_none_rounded,
+                                ),
                               ),
                             ],
                           ),
@@ -430,24 +441,21 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: FinancePalette.soft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: dark
-                  ? const Color(0xFFA9B4D9)
-                  : const Color(0xFF0B1F3B).withValues(alpha: 0.65),
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: FinancePalette.muted),
           ),
           const SizedBox(height: 8),
           Text(
@@ -466,11 +474,9 @@ class _StatCard extends StatelessWidget {
           ),
           Text(
             trend,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: dark
-                  ? const Color(0xFF8F9CC8)
-                  : const Color(0xFF0B1F3B).withValues(alpha: 0.55),
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: FinancePalette.muted),
           ),
         ],
       ),
@@ -493,14 +499,15 @@ class _PendingUserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: dark ? const Color(0xFF181F4C) : const Color(0xFFF5F8FD),
+        color: FinancePalette.soft.withValues(
+          alpha: FinancePalette.isDark ? 0.65 : 0.45,
+        ),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: FinancePalette.soft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -538,20 +545,21 @@ class _UserRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-
     final statusColor = switch (user.status) {
-      'ACTIVE' => const Color(0xFF13A16D),
-      'REJECTED' => const Color(0xFFD64545),
-      _ => const Color(0xFFB07A00),
+      'ACTIVE' => FinancePalette.success,
+      'REJECTED' => FinancePalette.danger,
+      _ => FinancePalette.warning,
     };
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: dark ? const Color(0xFF181F4C) : const Color(0xFFF5F8FD),
+        color: FinancePalette.soft.withValues(
+          alpha: FinancePalette.isDark ? 0.65 : 0.45,
+        ),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: FinancePalette.soft),
       ),
       child: Row(
         children: [

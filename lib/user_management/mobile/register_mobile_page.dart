@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../api/user_management_api.dart';
 import '../models/user_management_models.dart';
+import 'auth_theme_mobile.dart';
 
 class RegisterMobilePage extends StatefulWidget {
   const RegisterMobilePage({
@@ -28,6 +29,7 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
   bool _loading = false;
   bool _hidePassword = true;
   bool _hideConfirmPassword = true;
+  bool _acceptTerms = false;
 
   List<ClubModel> _activeClubs = [];
   String? _error;
@@ -146,6 +148,13 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
       return;
     }
 
+    if (!_acceptTerms) {
+      setState(
+        () => _error = 'Please accept the Terms of Service and Privacy Policy.',
+      );
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -210,27 +219,8 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
     }
   }
 
-  InputDecoration _inputDecoration(BuildContext context, String hint) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final hintColor = dark ? const Color(0xFFA2B8E7) : const Color(0xFF6A769A);
-    final borderColor = dark
-        ? const Color(0x6688A7E1)
-        : const Color(0xFFCCD7EF);
-    final focusColor = dark ? const Color(0xFF5A8FFF) : const Color(0xFF1D7BEA);
-
-    return InputDecoration(
-      hintText: hint,
-      labelText: hint,
-      labelStyle: TextStyle(color: hintColor),
-      hintStyle: TextStyle(color: hintColor),
-      enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: borderColor),
-      ),
-      focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: focusColor, width: 1.4),
-      ),
-    );
-  }
+  InputDecoration _inputDecoration(BuildContext context, String hint) =>
+      authInputDecoration(label: hint, hint: hint);
 
   DropdownButtonFormField<String> _dropdownField({
     required BuildContext context,
@@ -240,15 +230,24 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
     required ValueChanged<String?> onChanged,
     String? Function(String?)? validator,
   }) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final foreground = dark ? Colors.white : const Color(0xFF0B1F3B);
-
     return DropdownButtonFormField<String>(
+      key: ValueKey('$label:$value'),
       initialValue: value,
-      dropdownColor: dark ? const Color(0xFF173A97) : Colors.white,
-      style: TextStyle(color: foreground),
+      isExpanded: true,
+      dropdownColor: const Color(0xFF0C1B31),
+      style: const TextStyle(color: AuthPalette.text),
+      iconEnabledColor: AuthPalette.muted,
       items: options
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .map(
+            (item) => DropdownMenuItem(
+              value: item,
+              child: Text(
+                item,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AuthPalette.text),
+              ),
+            ),
+          )
           .toList(),
       onChanged: onChanged,
       validator: validator,
@@ -256,22 +255,47 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
     );
   }
 
+  Widget _sectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(
+          color: AuthPalette.label,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 2.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _textField({
+    required TextEditingController controller,
+    required String label,
+    String? hint,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      validator: validator,
+      style: const TextStyle(color: AuthPalette.text),
+      cursorColor: AuthPalette.neonBlue,
+      decoration: authInputDecoration(
+        label: label,
+        hint: hint ?? label,
+        suffixIcon: suffixIcon,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final fg = dark ? Colors.white : const Color(0xFF0B1F3B);
-    final muted = dark ? const Color(0xFFA2B8E7) : const Color(0xFF6A769A);
-    final softBorder = dark ? const Color(0x556D90CF) : const Color(0xFFBFCBEA);
-    final action = dark ? const Color(0xFF4E83FF) : const Color(0xFF1D7BEA);
-    final primaryButton = dark
-        ? const Color(0xFF3D66E0)
-        : const Color(0xFF1D7BEA);
-    final panelBg = dark ? const Color(0x1AFFFFFF) : Colors.white;
-    final errorText = dark ? const Color(0xFFFF9FA6) : const Color(0xFFD64545);
-    final gradientColors = dark
-        ? const [Color(0xFF173A97), Color(0xFF0D1F70), Color(0xFF061754)]
-        : const [Color(0xFFF9FBFF), Color(0xFFF1F6FF), Color(0xFFEAF3FF)];
-
     const positionOptions = ['GK', 'CB', 'CM', 'ST', 'RW', 'LW'];
     const techOptions = ['Coach', 'Head Coach', 'Analyst', 'Prep Physique'];
     const medOptions = ['Docteur', 'Kine', 'Physiotherapeute'];
@@ -283,244 +307,230 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
     ];
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradientColors,
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -120,
-              left: -40,
-              right: -40,
-              child: Transform.rotate(
-                angle: -0.35,
-                child: Container(
-                  height: 240,
-                  color: dark
-                      ? const Color(0x222E58BF)
-                      : const Color(0x22BFD2F6),
+      backgroundColor: Colors.transparent,
+      body: AuthBackground(
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 26),
+              children: [
+                Row(
+                  children: [
+                    AuthCircleBackButton(onTap: widget.onShowLogin),
+                    const Spacer(),
+                  ],
                 ),
-              ),
-            ),
-            Positioned(
-              top: 40,
-              left: -80,
-              right: -80,
-              child: Transform.rotate(
-                angle: -0.35,
-                child: Container(
-                  height: 120,
-                  color: dark
-                      ? const Color(0x223E6BE8)
-                      : const Color(0x2292B4F7),
+                const SizedBox(height: 18),
+                const Text(
+                  'ANALYTICS PRO',
+                  style: TextStyle(
+                    color: AuthPalette.neonBlue,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 4,
+                  ),
                 ),
-              ),
-            ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(28, 22, 28, 18),
-                child: Form(
-                  key: _formKey,
-                  child: ListView(
+                const SizedBox(height: 18),
+                const Text(
+                  'Create Account',
+                  style: TextStyle(
+                    color: AuthPalette.text,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Join the ODIN analytics network and unlock AI-powered match insights for your club.',
+                  style: TextStyle(
+                    color: AuthPalette.muted,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                AuthGlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 26),
-                      Text(
-                        'Register',
-                        style: TextStyle(
-                          color: fg,
-                          fontSize: 48,
-                          fontWeight: FontWeight.w300,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                      _sectionTitle('Account Type'),
                       SegmentedButton<bool>(
                         showSelectedIcon: false,
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStatePropertyAll(
-                            dark ? const Color(0x221E3D96) : Colors.white,
-                          ),
-                          foregroundColor: WidgetStatePropertyAll(
-                            dark
-                                ? const Color(0xFFD2E0FF)
-                                : const Color(0xFF3C4B72),
-                          ),
-                          side: WidgetStatePropertyAll(
-                            BorderSide(color: softBorder),
-                          ),
-                        ),
                         segments: const [
-                          ButtonSegment(
-                            value: true,
-                            label: Text('Responsable Club'),
-                          ),
+                          ButtonSegment(value: true, label: Text('Club Owner')),
                           ButtonSegment(
                             value: false,
-                            label: Text('Autre role'),
+                            label: Text('Team Member'),
                           ),
                         ],
                         selected: {_responsableMode},
-                        onSelectionChanged: (set) {
-                          setState(() => _responsableMode = set.first);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: panelBg,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: softBorder),
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStateProperty.resolveWith((
+                            states,
+                          ) {
+                            if (states.contains(WidgetState.selected)) {
+                              return const Color(0xFF173157);
+                            }
+                            return const Color(0xFF09172A);
+                          }),
+                          foregroundColor: WidgetStateProperty.all(
+                            AuthPalette.text,
+                          ),
+                          side: WidgetStateProperty.all(
+                            const BorderSide(color: AuthPalette.border),
+                          ),
                         ),
-                        child: Row(
+                        onSelectionChanged: (set) =>
+                            setState(() => _responsableMode = set.first),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                AuthGlassCard(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFF11284B),
+                          border: Border.all(color: AuthPalette.borderStrong),
+                          image: _pickedPhotoBytes != null
+                              ? DecorationImage(
+                                  image: MemoryImage(_pickedPhotoBytes!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: _pickedPhotoBytes == null
+                            ? const Icon(
+                                Icons.person_rounded,
+                                color: AuthPalette.text,
+                                size: 36,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            CircleAvatar(
-                              radius: 34,
-                              backgroundColor: dark
-                                  ? const Color(0xFF244CBA)
-                                  : const Color(0xFF7CA4F0),
-                              backgroundImage: _pickedPhotoBytes != null
-                                  ? MemoryImage(_pickedPhotoBytes!)
-                                  : null,
-                              child: _pickedPhotoBytes == null
-                                  ? const Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                      size: 34,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Photo de profil',
-                                    style: TextStyle(
-                                      color: fg,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Obligatoire pour inscription',
-                                    style: TextStyle(
-                                      color: muted,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Wrap(
-                                    spacing: 8,
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: _pickPhoto,
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: fg,
-                                          side: BorderSide(color: softBorder),
-                                        ),
-                                        child: const Text('Choose image'),
-                                      ),
-                                      if (_pickedPhotoDataUrl != null)
-                                        TextButton(
-                                          onPressed: () => setState(() {
-                                            _pickedPhotoDataUrl = null;
-                                            _pickedPhotoBytes = null;
-                                          }),
-                                          child: Text(
-                                            'Remove',
-                                            style: TextStyle(color: action),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ],
+                            const Text(
+                              'Profile Photo',
+                              style: TextStyle(
+                                color: AuthPalette.text,
+                                fontWeight: FontWeight.w700,
                               ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Required for account verification',
+                              style: TextStyle(
+                                color: AuthPalette.muted,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                OutlinedButton(
+                                  onPressed: _pickPhoto,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AuthPalette.text,
+                                    side: const BorderSide(
+                                      color: AuthPalette.border,
+                                    ),
+                                    backgroundColor: const Color(0x22101E36),
+                                  ),
+                                  child: const Text('Choose image'),
+                                ),
+                                if (_pickedPhotoDataUrl != null)
+                                  TextButton(
+                                    onPressed: () => setState(() {
+                                      _pickedPhotoDataUrl = null;
+                                      _pickedPhotoBytes = null;
+                                    }),
+                                    child: const Text(
+                                      'Remove',
+                                      style: TextStyle(
+                                        color: AuthPalette.neonBlue,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                      if (_responsableMode) ...[
-                        const SizedBox(height: 10),
-                        TextFormField(
+                    ],
+                  ),
+                ),
+                if (_responsableMode) ...[
+                  const SizedBox(height: 14),
+                  AuthGlassCard(
+                    child: Column(
+                      children: [
+                        _sectionTitle('Club Information'),
+                        _textField(
                           controller: _clubName,
-                          style: TextStyle(color: fg),
-                          decoration: _inputDecoration(context, 'Nom du club'),
+                          label: 'Club Name',
                           validator: (v) => _requiredField(v, 'Nom du club'),
                         ),
-                        const SizedBox(height: 10),
-                        TextFormField(
+                        const SizedBox(height: 12),
+                        _textField(
                           controller: _league,
-                          style: TextStyle(color: fg),
-                          decoration: _inputDecoration(context, 'Ligue'),
+                          label: 'League',
                           validator: (v) => _requiredField(v, 'Ligue'),
                         ),
-                        const SizedBox(height: 10),
-                        TextFormField(
+                        const SizedBox(height: 12),
+                        _textField(
                           controller: _country,
-                          style: TextStyle(color: fg),
-                          decoration: _inputDecoration(
-                            context,
-                            'Pays (optionnel)',
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _city,
-                          style: TextStyle(color: fg),
-                          decoration: _inputDecoration(
-                            context,
-                            'Ville (optionnel)',
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _logo,
-                          style: TextStyle(color: fg),
-                          decoration: _inputDecoration(
-                            context,
-                            'Logo URL (optionnel)',
-                          ),
+                          label: 'Country (optional)',
                         ),
                         const SizedBox(height: 12),
-                        Divider(
-                          color: dark
-                              ? const Color(0x335A82CB)
-                              : const Color(0xFFCDD8EE),
+                        _textField(controller: _city, label: 'City (optional)'),
+                        const SizedBox(height: 12),
+                        _textField(
+                          controller: _logo,
+                          label: 'Logo URL (optional)',
                         ),
                       ],
-                      const SizedBox(height: 10),
-                      TextFormField(
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                AuthGlassCard(
+                  child: Column(
+                    children: [
+                      _sectionTitle('Personal Information'),
+                      _textField(
                         controller: _firstName,
-                        style: TextStyle(color: fg),
-                        decoration: _inputDecoration(context, 'Nom'),
+                        label: 'First Name',
                         validator: (v) => _requiredField(v, 'Nom'),
                       ),
-                      const SizedBox(height: 10),
-                      TextFormField(
+                      const SizedBox(height: 12),
+                      _textField(
                         controller: _lastName,
-                        style: TextStyle(color: fg),
-                        decoration: _inputDecoration(context, 'Prenom'),
+                        label: 'Last Name',
                         validator: (v) => _requiredField(v, 'Prenom'),
                       ),
-                      const SizedBox(height: 10),
-                      TextFormField(
+                      const SizedBox(height: 12),
+                      _textField(
                         controller: _phone,
-                        style: TextStyle(color: fg),
-                        decoration: _inputDecoration(context, 'Telephone'),
+                        label: 'Phone',
+                        keyboardType: TextInputType.phone,
                         validator: (v) => _requiredField(v, 'Telephone'),
                       ),
-                      const SizedBox(height: 10),
-                      TextFormField(
+                      const SizedBox(height: 12),
+                      _textField(
                         controller: _email,
+                        label: 'Email Address',
                         keyboardType: TextInputType.emailAddress,
-                        style: TextStyle(color: fg),
-                        decoration: _inputDecoration(context, 'Email'),
                         validator: (v) {
                           if (v == null || !v.contains('@')) {
                             return 'Email invalide';
@@ -528,26 +538,21 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 10),
-                      TextFormField(
+                      const SizedBox(height: 12),
+                      _textField(
                         controller: _password,
+                        label: 'Password',
                         obscureText: _hidePassword,
-                        style: TextStyle(color: fg),
-                        decoration: _inputDecoration(context, 'Password')
-                            .copyWith(
-                              suffixIcon: IconButton(
-                                onPressed: () => setState(
-                                  () => _hidePassword = !_hidePassword,
-                                ),
-                                icon: Icon(
-                                  _hidePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  color: muted,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
+                        suffixIcon: IconButton(
+                          onPressed: () =>
+                              setState(() => _hidePassword = !_hidePassword),
+                          icon: Icon(
+                            _hidePassword
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                            color: AuthPalette.muted,
+                          ),
+                        ),
                         validator: (v) {
                           if (v == null || v.length < 8) {
                             return 'Minimum 8 caracteres';
@@ -555,30 +560,22 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 10),
-                      TextFormField(
+                      const SizedBox(height: 12),
+                      _textField(
                         controller: _confirmPassword,
+                        label: 'Confirm Password',
                         obscureText: _hideConfirmPassword,
-                        style: TextStyle(color: fg),
-                        decoration:
-                            _inputDecoration(
-                              context,
-                              'Confirm Password',
-                            ).copyWith(
-                              suffixIcon: IconButton(
-                                onPressed: () => setState(
-                                  () => _hideConfirmPassword =
-                                      !_hideConfirmPassword,
-                                ),
-                                icon: Icon(
-                                  _hideConfirmPassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  color: muted,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(
+                            () => _hideConfirmPassword = !_hideConfirmPassword,
+                          ),
+                          icon: Icon(
+                            _hideConfirmPassword
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                            color: AuthPalette.muted,
+                          ),
+                        ),
                         validator: (v) {
                           if (v == null || v.isEmpty) {
                             return 'Confirmez le mot de passe';
@@ -586,8 +583,15 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
                           return null;
                         },
                       ),
-                      if (!_responsableMode) ...[
-                        const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+                if (!_responsableMode) ...[
+                  const SizedBox(height: 14),
+                  AuthGlassCard(
+                    child: Column(
+                      children: [
+                        _sectionTitle('Role & Team Assignment'),
                         _dropdownField(
                           context: context,
                           label: 'Role',
@@ -599,30 +603,37 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
                             _jobTitle = null;
                           }),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
+                          key: ValueKey('club:$_clubId:${_activeClubs.length}'),
                           initialValue: _clubId,
-                          dropdownColor: dark
-                              ? const Color(0xFF173A97)
-                              : Colors.white,
-                          style: TextStyle(color: fg),
+                          isExpanded: true,
+                          dropdownColor: const Color(0xFF0C1B31),
+                          iconEnabledColor: AuthPalette.muted,
+                          style: const TextStyle(color: AuthPalette.text),
                           items: _activeClubs
                               .map(
                                 (club) => DropdownMenuItem(
                                   value: club.id,
-                                  child: Text('${club.name} (${club.league})'),
+                                  child: Text(
+                                    '${club.name} (${club.league})',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: AuthPalette.text,
+                                    ),
+                                  ),
                                 ),
                               )
                               .toList(),
                           onChanged: (value) => setState(() => _clubId = value),
-                          decoration: _inputDecoration(context, 'Club'),
                           validator: (v) => _requiredField(v, 'Club'),
+                          decoration: _inputDecoration(context, 'Club'),
                         ),
                         if (_role == 'JOUEUR') ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           _dropdownField(
                             context: context,
-                            label: 'Position de jeu',
+                            label: 'Position',
                             value: _position,
                             options: positionOptions,
                             onChanged: (value) =>
@@ -631,10 +642,10 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
                           ),
                         ],
                         if (_role == 'STAFF_TECHNIQUE') ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           _dropdownField(
                             context: context,
-                            label: 'Poste technique',
+                            label: 'Technical Role',
                             value: _jobTitle,
                             options: techOptions,
                             onChanged: (value) =>
@@ -644,10 +655,10 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
                           ),
                         ],
                         if (_role == 'STAFF_MEDICAL') ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           _dropdownField(
                             context: context,
-                            label: 'Poste medical',
+                            label: 'Medical Role',
                             value: _jobTitle,
                             options: medOptions,
                             onChanged: (value) =>
@@ -657,51 +668,110 @@ class _RegisterMobilePageState extends State<RegisterMobilePage> {
                           ),
                         ],
                       ],
-                      if (_error != null) ...[
-                        const SizedBox(height: 10),
-                        Text(_error!, style: TextStyle(color: errorText)),
-                      ],
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: _loading ? null : _submit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: primaryButton,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                AuthGlassCard(
+                  child: Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: Checkbox(
+                              value: _acceptTerms,
+                              onChanged: (v) =>
+                                  setState(() => _acceptTerms = v ?? false),
+                              shape: const CircleBorder(),
+                              side: const BorderSide(
+                                color: AuthPalette.borderStrong,
+                              ),
+                              fillColor: WidgetStateProperty.resolveWith((
+                                states,
+                              ) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return AuthPalette.electric;
+                                }
+                                return Colors.transparent;
+                              }),
                             ),
                           ),
-                          child: Text(_loading ? 'Envoi...' : 'Register'),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Existing user? ',
-                            style: TextStyle(color: muted),
-                          ),
-                          GestureDetector(
-                            onTap: widget.onShowLogin,
-                            child: Text(
-                              'Login',
-                              style: TextStyle(
-                                color: action,
-                                fontWeight: FontWeight.w600,
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text.rich(
+                              TextSpan(
+                                text: 'I agree to the ',
+                                style: TextStyle(color: AuthPalette.muted),
+                                children: [
+                                  TextSpan(
+                                    text: 'Terms of Service',
+                                    style: TextStyle(
+                                      color: AuthPalette.electric,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  TextSpan(text: ' and '),
+                                  TextSpan(
+                                    text: 'Privacy Policy',
+                                    style: TextStyle(
+                                      color: AuthPalette.electric,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  TextSpan(text: '.'),
+                                ],
                               ),
                             ),
                           ),
                         ],
                       ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          _error!,
+                          style: const TextStyle(color: AuthPalette.danger),
+                        ),
+                      ],
+                      const SizedBox(height: 14),
+                      AuthPrimaryButton(
+                        label: 'Sign Up',
+                        loading: _loading,
+                        icon: Icons.arrow_forward_rounded,
+                        onPressed: _submit,
+                      ),
                     ],
                   ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                const AuthDividerLabel(label: 'OR REGISTER WITH'),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AuthSocialButton(label: 'Google', onTap: () {}),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AuthSocialButton(label: 'Apple', onTap: () {}),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AuthSocialButton(label: 'Club SSO', onTap: () {}),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+                AuthLinkText(
+                  prefix: 'Already have an account? ',
+                  link: 'Log In',
+                  onTap: widget.onShowLogin,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

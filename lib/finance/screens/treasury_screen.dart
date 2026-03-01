@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/finance_models.dart';
 import '../services/finance_store.dart';
 import '../theme/finance_theme.dart';
+import '../widgets/finance_form_widgets.dart';
 import '../widgets/finance_widgets.dart';
 
 class TreasuryScreen extends StatelessWidget {
@@ -73,72 +74,78 @@ class TreasuryScreen extends StatelessWidget {
     );
     bool connected = current?.connected ?? true;
 
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              title: Text(current == null ? 'Add Account' : 'Edit Account'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
+            return FinanceFormSheet(
+              title: current == null ? 'Ajouter compte' : 'Modifier compte',
+              onSave: () {
+                final balance =
+                    double.tryParse(balanceController.text.trim()) ?? 0;
+                if (current == null) {
+                  store.addAccount(
+                    nameController.text.trim(),
+                    codeController.text.trim(),
+                    balance,
+                    connected,
+                  );
+                } else {
+                  store.updateAccount(
+                    current.id,
+                    nameController.text.trim(),
+                    codeController.text.trim(),
+                    balance,
+                    connected,
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                  const FinanceSectionHeader(
+                    icon: Icons.info_outline_rounded,
+                    label: 'INFORMATIONS DE BASE',
                   ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: codeController,
-                    decoration: const InputDecoration(labelText: 'Code'),
+                  const SizedBox(height: 12),
+                  FinanceTextField(label: 'Name', controller: nameController),
+                  const SizedBox(height: 12),
+                  FinanceTextField(label: 'Code', controller: codeController),
+                  const SizedBox(height: 20),
+                  const FinanceSectionHeader(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: 'DONNEES FINANCIERES',
                   ),
-                  const SizedBox(height: 8),
-                  TextField(
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Balance',
                     controller: balanceController,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(labelText: 'Balance'),
+                    suffix: const Text('DT'),
                   ),
-                  const SizedBox(height: 8),
-                  SwitchListTile(
-                    value: connected,
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Connected'),
-                    onChanged: (value) => setState(() => connected = value),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: FinancePalette.soft,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: SwitchListTile(
+                      value: connected,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
+                      title: const Text('Connected'),
+                      onChanged: (value) => setState(() => connected = value),
+                    ),
                   ),
                 ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    final balance =
-                        double.tryParse(balanceController.text.trim()) ?? 0;
-                    if (current == null) {
-                      store.addAccount(
-                        nameController.text.trim(),
-                        codeController.text.trim(),
-                        balance,
-                        connected,
-                      );
-                    } else {
-                      store.updateAccount(
-                        current.id,
-                        nameController.text.trim(),
-                        codeController.text.trim(),
-                        balance,
-                        connected,
-                      );
-                    }
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
             );
           },
         );
@@ -187,7 +194,7 @@ class _AccountCard extends StatelessWidget {
           Text(
             formatCompactMoney(
               account.balance,
-              symbol: account.code.contains('€') ? '€' : r'$',
+              symbol: 'DT',
             ),
             style: Theme.of(
               context,

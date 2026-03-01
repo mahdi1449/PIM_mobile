@@ -1,9 +1,6 @@
-# odin
+# odinclub
 
-Flutter mobile app + backend workspace.
-
-- Mobile app source: root project (`lib/`, `android/`, `ios/`...).
-- Backend API source: [`odin_backend`](./odin_backend) (NestJS + MongoDB).
+A new Flutter project.
 
 ## Getting Started
 

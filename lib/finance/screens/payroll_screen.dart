@@ -1,12 +1,70 @@
 import 'package:flutter/material.dart';
 
+import '../../ui/shell/app_shell.dart';
+import '../../user_management/api/user_management_api.dart';
+import '../../user_management/models/user_management_models.dart';
 import '../models/finance_models.dart';
 import '../services/finance_store.dart';
 import '../theme/finance_theme.dart';
+import '../widgets/finance_form_widgets.dart';
 import '../widgets/finance_widgets.dart';
 
-class PayrollScreen extends StatelessWidget {
+class PayrollScreen extends StatefulWidget {
   const PayrollScreen({super.key});
+
+  @override
+  State<PayrollScreen> createState() => _PayrollScreenState();
+}
+
+class _PayrollScreenState extends State<PayrollScreen> {
+  final UserManagementApi _userApi = UserManagementApi();
+  List<UserModel> _employees = [];
+  bool _loadingEmployees = false;
+  String? _employeeError;
+  bool _didLoadEmployees = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didLoadEmployees) {
+      _didLoadEmployees = true;
+      _loadEmployees();
+    }
+  }
+
+  Future<void> _loadEmployees() async {
+    final shell = AppShellScope.of(context);
+    final session = shell?.session;
+    final token = session?.token ?? '';
+    if (token.isEmpty) return;
+
+    setState(() {
+      _loadingEmployees = true;
+      _employeeError = null;
+    });
+
+    try {
+      final users = await _userApi.getUsers(token);
+      final filtered = users.where((user) {
+        final sameClub =
+            session?.clubId == null || user.clubId == session!.clubId;
+        final active = user.status.toUpperCase() == 'ACTIVE';
+        return sameClub && active;
+      }).toList();
+
+      filtered.sort((a, b) => a.fullName.compareTo(b.fullName));
+
+      if (!mounted) return;
+      setState(() => _employees = filtered);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _employeeError = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _loadingEmployees = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +87,8 @@ class PayrollScreen extends StatelessWidget {
                   ),
                 ),
                 FilledButton(
-                  onPressed: () => _openSalaryDialog(context, store),
+                  onPressed: () =>
+                      _openSalaryDialog(context, store, _employees),
                   style: FilledButton.styleFrom(
                     backgroundColor: FinancePalette.blue,
                   ),
@@ -82,7 +141,7 @@ class PayrollScreen extends StatelessWidget {
                 Expanded(
                   child: MetricTile(
                     label: 'Total net a payer',
-                    value: formatCompactMoney(totalNet, symbol: '€'),
+                    value: formatCompactMoney(totalNet, symbol: 'DT'),
                     icon: Icons.payments_rounded,
                   ),
                 ),
@@ -102,8 +161,12 @@ class PayrollScreen extends StatelessWidget {
                   ...store.salaries.map(
                     (salary) => _PayrollRow(
                       salary: salary,
-                      onEdit: () =>
-                          _openSalaryDialog(context, store, current: salary),
+                      onEdit: () => _openSalaryDialog(
+                        context,
+                        store,
+                        _employees,
+                        current: salary,
+                      ),
                       onDelete: () => store.deleteSalary(salary.id),
                       onMarkPaid: () => store.markSalaryPaid(salary.id),
                       onPayslip: () {
@@ -142,7 +205,7 @@ class PayrollScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            formatCompactMoney(history.amount, symbol: '€'),
+                            formatCompactMoney(history.amount, symbol: 'DT'),
                             style: TextStyle(
                               color: FinancePalette.success,
                               fontWeight: FontWeight.w700,
@@ -163,7 +226,8 @@ class PayrollScreen extends StatelessWidget {
 
   Future<void> _openSalaryDialog(
     BuildContext context,
-    FinanceStore store, {
+    FinanceStore store,
+    List<UserModel> employees, {
     SalaryRecord? current,
   }) async {
     final employee = TextEditingController(text: current?.employee ?? '');
@@ -195,180 +259,219 @@ class PayrollScreen extends StatelessWidget {
       text: current != null ? current.taxes.toStringAsFixed(0) : '0',
     );
     String status = current?.status ?? 'READY';
+    UserModel? selectedUser;
+    if (current != null) {
+      selectedUser = employees.cast<UserModel?>().firstWhere(
+            (u) => u?.fullName == current.employee,
+            orElse: () => null,
+          );
+      if (selectedUser != null) {
+        employee.text = selectedUser.fullName;
+        role.text = selectedUser.role;
+      }
+    }
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              title: Text(
-                current == null ? 'Ajouter fiche paie' : 'Modifier fiche paie',
-              ),
-              content: SizedBox(
-                width: 560,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: employee,
-                        decoration: const InputDecoration(labelText: 'Employe'),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: role,
-                        decoration: const InputDecoration(labelText: 'Role'),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: fixedSalary,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Salaire fixe',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: matchBonus,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Prime match',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: performanceBonus,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Prime performance',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: signingBonus,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Prime signature',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: penalties,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Penalites/amendes',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: benefits,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Avantages (voiture/logement)',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: socialContributions,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Cotisations sociales',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: taxes,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(labelText: 'Impots'),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        initialValue: status,
-                        items: const ['READY', 'PAID']
-                            .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)),
-                            )
-                            .toList(),
-                        onChanged: (value) =>
-                            setState(() => status = value ?? status),
-                        decoration: const InputDecoration(labelText: 'Status'),
-                      ),
-                    ],
+            return FinanceFormSheet(
+              title: current == null
+                  ? 'Ajouter fiche paie'
+                  : 'Modifier fiche paie',
+              onSave: () {
+                final fixed = double.tryParse(fixedSalary.text.trim()) ?? 0;
+                final match = double.tryParse(matchBonus.text.trim()) ?? 0;
+                final performance =
+                    double.tryParse(performanceBonus.text.trim()) ?? 0;
+                final signing = double.tryParse(signingBonus.text.trim()) ?? 0;
+                final penalty = double.tryParse(penalties.text.trim()) ?? 0;
+                final benefit = double.tryParse(benefits.text.trim()) ?? 0;
+                final social =
+                    double.tryParse(socialContributions.text.trim()) ?? 0;
+                final tax = double.tryParse(taxes.text.trim()) ?? 0;
+
+                if (current == null) {
+                  store.addSalary(
+                    employee.text.trim(),
+                    role.text.trim(),
+                    fixed,
+                    match,
+                    performance,
+                    signing,
+                    penalty,
+                    benefit,
+                    social,
+                    tax,
+                    status,
+                  );
+                } else {
+                  store.updateSalary(
+                    current.id,
+                    employee.text.trim(),
+                    role.text.trim(),
+                    fixed,
+                    match,
+                    performance,
+                    signing,
+                    penalty,
+                    benefit,
+                    social,
+                    tax,
+                    status,
+                  );
+                }
+
+                Navigator.pop(context);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FinanceSectionHeader(
+                    icon: Icons.info_outline_rounded,
+                    label: 'INFORMATIONS DE BASE',
                   ),
-                ),
+                  if (_employeeError != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Impossible de charger les employes: $_employeeError',
+                      style: TextStyle(
+                        color: FinancePalette.danger,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  if (_loadingEmployees)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (employees.isEmpty)
+                    FinanceTextField(
+                      label: 'Employe',
+                      controller: employee,
+                      hint: 'Nom complet',
+                    )
+                  else
+                    FinanceDropdownField(
+                      label: 'Employe',
+                      value: selectedUser?.id,
+                      menuItems: employees
+                          .map(
+                            (user) => DropdownMenuItem(
+                              value: user.id,
+                              child: Text('${user.fullName} • ${user.role}'),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        final user = employees.firstWhere(
+                          (u) => u.id == value,
+                          orElse: () => employees.first,
+                        );
+                        setState(() {
+                          selectedUser = user;
+                          employee.text = user.fullName;
+                          role.text = user.role;
+                        });
+                      },
+                    ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Role',
+                    controller: role,
+                    readOnly: true,
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceDropdownField(
+                    label: 'Status',
+                    value: status,
+                    items: const ['READY', 'PAID'],
+                    onChanged: (value) => setState(() => status = value),
+                  ),
+                  const SizedBox(height: 20),
+                  const FinanceSectionHeader(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: 'DONNEES FINANCIERES',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Salaire fixe',
+                    controller: fixedSalary,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Prime match',
+                    controller: matchBonus,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Prime performance',
+                    controller: performanceBonus,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Prime signature',
+                    controller: signingBonus,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Penalites/amendes',
+                    controller: penalties,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Avantages (voiture/logement)',
+                    controller: benefits,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Cotisations sociales',
+                    controller: socialContributions,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Impots',
+                    controller: taxes,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    final fixed = double.tryParse(fixedSalary.text.trim()) ?? 0;
-                    final match = double.tryParse(matchBonus.text.trim()) ?? 0;
-                    final performance =
-                        double.tryParse(performanceBonus.text.trim()) ?? 0;
-                    final signing =
-                        double.tryParse(signingBonus.text.trim()) ?? 0;
-                    final penalty = double.tryParse(penalties.text.trim()) ?? 0;
-                    final benefit = double.tryParse(benefits.text.trim()) ?? 0;
-                    final social =
-                        double.tryParse(socialContributions.text.trim()) ?? 0;
-                    final tax = double.tryParse(taxes.text.trim()) ?? 0;
-
-                    if (current == null) {
-                      store.addSalary(
-                        employee.text.trim(),
-                        role.text.trim(),
-                        fixed,
-                        match,
-                        performance,
-                        signing,
-                        penalty,
-                        benefit,
-                        social,
-                        tax,
-                        status,
-                      );
-                    } else {
-                      store.updateSalary(
-                        current.id,
-                        employee.text.trim(),
-                        role.text.trim(),
-                        fixed,
-                        match,
-                        performance,
-                        signing,
-                        penalty,
-                        benefit,
-                        social,
-                        tax,
-                        status,
-                      );
-                    }
-
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
             );
           },
         );
@@ -453,26 +556,26 @@ class _PayrollRow extends StatelessWidget {
             runSpacing: 4,
             children: [
               Text(
-                'Fixe ${formatCompactMoney(salary.fixedSalary, symbol: '€')}',
+                'Fixe ${formatCompactMoney(salary.fixedSalary, symbol: 'DT')}',
               ),
               Text(
-                'Primes ${formatCompactMoney(salary.matchBonus + salary.performanceBonus + salary.signingBonus, symbol: '€')}',
+                'Primes ${formatCompactMoney(salary.matchBonus + salary.performanceBonus + salary.signingBonus, symbol: 'DT')}',
               ),
               Text(
-                'Penalites ${formatCompactMoney(salary.penalties, symbol: '€')}',
+                'Penalites ${formatCompactMoney(salary.penalties, symbol: 'DT')}',
               ),
               Text(
-                'Avantages ${formatCompactMoney(salary.benefits, symbol: '€')}',
+                'Avantages ${formatCompactMoney(salary.benefits, symbol: 'DT')}',
               ),
               Text(
-                'Cotisations ${formatCompactMoney(salary.socialContributions, symbol: '€')}',
+                'Cotisations ${formatCompactMoney(salary.socialContributions, symbol: 'DT')}',
               ),
-              Text('Impots ${formatCompactMoney(salary.taxes, symbol: '€')}'),
+              Text('Impots ${formatCompactMoney(salary.taxes, symbol: 'DT')}'),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            'Net a payer: ${formatCompactMoney(salary.netToPay, symbol: '€')}',
+            'Net a payer: ${formatCompactMoney(salary.netToPay, symbol: 'DT')}',
             style: TextStyle(
               fontWeight: FontWeight.w800,
               color: FinancePalette.blue,

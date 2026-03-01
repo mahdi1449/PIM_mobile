@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../ui/theme/app_colors.dart';
+import '../../ui/theme/app_text.dart';
 
 class FinancePalette {
   static bool _dark = true;
@@ -9,25 +11,17 @@ class FinancePalette {
 
   static bool get isDark => _dark;
 
-  static Color get navy =>
-      _dark ? const Color(0xFF050B2D) : const Color(0xFF022946);
-  static Color get blue =>
-      _dark ? const Color(0xFF2F53FF) : const Color(0xFF0A4977);
-  static Color get cyan =>
-      _dark ? const Color(0xFF6CC4FF) : const Color(0xFF6CC4FF);
-  static Color get ink =>
-      _dark ? const Color(0xFFE9EEFF) : const Color(0xFF0F172A);
-  static Color get soft =>
-      _dark ? const Color(0xFF1A2454) : const Color(0xFFF2F6FB);
-  static Color get card =>
-      _dark ? const Color(0xFF121A43) : const Color(0xFFFFFFFF);
-  static Color get success => const Color(0xFF1FA971);
-  static Color get danger => const Color(0xFFE7426C);
-  static Color get warning => const Color(0xFFFFA726);
-  static Color get scaffold =>
-      _dark ? const Color(0xFF070E33) : const Color(0xFFF2F6FB);
-  static Color get muted =>
-      _dark ? const Color(0xFFAAB5DA) : const Color(0xFF5E6C92);
+  static Color get navy => _dark ? AppColors.darkBackground : AppColors.background;
+  static Color get blue => _dark ? AppColors.primaryLight : AppColors.primary;
+  static Color get cyan => AppColors.accent;
+  static Color get ink => _dark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+  static Color get soft => _dark ? AppColors.darkSurfaceAlt : AppColors.surfaceAlt;
+  static Color get card => _dark ? AppColors.darkSurface : AppColors.surface;
+  static Color get success => AppColors.success;
+  static Color get danger => AppColors.danger;
+  static Color get warning => AppColors.warning;
+  static Color get scaffold => _dark ? AppColors.darkBackground : AppColors.background;
+  static Color get muted => _dark ? AppColors.darkTextSecondary : AppColors.textSecondary;
 }
 
 ThemeData buildFinanceLightTheme() {
@@ -70,10 +64,9 @@ ThemeData _buildFinanceTheme({required Brightness brightness}) {
       onPrimary: Colors.white,
       onSurface: FinancePalette.ink,
     ),
-    textTheme: base.apply(
+    textTheme: AppText.themed(base, isDark: brightness == Brightness.dark).apply(
       bodyColor: FinancePalette.ink,
       displayColor: FinancePalette.ink,
-      fontFamily: 'Poppins',
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,

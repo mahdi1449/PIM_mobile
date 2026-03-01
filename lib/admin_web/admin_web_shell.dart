@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:odin/user_management/api/user_management_api.dart';
-import 'package:odin/user_management/models/user_management_models.dart';
+import 'package:odinclub/user_management/api/user_management_api.dart';
+import 'package:odinclub/user_management/models/user_management_models.dart';
 
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/admin_login_screen.dart';

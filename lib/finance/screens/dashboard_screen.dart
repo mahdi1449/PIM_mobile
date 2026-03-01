@@ -46,14 +46,14 @@ class DashboardScreen extends StatelessWidget {
               children: [
                 MetricTile(
                   label: 'Total Cash',
-                  value: formatCompactMoney(totalCash, symbol: '€'),
+                  value: formatCompactMoney(totalCash, symbol: 'DT'),
                   icon: Icons.account_balance_wallet_outlined,
                 ),
                 MetricTile(
                   label: 'Revenus (Actual)',
                   value: formatCompactMoney(
                     store.totalRevenueActual,
-                    symbol: '€',
+                    symbol: 'DT',
                   ),
                   delta: '${store.revenues.length} lignes',
                   icon: Icons.trending_up_rounded,
@@ -62,7 +62,7 @@ class DashboardScreen extends StatelessWidget {
                   label: 'Paie (Net)',
                   value: formatCompactMoney(
                     store.totalSalaryExpense,
-                    symbol: '€',
+                    symbol: 'DT',
                   ),
                   delta: '${store.salaries.length} fiches',
                   positive: false,
@@ -72,7 +72,7 @@ class DashboardScreen extends StatelessWidget {
                   label: 'Exposition transferts',
                   value: formatCompactMoney(
                     store.totalTransferExposure,
-                    symbol: '€',
+                    symbol: 'DT',
                   ),
                   positive: false,
                   icon: Icons.swap_horiz_rounded,
@@ -96,7 +96,7 @@ class DashboardScreen extends StatelessWidget {
                           label: '${revenue.title} (${revenue.category})',
                           type: '${revenue.season} • ${revenue.competition}',
                           amount:
-                              '+${formatCompactMoney(revenue.actualAmount, symbol: '€')}',
+                              '+${formatCompactMoney(revenue.actualAmount, symbol: 'DT')}',
                           positive: true,
                         ),
                       ),
@@ -120,7 +120,7 @@ class DashboardScreen extends StatelessWidget {
                           label: '${expense.title} (${expense.category})',
                           type: expense.status,
                           amount:
-                              '-${formatCompactMoney(expense.amount, symbol: '€')}',
+                              '-${formatCompactMoney(expense.amount, symbol: 'DT')}',
                           positive: false,
                         ),
                       ),

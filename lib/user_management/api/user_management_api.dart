@@ -1,8 +1,9 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import '../../communication/models/communication_models.dart';
+import '../../config/app_config.dart';
 import '../models/user_management_models.dart';
 
 class UserManagementApi {
@@ -11,11 +12,11 @@ class UserManagementApi {
   final http.Client _client;
 
   String get _baseUrl {
-    const env = String.fromEnvironment('API_BASE_URL');
-    if (env.isNotEmpty) {
-      return env;
-    }
-    return kIsWeb ? 'http://localhost:3001/api' : 'http://10.0.2.2:3001/api';
+    return AppConfig.apiBaseUrl;
+  }
+
+  Uri _buildUri(String path, [Map<String, String>? query]) {
+    return Uri.parse('$_baseUrl$path').replace(queryParameters: query);
   }
 
   Future<Map<String, dynamic>> _post(
@@ -69,7 +70,7 @@ class UserManagementApi {
 
   Future<List<dynamic>> _getList(String path, {String? token}) async {
     final response = await _client.get(
-      Uri.parse('$_baseUrl$path'),
+      _buildUri(path),
       headers: {
         'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
@@ -85,6 +86,22 @@ class UserManagementApi {
     }
 
     throw Exception(_extractError(response));
+  }
+
+  Future<Map<String, dynamic>> _getObject(
+    String path, {
+    String? token,
+    Map<String, String>? query,
+  }) async {
+    final response = await _client.get(
+      _buildUri(path, query),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+
+    return _decode(response);
   }
 
   Map<String, dynamic> _decode(http.Response response) {
@@ -125,6 +142,7 @@ class UserManagementApi {
       email: (user['email'] ?? '').toString(),
       status: (user['status'] ?? '').toString(),
       clubId: user['clubId']?.toString(),
+      clubName: user['clubName']?.toString(),
       firstName: user['firstName']?.toString(),
       lastName: user['lastName']?.toString(),
       photoUrl: user['photoUrl']?.toString(),
@@ -214,5 +232,306 @@ class UserManagementApi {
         .whereType<Map<String, dynamic>>()
         .map(UserModel.fromJson)
         .toList();
+  }
+
+  Future<List<ChatUserModel>> getChatUsers(
+    String token, {
+    String? search,
+  }) async {
+    final response = await _client.get(
+      _buildUri('/chat/users', {
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final decoded = _decodeDynamic(response);
+    if (decoded is! List) {
+      return [];
+    }
+
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map(ChatUserModel.fromJson)
+        .toList();
+  }
+
+  Future<List<ConversationModel>> getConversations(
+    String token, {
+    String? search,
+    int page = 1,
+    int limit = 30,
+  }) async {
+    final data = await _getObject(
+      '/chat/conversations',
+      token: token,
+      query: {
+        'page': '$page',
+        'limit': '$limit',
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+      },
+    );
+
+    final items = (data['items'] as List<dynamic>? ?? const []);
+    return items
+        .whereType<Map<String, dynamic>>()
+        .map(ConversationModel.fromJson)
+        .toList();
+  }
+
+  Future<ConversationModel> createDirectConversation(
+    String token,
+    String targetUserId,
+  ) async {
+    final data = await _post('/chat/conversations/direct', {
+      'targetUserId': targetUserId,
+    }, token: token);
+    return ConversationModel.fromJson(data);
+  }
+
+  Future<List<ChatMessageModel>> getMessages(
+    String token,
+    String conversationId, {
+    int limit = 40,
+    DateTime? before,
+  }) async {
+    final data = await _getObject(
+      '/chat/conversations/$conversationId/messages',
+      token: token,
+      query: {
+        'limit': '$limit',
+        if (before != null) 'before': before.toIso8601String(),
+      },
+    );
+
+    final items = (data['items'] as List<dynamic>? ?? const []);
+    return items
+        .whereType<Map<String, dynamic>>()
+        .map(ChatMessageModel.fromJson)
+        .toList();
+  }
+
+  Future<ChatMessageModel> sendChatMessage({
+    required String token,
+    required String conversationId,
+    String? text,
+    UploadedDocumentModel? file,
+    Map<String, dynamic>? metadata,
+  }) async {
+    final payload = <String, dynamic>{
+      if (text != null && text.trim().isNotEmpty) 'text': text.trim(),
+      if (file != null) 'file': file.toJson(),
+      if (metadata != null) 'metadata': metadata,
+    };
+    final data = await _post(
+      '/chat/conversations/$conversationId/messages',
+      payload,
+      token: token,
+    );
+    return ChatMessageModel.fromJson(data);
+  }
+
+  Future<void> deleteChatMessage({
+    required String token,
+    required String messageId,
+    required String scope,
+  }) async {
+    final response = await _client.delete(
+      _buildUri('/chat/messages/$messageId', {'scope': scope}),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    _decode(response);
+  }
+
+  Future<void> sendAnnouncement({
+    required String token,
+    required String title,
+    required String text,
+    List<String>? targetUserIds,
+    List<String>? targetRoles,
+  }) async {
+    await _post('/chat/announcements', {
+      'title': title,
+      'text': text,
+      if (targetUserIds != null && targetUserIds.isNotEmpty)
+        'targetUserIds': targetUserIds,
+      if (targetRoles != null && targetRoles.isNotEmpty)
+        'targetRoles': targetRoles,
+    }, token: token);
+  }
+
+  Future<List<NotificationModel>> getNotifications(
+    String token, {
+    bool unreadOnly = false,
+    String? type,
+    int limit = 80,
+  }) async {
+    final response = await _client.get(
+      _buildUri('/notifications', {
+        'unreadOnly': unreadOnly.toString(),
+        'limit': '$limit',
+        if (type != null && type.isNotEmpty) 'type': type,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    final decoded = _decodeDynamic(response);
+    if (decoded is! List) {
+      return [];
+    }
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map(NotificationModel.fromJson)
+        .toList();
+  }
+
+  Future<void> markNotificationsRead(
+    String token,
+    List<String> notificationIds,
+  ) async {
+    if (notificationIds.isEmpty) {
+      return;
+    }
+    await _post('/notifications/mark-read', {
+      'notificationIds': notificationIds,
+    }, token: token);
+  }
+
+  Future<void> deleteNotification(String token, String notificationId) async {
+    await _delete('/notifications/$notificationId', token: token);
+  }
+
+  Future<void> createEmergencyNotification({
+    required String token,
+    required String title,
+    required String body,
+    String severity = 'HIGH',
+    List<String>? targetUserIds,
+    List<String>? targetRoles,
+  }) async {
+    await _post('/notifications/emergency', {
+      'title': title,
+      'body': body,
+      'severity': severity,
+      if (targetUserIds != null && targetUserIds.isNotEmpty)
+        'targetUserIds': targetUserIds,
+      if (targetRoles != null && targetRoles.isNotEmpty)
+        'targetRoles': targetRoles,
+    }, token: token);
+  }
+
+  Future<void> createMedicalAlert({
+    required String token,
+    required String title,
+    required String body,
+    required List<String> targetPlayerIds,
+    String severity = 'MEDIUM',
+    bool includeCoaches = true,
+    bool includeResponsables = false,
+    bool confidential = true,
+  }) async {
+    await _post('/notifications/medical-alert', {
+      'title': title,
+      'body': body,
+      'severity': severity,
+      'targetPlayerIds': targetPlayerIds,
+      'includeCoaches': includeCoaches,
+      'includeResponsables': includeResponsables,
+      'confidential': confidential,
+    }, token: token);
+  }
+
+  Future<void> createTrainingReminder({
+    required String token,
+    required String title,
+    required String body,
+    required DateTime scheduleAt,
+    List<String>? targetUserIds,
+    List<String>? targetRoles,
+    String? trainingId,
+  }) async {
+    await _post('/notifications/training-reminder', {
+      'title': title,
+      'body': body,
+      'scheduleAt': scheduleAt.toIso8601String(),
+      if (trainingId != null && trainingId.isNotEmpty) 'trainingId': trainingId,
+      if (targetUserIds != null && targetUserIds.isNotEmpty)
+        'targetUserIds': targetUserIds,
+      if (targetRoles != null && targetRoles.isNotEmpty)
+        'targetRoles': targetRoles,
+    }, token: token);
+  }
+
+  Future<UploadedDocumentModel> uploadDocument({
+    required String token,
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    final request = http.MultipartRequest('POST', _buildUri('/uploads'))
+      ..headers['Authorization'] = 'Bearer $token'
+      ..files.add(
+        http.MultipartFile.fromBytes('file', bytes, filename: filename),
+      );
+
+    final streamed = await _client.send(request);
+    final response = await http.Response.fromStream(streamed);
+    final data = _decode(response);
+    return UploadedDocumentModel.fromJson(data);
+  }
+
+  Stream<Map<String, dynamic>> subscribeSse({
+    required String token,
+    required String path,
+  }) async* {
+    final request = http.Request('GET', _buildUri(path));
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+      'Accept': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+    });
+
+    final streamed = await _client.send(request);
+    if (streamed.statusCode < 200 || streamed.statusCode >= 300) {
+      throw Exception('Failed to open stream on $path');
+    }
+
+    await for (final line
+        in streamed.stream
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())) {
+      if (!line.startsWith('data:')) {
+        continue;
+      }
+      final raw = line.replaceFirst('data:', '').trim();
+      if (raw.isEmpty) {
+        continue;
+      }
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) {
+          yield decoded;
+        }
+      } catch (_) {
+        // ignore malformed stream lines
+      }
+    }
+  }
+
+  dynamic _decodeDynamic(http.Response response) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.trim().isEmpty) {
+        return null;
+      }
+      return jsonDecode(response.body);
+    }
+    throw Exception(_extractError(response));
   }
 }

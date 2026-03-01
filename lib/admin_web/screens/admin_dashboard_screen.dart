@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:odin/user_management/api/user_management_api.dart';
-import 'package:odin/user_management/models/user_management_models.dart';
+import 'package:odinclub/user_management/api/user_management_api.dart';
+import 'package:odinclub/user_management/models/user_management_models.dart';
 
 import '../theme/admin_theme.dart';
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/finance_models.dart';
 import '../services/finance_store.dart';
 import '../theme/finance_theme.dart';
+import '../widgets/finance_form_widgets.dart';
 import '../widgets/finance_widgets.dart';
 
 class AccountingScreen extends StatelessWidget {
@@ -136,14 +137,14 @@ class AccountingScreen extends StatelessWidget {
                           Expanded(flex: 2, child: Text(line.accountCode)),
                           Expanded(
                             child: Text(
-                              formatCompactMoney(line.debit, symbol: '€'),
+                              formatCompactMoney(line.debit, symbol: 'DT'),
                               textAlign: TextAlign.end,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              formatCompactMoney(line.credit, symbol: '€'),
+                              formatCompactMoney(line.credit, symbol: 'DT'),
                               textAlign: TextAlign.end,
                             ),
                           ),
@@ -160,7 +161,7 @@ class AccountingScreen extends StatelessWidget {
                 Expanded(
                   child: MetricTile(
                     label: 'Bilan - Actif',
-                    value: formatCompactMoney(store.totalAssets, symbol: '€'),
+                    value: formatCompactMoney(store.totalAssets, symbol: 'DT'),
                     icon: Icons.account_balance_outlined,
                   ),
                 ),
@@ -170,7 +171,7 @@ class AccountingScreen extends StatelessWidget {
                     label: 'Bilan - Passif',
                     value: formatCompactMoney(
                       store.totalLiabilitiesAndEquity,
-                      symbol: '€',
+                      symbol: 'DT',
                     ),
                     icon: Icons.balance_outlined,
                   ),
@@ -183,7 +184,7 @@ class AccountingScreen extends StatelessWidget {
                 Expanded(
                   child: MetricTile(
                     label: 'Compte resultat - Revenus',
-                    value: formatCompactMoney(store.pnlRevenue, symbol: '€'),
+                    value: formatCompactMoney(store.pnlRevenue, symbol: 'DT'),
                     icon: Icons.trending_up_rounded,
                   ),
                 ),
@@ -191,7 +192,7 @@ class AccountingScreen extends StatelessWidget {
                 Expanded(
                   child: MetricTile(
                     label: 'Compte resultat - Charges',
-                    value: formatCompactMoney(store.pnlExpenses, symbol: '€'),
+                    value: formatCompactMoney(store.pnlExpenses, symbol: 'DT'),
                     positive: false,
                     icon: Icons.trending_down_rounded,
                   ),
@@ -201,7 +202,7 @@ class AccountingScreen extends StatelessWidget {
             const SizedBox(height: 10),
             MetricTile(
               label: 'Resultat net',
-              value: formatCompactMoney(store.netResult, symbol: '€'),
+              value: formatCompactMoney(store.netResult, symbol: 'DT'),
               positive: store.netResult >= 0,
               icon: Icons.summarize_outlined,
             ),
@@ -238,97 +239,90 @@ class AccountingScreen extends StatelessWidget {
     String type = current?.type ?? 'ASSET';
     bool active = current?.active ?? true;
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              title: Text(
-                current == null ? 'Ajouter compte' : 'Modifier compte',
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: code,
-                      decoration: const InputDecoration(labelText: 'Code'),
+            return FinanceFormSheet(
+              title: current == null ? 'Ajouter compte' : 'Modifier compte',
+              onSave: () {
+                if (current == null) {
+                  store.addChartAccount(
+                    code.text.trim(),
+                    label.text.trim(),
+                    type,
+                    parentCode: parentCode.text.trim().isEmpty
+                        ? null
+                        : parentCode.text.trim(),
+                  );
+                } else {
+                  store.updateChartAccount(
+                    current.id,
+                    code.text.trim(),
+                    label.text.trim(),
+                    type,
+                    parentCode: parentCode.text.trim().isEmpty
+                        ? null
+                        : parentCode.text.trim(),
+                    active: active,
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FinanceSectionHeader(
+                    icon: Icons.info_outline_rounded,
+                    label: 'INFORMATIONS DE BASE',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(label: 'Code', controller: code),
+                  const SizedBox(height: 12),
+                  FinanceTextField(label: 'Libelle', controller: label),
+                  const SizedBox(height: 12),
+                  FinanceDropdownField(
+                    label: 'Type',
+                    value: type,
+                    items: const [
+                      'ASSET',
+                      'LIABILITY',
+                      'EQUITY',
+                      'REVENUE',
+                      'EXPENSE',
+                    ],
+                    onChanged: (value) => setState(() => type = value),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Parent code (optionnel)',
+                    controller: parentCode,
+                  ),
+                  const SizedBox(height: 20),
+                  const FinanceSectionHeader(
+                    icon: Icons.tune_rounded,
+                    label: 'PARAMETRES',
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: FinancePalette.soft,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: label,
-                      decoration: const InputDecoration(labelText: 'Libelle'),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue: type,
-                      items:
-                          const [
-                                'ASSET',
-                                'LIABILITY',
-                                'EQUITY',
-                                'REVENUE',
-                                'EXPENSE',
-                              ]
-                              .map(
-                                (v) =>
-                                    DropdownMenuItem(value: v, child: Text(v)),
-                              )
-                              .toList(),
-                      onChanged: (v) => type = v ?? type,
-                      decoration: const InputDecoration(labelText: 'Type'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: parentCode,
-                      decoration: const InputDecoration(
-                        labelText: 'Parent code (optionnel)',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SwitchListTile(
+                    child: SwitchListTile(
                       value: active,
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
                       title: const Text('Actif'),
                       onChanged: (v) => setState(() => active = v),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    if (current == null) {
-                      store.addChartAccount(
-                        code.text.trim(),
-                        label.text.trim(),
-                        type,
-                        parentCode: parentCode.text.trim().isEmpty
-                            ? null
-                            : parentCode.text.trim(),
-                      );
-                    } else {
-                      store.updateChartAccount(
-                        current.id,
-                        code.text.trim(),
-                        label.text.trim(),
-                        type,
-                        parentCode: parentCode.text.trim().isEmpty
-                            ? null
-                            : parentCode.text.trim(),
-                        active: active,
-                      );
-                    }
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
             );
           },
         );
@@ -355,119 +349,98 @@ class AccountingScreen extends StatelessWidget {
     String source = current?.source ?? 'MANUAL';
     String status = current?.status ?? 'DRAFT';
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              title: Text(
-                current == null ? 'Ajouter ecriture' : 'Modifier ecriture',
+            return FinanceFormSheet(
+              title: current == null ? 'Ajouter ecriture' : 'Modifier ecriture',
+              onSave: () {
+                final parsedAmount = double.tryParse(amount.text.trim()) ?? 0;
+                final parsedDate =
+                    _parseDate(date.text.trim()) ?? DateTime.now();
+                if (current == null) {
+                  store.addLedger(
+                    parsedDate,
+                    accountCode.text.trim(),
+                    description.text.trim(),
+                    parsedAmount,
+                    nature,
+                    source,
+                    status,
+                  );
+                } else {
+                  store.updateLedger(
+                    current.id,
+                    parsedDate,
+                    accountCode.text.trim(),
+                    description.text.trim(),
+                    parsedAmount,
+                    nature,
+                    source,
+                    status,
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FinanceSectionHeader(
+                    icon: Icons.info_outline_rounded,
+                    label: 'INFORMATIONS DE BASE',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Date (dd/MM/yyyy)',
+                    controller: date,
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(label: 'Compte', controller: accountCode),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Description',
+                    controller: description,
+                  ),
+                  const SizedBox(height: 20),
+                  const FinanceSectionHeader(
+                    icon: Icons.receipt_long_outlined,
+                    label: 'ECRITURE',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Montant',
+                    controller: amount,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceDropdownField(
+                    label: 'Nature',
+                    value: nature,
+                    items: const ['DEBIT', 'CREDIT'],
+                    onChanged: (value) => setState(() => nature = value),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceDropdownField(
+                    label: 'Source',
+                    value: source,
+                    items: const ['MANUAL', 'AUTO'],
+                    onChanged: (value) => setState(() => source = value),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceDropdownField(
+                    label: 'Status',
+                    value: status,
+                    items: const ['DRAFT', 'POSTED'],
+                    onChanged: (value) => setState(() => status = value),
+                  ),
+                ],
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: date,
-                      decoration: const InputDecoration(
-                        labelText: 'Date (dd/MM/yyyy)',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: accountCode,
-                      decoration: const InputDecoration(labelText: 'Compte'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: description,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: amount,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(labelText: 'Montant'),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue: nature,
-                      items: const ['DEBIT', 'CREDIT']
-                          .map(
-                            (v) => DropdownMenuItem(value: v, child: Text(v)),
-                          )
-                          .toList(),
-                      onChanged: (v) => nature = v ?? nature,
-                      decoration: const InputDecoration(labelText: 'Nature'),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue: source,
-                      items: const ['MANUAL', 'AUTO']
-                          .map(
-                            (v) => DropdownMenuItem(value: v, child: Text(v)),
-                          )
-                          .toList(),
-                      onChanged: (v) => source = v ?? source,
-                      decoration: const InputDecoration(labelText: 'Source'),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue: status,
-                      items: const ['DRAFT', 'POSTED']
-                          .map(
-                            (v) => DropdownMenuItem(value: v, child: Text(v)),
-                          )
-                          .toList(),
-                      onChanged: (v) => status = v ?? status,
-                      decoration: const InputDecoration(labelText: 'Status'),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    final parsedAmount =
-                        double.tryParse(amount.text.trim()) ?? 0;
-                    final parsedDate =
-                        _parseDate(date.text.trim()) ?? DateTime.now();
-                    if (current == null) {
-                      store.addLedger(
-                        parsedDate,
-                        accountCode.text.trim(),
-                        description.text.trim(),
-                        parsedAmount,
-                        nature,
-                        source,
-                        status,
-                      );
-                    } else {
-                      store.updateLedger(
-                        current.id,
-                        parsedDate,
-                        accountCode.text.trim(),
-                        description.text.trim(),
-                        parsedAmount,
-                        nature,
-                        source,
-                        status,
-                      );
-                    }
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
             );
           },
         );
@@ -592,7 +565,7 @@ class _LedgerRow extends StatelessWidget {
           Row(
             children: [
               Text(
-                formatCompactMoney(entry.amount, symbol: '€'),
+                formatCompactMoney(entry.amount, symbol: 'DT'),
                 style: TextStyle(
                   color: entry.nature == 'CREDIT'
                       ? FinancePalette.success

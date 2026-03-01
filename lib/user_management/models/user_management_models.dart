@@ -72,6 +72,7 @@ class SessionModel {
     required this.email,
     required this.status,
     required this.clubId,
+    this.clubName,
     this.firstName,
     this.lastName,
     this.photoUrl,
@@ -83,6 +84,7 @@ class SessionModel {
   final String email;
   final String status;
   final String? clubId;
+  final String? clubName;
   final String? firstName;
   final String? lastName;
   final String? photoUrl;

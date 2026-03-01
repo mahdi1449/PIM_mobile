@@ -247,14 +247,14 @@ class FinanceStore extends ChangeNotifier {
     TreasuryAccountItem(
       id: '50',
       name: 'Santander',
-      code: 'EUR •••• 8842',
+      code: 'TND •••• 8842',
       balance: 24500000,
       connected: true,
     ),
     TreasuryAccountItem(
       id: '51',
       name: 'BNP Paribas',
-      code: 'EUR •••• 1129',
+      code: 'TND •••• 1129',
       balance: 12100000,
       connected: true,
     ),

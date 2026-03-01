@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/finance_models.dart';
 import '../services/finance_store.dart';
 import '../theme/finance_theme.dart';
+import '../widgets/finance_form_widgets.dart';
 import '../widgets/finance_widgets.dart';
 
 class TransfersScreen extends StatelessWidget {
@@ -123,133 +124,115 @@ class TransfersScreen extends StatelessWidget {
     );
     String direction = current?.direction ?? 'IN';
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              title: Text(
-                current == null ? 'Ajouter transfert' : 'Modifier transfert',
-              ),
-              content: SizedBox(
-                width: 560,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: player,
-                        decoration: const InputDecoration(labelText: 'Joueur'),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        initialValue: direction,
-                        items: const ['IN', 'OUT']
-                            .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)),
-                            )
-                            .toList(),
-                        onChanged: (v) =>
-                            setState(() => direction = v ?? direction),
-                        decoration: const InputDecoration(
-                          labelText: 'Direction',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: totalFee,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Montant transfert',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: contractYears,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Duree contrat (annees)',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: resalePct,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: '% revente',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: conditionalBonus,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Bonus conditionnels',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: agentCommission,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Commission agent',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    final fee = double.tryParse(totalFee.text.trim()) ?? 0;
-                    final years = int.tryParse(contractYears.text.trim()) ?? 1;
-                    final resale = double.tryParse(resalePct.text.trim()) ?? 0;
-                    final bonus =
-                        double.tryParse(conditionalBonus.text.trim()) ?? 0;
-                    final commission =
-                        double.tryParse(agentCommission.text.trim()) ?? 0;
+            return FinanceFormSheet(
+              title: current == null
+                  ? 'Ajouter transfert'
+                  : 'Modifier transfert',
+              onSave: () {
+                final fee = double.tryParse(totalFee.text.trim()) ?? 0;
+                final years = int.tryParse(contractYears.text.trim()) ?? 1;
+                final resale = double.tryParse(resalePct.text.trim()) ?? 0;
+                final bonus =
+                    double.tryParse(conditionalBonus.text.trim()) ?? 0;
+                final commission =
+                    double.tryParse(agentCommission.text.trim()) ?? 0;
 
-                    if (current == null) {
-                      store.addTransfer(
-                        player.text.trim(),
-                        direction,
-                        fee,
-                        years,
-                        resale,
-                        bonus,
-                        commission,
-                      );
-                    } else {
-                      store.updateTransfer(
-                        current.id,
-                        player.text.trim(),
-                        direction,
-                        fee,
-                        years,
-                        resale,
-                        bonus,
-                        commission,
-                      );
-                    }
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
+                if (current == null) {
+                  store.addTransfer(
+                    player.text.trim(),
+                    direction,
+                    fee,
+                    years,
+                    resale,
+                    bonus,
+                    commission,
+                  );
+                } else {
+                  store.updateTransfer(
+                    current.id,
+                    player.text.trim(),
+                    direction,
+                    fee,
+                    years,
+                    resale,
+                    bonus,
+                    commission,
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FinanceSectionHeader(
+                    icon: Icons.info_outline_rounded,
+                    label: 'INFORMATIONS DE BASE',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(label: 'Joueur', controller: player),
+                  const SizedBox(height: 12),
+                  FinanceDropdownField(
+                    label: 'Direction',
+                    value: direction,
+                    items: const ['IN', 'OUT'],
+                    onChanged: (value) => setState(() => direction = value),
+                  ),
+                  const SizedBox(height: 20),
+                  const FinanceSectionHeader(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: 'DONNEES FINANCIERES',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Montant transfert',
+                    controller: totalFee,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Duree contrat (annees)',
+                    controller: contractYears,
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: '% revente',
+                    controller: resalePct,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('%'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Bonus conditionnels',
+                    controller: conditionalBonus,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Commission agent',
+                    controller: agentCommission,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -271,83 +254,88 @@ class TransfersScreen extends StatelessWidget {
     );
     bool receivable = false;
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Ajouter tranche'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      initialValue: transferId,
-                      items: store.transfers
-                          .map(
-                            (t) => DropdownMenuItem(
-                              value: t.id,
-                              child: Text(t.player),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) => setState(() => transferId = v),
-                      decoration: const InputDecoration(labelText: 'Transfert'),
+            return FinanceFormSheet(
+              title: 'Ajouter tranche',
+              onSave: () {
+                if (transferId == null) return;
+                final value = double.tryParse(amount.text.trim()) ?? 0;
+                final parsedDate =
+                    _parseDate(dueDate.text.trim()) ?? DateTime.now();
+                store.addTranche(
+                  transferId!,
+                  club.text.trim(),
+                  value,
+                  parsedDate,
+                  receivable,
+                );
+                Navigator.pop(context);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FinanceSectionHeader(
+                    icon: Icons.info_outline_rounded,
+                    label: 'INFORMATIONS DE BASE',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceDropdownField(
+                    label: 'Transfert',
+                    value: transferId,
+                    menuItems: store.transfers
+                        .map(
+                          (t) => DropdownMenuItem(
+                            value: t.id,
+                            child: Text(t.player),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => setState(() => transferId = value),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(label: 'Club', controller: club),
+                  const SizedBox(height: 20),
+                  const FinanceSectionHeader(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: 'DONNEES FINANCIERES',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Montant',
+                    controller: amount,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: club,
-                      decoration: const InputDecoration(labelText: 'Club'),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Echeance (dd/MM/yyyy)',
+                    controller: dueDate,
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: FinancePalette.soft,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: amount,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(labelText: 'Montant'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: dueDate,
-                      decoration: const InputDecoration(
-                        labelText: 'Echeance (dd/MM/yyyy)',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SwitchListTile(
+                    child: SwitchListTile(
                       value: receivable,
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
                       title: const Text('Recevable (entrant)'),
                       onChanged: (v) => setState(() => receivable = v),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    if (transferId == null) return;
-                    final value = double.tryParse(amount.text.trim()) ?? 0;
-                    final parsedDate =
-                        _parseDate(dueDate.text.trim()) ?? DateTime.now();
-                    store.addTranche(
-                      transferId!,
-                      club.text.trim(),
-                      value,
-                      parsedDate,
-                      receivable,
-                    );
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
             );
           },
         );
@@ -419,17 +407,17 @@ class _TransferRow extends StatelessWidget {
             runSpacing: 4,
             children: [
               Text(
-                'Montant ${formatCompactMoney(transfer.totalFee, symbol: '€')}',
+                'Montant ${formatCompactMoney(transfer.totalFee, symbol: 'DT')}',
               ),
               Text(
-                'Amortissement/an ${formatCompactMoney(transfer.annualAmortization, symbol: '€')}',
+                'Amortissement/an ${formatCompactMoney(transfer.annualAmortization, symbol: 'DT')}',
               ),
               Text('Revente ${transfer.resalePercentage.toStringAsFixed(1)}%'),
               Text(
-                'Bonus ${formatCompactMoney(transfer.conditionalBonus, symbol: '€')}',
+                'Bonus ${formatCompactMoney(transfer.conditionalBonus, symbol: 'DT')}',
               ),
               Text(
-                'Agent ${formatCompactMoney(transfer.agentCommission, symbol: '€')}',
+                'Agent ${formatCompactMoney(transfer.agentCommission, symbol: 'DT')}',
               ),
             ],
           ),
@@ -484,7 +472,7 @@ class _TrancheTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                formatCompactMoney(tranche.amount, symbol: '€'),
+                formatCompactMoney(tranche.amount, symbol: 'DT'),
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   color: tranche.receivable

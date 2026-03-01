@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/finance_models.dart';
 import '../services/finance_store.dart';
 import '../theme/finance_theme.dart';
+import '../widgets/finance_form_widgets.dart';
 import '../widgets/finance_widgets.dart';
 
 class BudgetScreen extends StatelessWidget {
@@ -43,7 +44,7 @@ class BudgetScreen extends StatelessWidget {
                     label: 'Total depenses',
                     value: formatCompactMoney(
                       store.totalExpenseAmount,
-                      symbol: '€',
+                      symbol: 'DT',
                     ),
                     icon: Icons.money_off_csred_rounded,
                     positive: false,
@@ -147,105 +148,87 @@ class BudgetScreen extends StatelessWidget {
     );
     String category = current?.category ?? FinanceStore.expenseCategories.first;
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              title: Text(
-                current == null ? 'Ajouter depense' : 'Modifier depense',
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      initialValue: category,
-                      items: FinanceStore.expenseCategories
-                          .map(
-                            (v) => DropdownMenuItem(value: v, child: Text(v)),
-                          )
-                          .toList(),
-                      onChanged: (v) =>
-                          setState(() => category = v ?? category),
-                      decoration: const InputDecoration(labelText: 'Categorie'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: title,
-                      decoration: const InputDecoration(
-                        labelText: 'Libelle depense',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: season,
-                      decoration: const InputDecoration(labelText: 'Saison'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: amount,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration: const InputDecoration(labelText: 'Montant'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: justification,
-                      decoration: const InputDecoration(
-                        labelText: 'Justificatif PDF (nom fichier)',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: approvalLevel,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Niveau approbation requis (1-3)',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    final amountValue =
-                        double.tryParse(amount.text.trim()) ?? 0;
-                    final approvalValue =
-                        int.tryParse(approvalLevel.text.trim()) ?? 1;
+            return FinanceFormSheet(
+              title: current == null ? 'Ajouter depense' : 'Modifier depense',
+              onSave: () {
+                final amountValue = double.tryParse(amount.text.trim()) ?? 0;
+                final approvalValue =
+                    int.tryParse(approvalLevel.text.trim()) ?? 1;
 
-                    if (current == null) {
-                      store.addExpense(
-                        category,
-                        title.text.trim(),
-                        season.text.trim(),
-                        amountValue,
-                        justification.text.trim(),
-                        approvalValue.clamp(1, 3),
-                      );
-                    } else {
-                      store.updateExpense(
-                        current.id,
-                        category,
-                        title.text.trim(),
-                        season.text.trim(),
-                        amountValue,
-                        justification.text.trim(),
-                        approvalValue.clamp(1, 3),
-                      );
-                    }
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
+                if (current == null) {
+                  store.addExpense(
+                    category,
+                    title.text.trim(),
+                    season.text.trim(),
+                    amountValue,
+                    justification.text.trim(),
+                    approvalValue.clamp(1, 3),
+                  );
+                } else {
+                  store.updateExpense(
+                    current.id,
+                    category,
+                    title.text.trim(),
+                    season.text.trim(),
+                    amountValue,
+                    justification.text.trim(),
+                    approvalValue.clamp(1, 3),
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FinanceSectionHeader(
+                    icon: Icons.info_outline_rounded,
+                    label: 'INFORMATIONS DE BASE',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceDropdownField(
+                    label: 'Categorie',
+                    value: category,
+                    items: FinanceStore.expenseCategories,
+                    onChanged: (value) => setState(() => category = value),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(label: 'Libelle depense', controller: title),
+                  const SizedBox(height: 12),
+                  FinanceTextField(label: 'Saison', controller: season),
+                  const SizedBox(height: 20),
+                  const FinanceSectionHeader(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: 'DONNEES FINANCIERES',
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Montant',
+                    controller: amount,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    suffix: const Text('DT'),
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Justificatif PDF (nom fichier)',
+                    controller: justification,
+                  ),
+                  const SizedBox(height: 12),
+                  FinanceTextField(
+                    label: 'Niveau approbation requis (1-3)',
+                    controller: approvalLevel,
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -266,62 +249,64 @@ class BudgetScreen extends StatelessWidget {
       text: current != null ? current.max.toStringAsFixed(1) : '',
     );
 
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return AlertDialog(
-          title: Text(
-            current == null ? 'Add budget threshold' : 'Edit budget threshold',
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+        return FinanceFormSheet(
+          title: current == null
+              ? 'Ajouter seuil budget'
+              : 'Modifier seuil budget',
+          onSave: () {
+            final usedValue = double.tryParse(used.text.trim()) ?? 0;
+            final maxValue = double.tryParse(max.text.trim()) ?? 1;
+            if (current == null) {
+              store.addBudget(label.text.trim(), usedValue, maxValue);
+            } else {
+              store.updateBudget(
+                current.id,
+                label.text.trim(),
+                usedValue,
+                maxValue,
+              );
+            }
+            Navigator.pop(context);
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
-                controller: label,
-                decoration: const InputDecoration(labelText: 'Category'),
+              const FinanceSectionHeader(
+                icon: Icons.info_outline_rounded,
+                label: 'INFORMATIONS DE BASE',
               ),
-              const SizedBox(height: 8),
-              TextField(
+              const SizedBox(height: 12),
+              FinanceTextField(label: 'Categorie', controller: label),
+              const SizedBox(height: 20),
+              const FinanceSectionHeader(
+                icon: Icons.account_balance_wallet_outlined,
+                label: 'DONNEES FINANCIERES',
+              ),
+              const SizedBox(height: 12),
+              FinanceTextField(
+                label: 'Montant utilise',
                 controller: used,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(labelText: 'Used amount'),
+                suffix: const Text('DT'),
               ),
-              const SizedBox(height: 8),
-              TextField(
+              const SizedBox(height: 12),
+              FinanceTextField(
+                label: 'Seuil max',
                 controller: max,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(labelText: 'Max threshold'),
+                suffix: const Text('DT'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final usedValue = double.tryParse(used.text.trim()) ?? 0;
-                final maxValue = double.tryParse(max.text.trim()) ?? 1;
-                if (current == null) {
-                  store.addBudget(label.text.trim(), usedValue, maxValue);
-                } else {
-                  store.updateBudget(
-                    current.id,
-                    label.text.trim(),
-                    usedValue,
-                    maxValue,
-                  );
-                }
-                Navigator.pop(context);
-              },
-              child: const Text('Save'),
-            ),
-          ],
         );
       },
     );
@@ -383,7 +368,7 @@ class _ExpenseRow extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Montant ${formatCompactMoney(expense.amount, symbol: '€')}',
+            'Montant ${formatCompactMoney(expense.amount, symbol: 'DT')}',
             style: TextStyle(
               color: FinancePalette.danger,
               fontWeight: FontWeight.w700,
@@ -456,7 +441,7 @@ class _BudgetBar extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              Text('€${item.used}M / €${item.max}M'),
+              Text('${item.used}M DT / ${item.max}M DT'),
               IconButton(
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_outlined, size: 18),
