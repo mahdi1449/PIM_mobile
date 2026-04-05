@@ -39,15 +39,19 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
 
   void _startTest() {
     List<ShulteTile> raw = [];
-    for (int i = 1; i <= 12; i++) {
+    // 8 Black numbers (1 to 8)
+    for (int i = 1; i <= 8; i++) {
       raw.add(ShulteTile(number: i, color: const Color(0xFF94A3B8), isBlack: true));
     }
-    for (int i = 1; i <= 13; i++) {
+    // 8 Red numbers (1 to 8)
+    for (int i = 1; i <= 8; i++) {
       raw.add(ShulteTile(number: i, color: Colors.redAccent, isBlack: false));
     }
     raw.shuffle();
     setState(() {
       tiles = raw;
+      currentBlack = 1;
+      currentRed = 8;
       startTime = DateTime.now();
     });
   }
@@ -55,7 +59,7 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
   void _onTileTap(ShulteTile tile) {
     bool isCorrect = false;
 
-    if (expectingBlack && currentBlack <= 12) {
+    if (expectingBlack && currentBlack <= 8) {
       if (tile.isBlack && tile.number == currentBlack) {
         isCorrect = true;
         currentBlack++;
@@ -65,13 +69,13 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
       if (!tile.isBlack && tile.number == currentRed) {
         isCorrect = true;
         currentRed--;
-        if (currentBlack <= 12) expectingBlack = true;
+        if (currentBlack <= 8) expectingBlack = true;
       }
     }
 
     if (isCorrect) {
       setState(() => tile.isDone = true);
-      if (currentBlack > 12 && currentRed < 1) {
+      if (currentBlack > 8 && currentRed < 1) {
         _finishTest();
       }
     } else {
@@ -82,9 +86,8 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
   void _finishTest() {
     final elapsed = DateTime.now().difference(startTime!).inSeconds;
     widget.onComplete({
-      'timeSeconds': elapsed,
+      'completionTime': elapsed,
       'errors': errors,
-      'efficiency': ( (25 / (elapsed + errors * 2)) * 100).round(),
     });
   }
 
@@ -110,7 +113,7 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildInfoColumn("ERRORS", "$errors", Colors.redAccent),
-                _buildInfoColumn("PROGRESS", "${(tiles.where((t) => t.isDone).length / 25 * 100).round()}%", Colors.cyanAccent),
+                _buildInfoColumn("PROGRESS", "${(tiles.where((t) => t.isDone).length / 16 * 100).round()}%", Colors.cyanAccent),
               ],
             ),
           ),
@@ -160,7 +163,7 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
             child: GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 5,
+                crossAxisCount: 4,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
               ),

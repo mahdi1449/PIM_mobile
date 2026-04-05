@@ -95,21 +95,37 @@ class _SquadCognitiveOverviewScreenState extends State<SquadCognitiveOverviewScr
                   children: [
                     _buildOverviewCard(summary, totalTests),
                     const SizedBox(height: 40),
+                    if (atRisk.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          const Icon(Icons.emergency_outlined, color: Colors.redAccent, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'AT-RISK PLAYERS (${atRisk.length})',
+                            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 2),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      ...atRisk.map((player) => _buildPlayerCard(context, player)),
+                      const SizedBox(height: 40),
+                    ],
+                    
                     Row(
                       children: [
-                        const Icon(Icons.emergency_outlined, color: Colors.redAccent, size: 20),
+                        const Icon(Icons.history_toggle_off, color: Colors.cyanAccent, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          'AT-RISK PLAYERS (${atRisk.length})',
+                          'COMPLETED ASSESSMENTS (${provider.allSessions.length})',
                           style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 2),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (atRisk.isEmpty)
+                    if (provider.allSessions.isEmpty)
                       _buildAllClearCard()
                     else
-                      ...atRisk.map((player) => _buildPlayerCard(context, player)),
+                      ...provider.allSessions.map((player) => _buildPlayerCard(context, player)),
                   ],
                 ),
               ),
@@ -256,6 +272,7 @@ class _SquadCognitiveOverviewScreenState extends State<SquadCognitiveOverviewScr
               builder: (_) => CognitiveDashboardScreen(
                 session: session,
                 targetPlayerId: player['playerId'],
+                targetPlayerName: player['playerName'], 
                 isReadOnly: false,
               ),
             ),
@@ -314,7 +331,7 @@ class _SquadCognitiveOverviewScreenState extends State<SquadCognitiveOverviewScr
                   Row(
                     children: [
                       Text(
-                        'READINESS: ${player['mentalScore'].toStringAsFixed(0)}%',
+                        'READINESS: ${player['mentalScore']?.toStringAsFixed(0) ?? "N/A"}%',
                         style: TextStyle(color: statusColor, fontSize: 18, fontWeight: FontWeight.w900),
                       ),
                       const Spacer(),

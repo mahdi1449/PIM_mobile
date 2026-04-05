@@ -62,11 +62,31 @@ class _CognitiveTestFlowScreenState extends State<CognitiveTestFlowScreen> {
       builder: (_) => const Center(child: CircularProgressIndicator(color: Colors.cyanAccent)),
     );
 
-    await context.read<CognitiveLabProvider>().submitSession(_sessionData);
+    try {
+      await context.read<CognitiveLabProvider>().submitSession(_sessionData);
 
-    if (mounted) {
-      Navigator.pop(context); // close dialog
-      Navigator.pop(context); // return to dashboard
+      if (mounted) {
+        Navigator.pop(context); // close dialog
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("ÉVALUATION TERMINÉE AVEC SUCCÈS 🏆"),
+            backgroundColor: Colors.cyanAccent,
+          ),
+        );
+        
+        Navigator.pop(context, true); // return to dashboard with 'true' to signal refresh
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // close dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("ERREUR LORS DE L'ENREGISTREMENT: $e"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 

@@ -4,17 +4,23 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import '../../../../user_management/models/user_management_models.dart';
 import '../providers/cognitive_lab_provider.dart';
+import '../models/cognitive_session.dart';
 import 'cognitive_test_flow_screen.dart';
+import 'tests/tactical_memory_screen.dart';
+import 'player_medical_sheet_screen.dart';
+import 'metabolic_scanner_screen.dart';
 
 class CognitiveDashboardScreen extends StatefulWidget {
   final SessionModel session;
   final String? targetPlayerId;
+  final String? targetPlayerName;
   final bool isReadOnly;
 
   const CognitiveDashboardScreen({
     super.key, 
     required this.session,
     this.targetPlayerId,
+    this.targetPlayerName,
     this.isReadOnly = false,
   });
 
@@ -84,35 +90,49 @@ class _CognitiveDashboardScreenState extends State<CognitiveDashboardScreen> {
                 ],
               ),
             ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(left: 24, right: 24, top: 110, bottom: 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildHeader(session?.aiStatus),
-                  const SizedBox(height: 40),
-                  if (session != null) ...[
-                    _buildMainScore(session),
+            child: RefreshIndicator(
+              onRefresh: () async {
+                final idToFetch = widget.targetPlayerId ?? widget.session.userId;
+                await context.read<CognitiveLabProvider>().fetchDashboard(idToFetch);
+              },
+              backgroundColor: const Color(0xFF1E293B),
+              color: Colors.cyanAccent,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(left: 24, right: 24, top: 110, bottom: 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildHeader(session),
+                    const SizedBox(height: 40),
+                    if (session != null && session.scores != null) ...[
+                      _buildMainScore(session),
+                      const SizedBox(height: 48),
+                      _buildGlassCard(
+                        title: "COGNITIVE PROFILE",
+                        subtitle: "Multi-dimensional performance overview",
+                        child: _buildRadarChart(session),
+                      ),
+                      const SizedBox(height: 24),
+                      if (session.scores?.trainingReadiness != null)
+                        _buildTrainingReadinessBadge(session.scores!.trainingReadiness!),
+                      const SizedBox(height: 24),
+                      _buildAiRecommendationCard(session.aiRecommendationText),
+                      const SizedBox(height: 16),
+                      _buildTrainingSuggestionCard(session.trainingSuggestion),
+                    ] else ...[
+                      _buildEmptyState(),
+                    ],
                     const SizedBox(height: 48),
-                    _buildGlassCard(
-                      title: "COGNITIVE PROFILE",
-                      subtitle: "Multi-dimensional performance overview",
-                      child: _buildRadarChart(session),
-                    ),
-                    const SizedBox(height: 24),
-                    if (session.scores?.trainingReadiness != null)
-                      _buildTrainingReadinessBadge(session.scores!.trainingReadiness!),
-                    const SizedBox(height: 24),
-                    _buildAiRecommendationCard(session.aiRecommendationText),
-                    const SizedBox(height: 16),
-                    _buildTrainingSuggestionCard(session.trainingSuggestion),
-                  ] else ...[
-                    _buildEmptyState(),
+                    if (!widget.isReadOnly) ...[
+                      _buildEliteStartButton(),
+                      const SizedBox(height: 16),
+                      _buildStandaloneTacticalButton(),
+                      const SizedBox(height: 16),
+                      _buildNutritionLabButtons(),
+                    ],
                   ],
-                  const SizedBox(height: 48),
-                  if (!widget.isReadOnly)
-                    _buildEliteStartButton(),
-                ],
+                ),
               ),
             ),
           );
@@ -147,48 +167,92 @@ class _CognitiveDashboardScreenState extends State<CognitiveDashboardScreen> {
     );
   }
 
-  Widget _buildHeader(String? status) {
-    final statusColor = _getStatusColor(status);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildHeader(CognitiveSession? session) {
+    final statusColor = _getStatusColor(session?.aiStatus);
+    final playerName = session?.playerName ?? widget.targetPlayerName ?? 'Utilisateur';
+    final playerPosition = session?.playerPosition ?? 'Joueur';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
           children: [
-            const Text(
-              "READINESS STATUS",
-              style: TextStyle(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2),
-            ),
-            const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: statusColor.withOpacity(0.3)),
-                boxShadow: [BoxShadow(color: statusColor.withOpacity(0.1), blurRadius: 10, spreadRadius: 1)],
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
               ),
-              child: Text(
-                status?.toUpperCase() ?? 'PENDING',
-                style: TextStyle(color: statusColor, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1),
+              child: Center(
+                child: Text(
+                  playerName.isNotEmpty ? playerName[0].toUpperCase() : 'P',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    playerName.toUpperCase(),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 1),
+                  ),
+                  Text(
+                    playerPosition.toUpperCase(),
+                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 2),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20),
-              SizedBox(width: 8),
-              Text("STREAK: 1", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
-            ],
-          ),
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "READINESS STATUS",
+                  style: TextStyle(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: statusColor.withOpacity(0.3)),
+                    boxShadow: [BoxShadow(color: statusColor.withOpacity(0.1), blurRadius: 10, spreadRadius: 1)],
+                  ),
+                  child: Text(
+                    session?.aiStatus?.toUpperCase() ?? 'PENDING',
+                    style: TextStyle(color: statusColor, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1),
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.local_fire_department_rounded, color: Colors.orangeAccent, size: 20),
+                  SizedBox(width: 8),
+                  Text("STREAK: 1", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -246,6 +310,10 @@ class _CognitiveDashboardScreenState extends State<CognitiveDashboardScreen> {
                     const SizedBox(width: 8),
                   if (session.scores?.wellnessScore != null)
                     _buildSubScoreChip("WEL", session.scores!.wellnessScore!, Colors.purpleAccent),
+                  if (session.scores?.tacticalIqScore != null) ...[
+                    const SizedBox(width: 8),
+                    _buildSubScoreChip("TAC", session.scores!.tacticalIqScore!, Colors.orangeAccent),
+                  ],
                 ],
               ),
             ),
@@ -288,6 +356,7 @@ class _CognitiveDashboardScreenState extends State<CognitiveDashboardScreen> {
     final reactionScore = (session.scores?.reactionScore ?? 0).toDouble();
     final focusScore = (session.scores?.focusScore ?? 0).toDouble();
     final memoryScore = (session.scores?.memoryScore ?? 0).toDouble();
+    final tacticalScore = (session.scores?.tacticalIqScore ?? 0).toDouble();
 
     return Column(
       children: [
@@ -312,11 +381,13 @@ class _CognitiveDashboardScreenState extends State<CognitiveDashboardScreen> {
                     RadarEntry(value: reactionScore),
                     RadarEntry(value: focusScore),
                     RadarEntry(value: memoryScore),
+                    if (session.scores?.tacticalIqScore != null) RadarEntry(value: tacticalScore),
                   ],
                 ),
               ],
               getTitle: (index, angle) {
                 final titles = ['REACTION', 'FOCUS', 'MEMORY'];
+                if (session.scores?.tacticalIqScore != null) titles.add('VISION');
                 return RadarChartTitle(text: titles[index], angle: angle);
               },
             ),
@@ -329,9 +400,42 @@ class _CognitiveDashboardScreenState extends State<CognitiveDashboardScreen> {
             _radarLegend('REACTION', reactionScore, Colors.cyanAccent),
             _radarLegend('FOCUS', focusScore, Colors.cyanAccent),
             _radarLegend('MEMORY', memoryScore, Colors.cyanAccent),
+            if (session.scores?.tacticalIqScore != null)
+              _radarLegend('VISION', tacticalScore, Colors.orangeAccent),
           ],
         ),
+        if (session.scores?.tacticalProfile != null) ...[
+          const SizedBox(height: 16),
+          _buildTacticalProfileBadge(session.scores!.tacticalProfile!),
+        ],
       ],
+    );
+  }
+
+  Widget _buildTacticalProfileBadge(String profile) {
+    Color badgeColor;
+    if (profile == 'Scanner') badgeColor = Colors.cyanAccent;
+    else if (profile == 'Standard') badgeColor = Colors.amber;
+    else badgeColor = Colors.redAccent;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: badgeColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: badgeColor.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.remove_red_eye, color: badgeColor, size: 16),
+          const SizedBox(width: 8),
+          Text(
+            "VIZ PROFILE: ${profile.toUpperCase()}",
+            style: TextStyle(color: badgeColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+          ),
+        ],
+      ),
     );
   }
 
@@ -496,8 +600,8 @@ class _CognitiveDashboardScreenState extends State<CognitiveDashboardScreen> {
         ],
       ),
       child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => CognitiveTestFlowScreen(
@@ -506,6 +610,11 @@ class _CognitiveDashboardScreenState extends State<CognitiveDashboardScreen> {
               ),
             ),
           );
+          
+          if (result == true) {
+            final idToFetch = widget.targetPlayerId ?? widget.session.userId;
+            context.read<CognitiveLabProvider>().fetchDashboard(idToFetch);
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.cyanAccent,
@@ -522,6 +631,149 @@ class _CognitiveDashboardScreenState extends State<CognitiveDashboardScreen> {
             Text(
               "START COGNITIVE ASSESSMENT",
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStandaloneTacticalButton() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.orangeAccent.withOpacity(0.5)),
+        color: Colors.orangeAccent.withOpacity(0.05),
+      ),
+      child: ElevatedButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TacticalMemoryScreen(
+                onComplete: (results) async {
+                  Navigator.pop(context, results);
+                },
+              ),
+            ),
+          );
+          
+          if (result != null) {
+            final idToFetch = widget.targetPlayerId ?? widget.session.userId;
+            
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => const Center(child: CircularProgressIndicator(color: Colors.orangeAccent)),
+            );
+
+            try {
+              await context.read<CognitiveLabProvider>().submitSession({
+                'playerId': idToFetch,
+                'tacticalMemory': result,
+              });
+              if (mounted) {
+                Navigator.pop(context); // close loader
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("ÉVALUATION TACTIQUE ENREGISTRÉE 👁️"), backgroundColor: Colors.orangeAccent),
+                );
+              }
+            } catch (e) {
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("ERREUR: $e"), backgroundColor: Colors.redAccent),
+                );
+              }
+            }
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.orangeAccent,
+          padding: const EdgeInsets.symmetric(vertical: 22),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 0,
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.remove_red_eye, size: 24),
+            SizedBox(width: 12),
+            Text(
+              "STANDALONE TACTICAL TEST",
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNutritionLabButtons() {
+    final playerId = widget.targetPlayerId ?? widget.session.userId;
+    final session = context.watch<CognitiveLabProvider>().latestSession;
+    final playerName = session?.playerName ?? widget.targetPlayerName ?? 'Utilisateur';
+    final playerPosition = session?.playerPosition ?? 'Joueur';
+
+    return Row(
+      children: [
+        Expanded(
+          child: _buildModuleButton(
+            label: 'Fiche Médicale',
+            icon: Icons.person_pin_outlined,
+            color: const Color(0xFF3B82F6),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PlayerMedicalSheetScreen(
+                  playerId: playerId,
+                  playerName: playerName,
+                  playerPosition: playerPosition,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildModuleButton(
+            label: 'Scanner Métabolique',
+            icon: Icons.biotech_outlined,
+            color: const Color(0xFF10B981),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MetabolicScannerScreen(
+                  playerId: playerId,
+                  playerName: playerName,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModuleButton({required String label, required IconData icon, required Color color, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withOpacity(0.4)),
+          color: color.withOpacity(0.06),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12, decoration: TextDecoration.none),
             ),
           ],
         ),
