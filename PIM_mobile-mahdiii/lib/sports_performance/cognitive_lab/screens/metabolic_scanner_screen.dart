@@ -83,7 +83,7 @@ class _MetabolicScannerScreenState extends State<MetabolicScannerScreen>
       _isLoading = false;
     });
   }
-
+ //C'est le verrou de sécurité qui compare votre consommation actuelle aux objectifs IA avant d'autoriser un repa
   bool _canLog(Map<String, dynamic> template) {
     if (_status == null) return false;
     final type = template['type'] as MealType;
@@ -444,7 +444,7 @@ class _MetabolicScannerScreenState extends State<MetabolicScannerScreen>
           children: [
             const Text('BILAN NUTRITIONNEL', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1.5, decoration: TextDecoration.none)),
             const Icon(Icons.analytics_outlined, color: Color(0xFF64748B), size: 16),
-          ],
+          ],  //Calcul du ratio de précision
         ),
         const SizedBox(height: 16),
         _buildMacroBar('GLUCIDES (ENERGY)', _status!.current['carbs'] ?? 0, _status!.targets['carbs'] ?? 1, 'G', const Color(0xFFF59E0B)),
