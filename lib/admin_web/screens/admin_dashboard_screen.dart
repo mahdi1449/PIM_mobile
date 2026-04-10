@@ -382,7 +382,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
-                        'FOOTBALL ERP',
+                        'FOOTBALL ADMIN',
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.white,

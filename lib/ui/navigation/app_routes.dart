@@ -68,6 +68,8 @@ class AppRoutes {
   static const String financeTransfers = '/finance/transfers';
   static const String financeTreasury = '/finance/treasury';
   static const String financeAudit = '/finance/audit';
+  static const String financeAi = '/finance/ai';
+  static const String financePlayerValue = '/finance/player-value';
   static const String aiCampaigns = '/ai/campaigns';
   static const String communication = '/communication';
 
@@ -156,6 +158,22 @@ class AppRoutes {
           title: 'Audit',
           builder: (_) =>
               FinanceDashboardScreen(session: session, initialIndex: 7),
+          showAppBar: true,
+          usePadding: false,
+        );
+      case financeAi:
+        return AppRouteData(
+          title: 'AI Finance',
+          builder: (_) =>
+              FinanceDashboardScreen(session: session, initialIndex: 8),
+          showAppBar: true,
+          usePadding: false,
+        );
+      case financePlayerValue:
+        return AppRouteData(
+          title: 'Player Value AI',
+          builder: (_) =>
+              FinanceDashboardScreen(session: session, initialIndex: 9),
           showAppBar: true,
           usePadding: false,
         );

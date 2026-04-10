@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'screens/ai_finance_screen.dart';
 import 'screens/accounting_screen.dart';
 import 'screens/audit_screen.dart';
 import 'screens/budget_screen.dart';
@@ -12,6 +13,7 @@ import 'screens/transfers_screen.dart';
 import 'screens/treasury_screen.dart';
 import 'theme/finance_theme.dart';
 import 'widgets/finance_widgets.dart';
+import '../player_value_ai/player_value_screen.dart';
 
 class FinanceMobileShell extends StatefulWidget {
   const FinanceMobileShell({
@@ -50,6 +52,8 @@ class _FinanceMobileShellState extends State<FinanceMobileShell> {
     ('Treasury', Icons.account_balance_rounded),
     ('Depenses', Icons.money_off_csred_rounded),
     ('Audit', Icons.verified_user_rounded),
+    ('AI Finance', Icons.psychology_alt_rounded),
+    ('Player Value AI', Icons.trending_up_rounded),
   ];
 
   final _screens = const [
@@ -61,6 +65,8 @@ class _FinanceMobileShellState extends State<FinanceMobileShell> {
     TreasuryScreen(),
     BudgetScreen(),
     AuditScreen(),
+    AiFinanceScreen(),
+    PlayerValueScreen(),
   ];
 
   @override

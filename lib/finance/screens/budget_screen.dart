@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../models/finance_models.dart';
+import '../services/finance_ai_service.dart';
 import '../services/finance_store.dart';
 import '../theme/finance_theme.dart';
 import '../widgets/finance_form_widgets.dart';
 import '../widgets/finance_widgets.dart';
+import '../../widgets/ai/ai_suggestion_banner.dart';
 
 class BudgetScreen extends StatelessWidget {
   const BudgetScreen({super.key});
@@ -16,6 +18,10 @@ class BudgetScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: store,
       builder: (context, _) {
+        final forecast = FinanceAiService.instance.buildBudgetForecast(store);
+        final optimization =
+            FinanceAiService.instance.buildExpenseOptimization(store);
+
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 104),
           children: [
@@ -61,6 +67,18 @@ class BudgetScreen extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            AiSuggestionBanner(
+              title: '${forecast.title} (AI)',
+              message: forecast.summary,
+              onTap: () => _openAiDetailsSheet(context, forecast),
+            ),
+            const SizedBox(height: 10),
+            AiSuggestionBanner(
+              title: '${optimization.title} (AI)',
+              message: optimization.summary,
+              onTap: () => _openAiDetailsSheet(context, optimization),
             ),
             const SizedBox(height: 12),
             FinanceCard(
@@ -306,6 +324,41 @@ class BudgetScreen extends StatelessWidget {
                 suffix: const Text('DT'),
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openAiDetailsSheet(
+    BuildContext context,
+    FinanceAiInsight insight,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${insight.title} (AI)',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    insight.details,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
           ),
         );
       },

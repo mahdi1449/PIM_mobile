@@ -15,6 +15,10 @@ class EventPlayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final initials = _safeInitials(
+      eventPlayer.player.firstName,
+      eventPlayer.player.lastName,
+    );
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -41,7 +45,7 @@ class EventPlayerCard extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  eventPlayer.player.firstName[0] + eventPlayer.player.lastName[0],
+                  initials,
                   style: SPTypography.h5.copyWith(color: SPColors.primaryBlue),
                 ),
               ),
@@ -151,5 +155,14 @@ class EventPlayerCard extends StatelessWidget {
         style: SPTypography.overline.copyWith(color: color),
       ),
     );
+  }
+
+  String _safeInitials(String firstName, String lastName) {
+    final first = firstName.trim();
+    final last = lastName.trim();
+    final firstChar = first.isNotEmpty ? first[0] : '';
+    final lastChar = last.isNotEmpty ? last[0] : '';
+    final initials = (firstChar + lastChar).trim();
+    return initials.isEmpty ? 'P' : initials;
   }
 }

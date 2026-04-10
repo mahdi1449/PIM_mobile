@@ -97,7 +97,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                           ),
                           SizedBox(width: 12),
                           Text(
-                            'FOOTBALL ERP',
+                            'FOOTBALL ADMIN',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,

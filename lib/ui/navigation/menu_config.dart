@@ -196,6 +196,16 @@ class MenuConfig {
             route: AppRoutes.financeDashboard,
           ),
           MenuItemConfig(
+            title: 'AI Finance',
+            icon: Icons.psychology_outlined,
+            route: AppRoutes.financeAi,
+          ),
+          MenuItemConfig(
+            title: 'Player Value AI',
+            icon: Icons.trending_up_outlined,
+            route: AppRoutes.financePlayerValue,
+          ),
+          MenuItemConfig(
             title: 'Payroll',
             icon: Icons.payments_outlined,
             route: AppRoutes.financePayroll,

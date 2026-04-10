@@ -483,4 +483,27 @@ class ApiService {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
+
+  Future<Map<String, dynamic>> getFinanceAiInsights({
+    List<String> focusCategories = const [],
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/finance/ai/insights'),
+        headers: await _authHeaders(),
+        body: jsonEncode({'focusCategories': focusCategories}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get finance AI insights',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
 }
