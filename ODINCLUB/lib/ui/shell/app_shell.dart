@@ -57,6 +57,10 @@ class _AppShellState extends State<AppShell> {
       AppRoutes.messages,
       AppRoutes.notifications,
       AppRoutes.profile,
+      if (RoleMapper.normalize(widget.session.role) == RoleMapper.admin) ...{
+        AppRoutes.adminUsers,
+        AppRoutes.auditLog,
+      },
       AppRoutes.cognitiveDashboard,
       AppRoutes.squadCognitiveOverview,
       AppRoutes.seasonPlanning,

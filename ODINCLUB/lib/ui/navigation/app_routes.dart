@@ -13,6 +13,8 @@ import '../../screens/roles/finance_dashboard_screen.dart';
 import '../../screens/roles/scout_dashboard_screen.dart';
 import '../../screens/medical/medical_analysis_detail_screen.dart';
 import '../../screens/medical/medical_players_screen.dart';
+import '../../screens/medical/medical_recovery_calendar_screen.dart';
+import '../../screens/medical/simulation_history_screen.dart';
 import '../../screens/medical/simulation_screen.dart';
 import '../../sports_performance/screens/calendar/calendar_screen.dart';
 import '../../sports_performance/screens/players/players_list_screen.dart';
@@ -23,6 +25,8 @@ import '../../sports_performance/cognitive_lab/screens/cognitive_dashboard_scree
 import '../../sports_performance/cognitive_lab/screens/squad_cognitive_overview_screen.dart';
 import '../../screens/ai/ai_campaign_screen.dart';
 import '../../user_management/models/user_management_models.dart';
+import '../screens/admin_users_screen.dart';
+import '../screens/audit_log_screen.dart';
 import '../screens/communication_shell_screen.dart';
 import '../screens/communication_notifications_shell_screen.dart';
 import '../../season_planning/screens/season_list_screen.dart';
@@ -47,6 +51,8 @@ class AppRoutes {
   AppRoutes._();
 
   static const String adminDashboard = '/admin/dashboard';
+  static const String adminUsers = '/admin/users';
+  static const String auditLog = '/admin/audit-log';
   static const String analystDashboard = '/analyst/dashboard';
   static const String clubDashboard = '/club/dashboard';
   static const String coachDashboard = '/coach/dashboard';
@@ -65,6 +71,8 @@ class AppRoutes {
   static const String medicalPlayers = '/medical/players';
   static const String medicalAnalysisDetail = '/medical/analysis';
   static const String medicalSimulation = '/medical/simulation';
+  static const String medicalRecoveryCalendar = '/medical/recovery-calendar';
+  static const String medicalMatchHistory = '/medical/match-history';
   static const String players = '/players';
   static const String calendar = '/calendar';
   static const String reports = '/reports';
@@ -94,6 +102,16 @@ class AppRoutes {
           builder: (_) => const AdminDashboardScreen(),
           showAppBar: false,
           usePadding: false,
+        );
+      case adminUsers:
+        return AppRouteData(
+          title: 'User management',
+          builder: (_) => const AdminUsersScreen(),
+        );
+      case auditLog:
+        return AppRouteData(
+          title: 'Audit log',
+          builder: (_) => const AuditLogScreen(),
         );
       case analystDashboard:
         return AppRouteData(
@@ -215,6 +233,16 @@ class AppRoutes {
           builder: (_) => const SimulationScreen(),
           showAppBar: true,
           usePadding: false,
+        );
+      case medicalRecoveryCalendar:
+        return AppRouteData(
+          title: 'Recovery Calendar',
+          builder: (_) => const MedicalRecoveryCalendarScreen(),
+        );
+      case medicalMatchHistory:
+        return AppRouteData(
+          title: 'Match History',
+          builder: (_) => const SimulationHistoryScreen(),
         );
       case players:
         return AppRouteData(

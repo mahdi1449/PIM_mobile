@@ -202,6 +202,16 @@ class MenuConfig {
             icon: Icons.sports_soccer_outlined,
             route: AppRoutes.medicalSimulation,
           ),
+          MenuItemConfig(
+            title: 'Recovery Calendar',
+            icon: Icons.calendar_month_outlined,
+            route: AppRoutes.medicalRecoveryCalendar,
+          ),
+          MenuItemConfig(
+            title: 'Match History',
+            icon: Icons.history_rounded,
+            route: AppRoutes.medicalMatchHistory,
+          ),
         ];
       case RoleMapper.finance:
         return const [

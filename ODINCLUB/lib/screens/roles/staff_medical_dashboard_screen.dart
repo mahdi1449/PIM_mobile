@@ -38,6 +38,20 @@ class StaffMedicalDashboardScreen extends StatelessWidget {
           icon: Icons.sports_soccer,
           route: AppRoutes.medicalSimulation,
         ),
+        const SizedBox(height: AppSpacing.s12),
+        const _ActionCard(
+          title: 'Calendrier de recuperation',
+          subtitle: 'Suivre les dates de retour estimees.',
+          icon: Icons.calendar_month,
+          route: AppRoutes.medicalRecoveryCalendar,
+        ),
+        const SizedBox(height: AppSpacing.s12),
+        const _ActionCard(
+          title: 'Historique des matchs',
+          subtitle: 'Consulter les simulations deja jouees.',
+          icon: Icons.history_rounded,
+          route: AppRoutes.medicalMatchHistory,
+        ),
       ],
     );
   }
