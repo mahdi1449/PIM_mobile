@@ -1,0 +1,8 @@
+class AppConfig {
+  // Backend base URL
+  // For Android emulator: http://10.0.2.2:3000
+  // For iOS simulator: http://localhost:3000
+  static const String baseUrl = 'http://10.0.2.2:3000';
+
+  static String get apiBaseUrl => '$baseUrl/api';
+}
