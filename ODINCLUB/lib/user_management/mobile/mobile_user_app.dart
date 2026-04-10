@@ -62,6 +62,7 @@ class _MobileUserAppState extends State<MobileUserApp> {
         api: _api,
         session: session,
         onLogout: _logout,
+        onOpenMessages: () {},
       );
     }
 

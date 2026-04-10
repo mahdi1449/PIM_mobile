@@ -15,4 +15,14 @@ class AppConfig {
     }
   }
   static String get apiBaseUrl => baseUrl;
+
+  static String get playerValueAiBaseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:8300';
+    } else if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8300';
+    } else {
+      return 'http://localhost:8300';
+    }
+  }
 }
