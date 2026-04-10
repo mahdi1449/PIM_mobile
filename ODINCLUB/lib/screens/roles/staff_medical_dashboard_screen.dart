@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+import '../../user_management/models/user_management_models.dart';
+import '../../ui/components/app_card.dart';
+import '../../ui/components/app_section_header.dart';
+import '../../ui/navigation/app_routes.dart';
+import '../../ui/shell/app_shell.dart';
+import '../../ui/theme/app_spacing.dart';
+
+class StaffMedicalDashboardScreen extends StatelessWidget {
+  const StaffMedicalDashboardScreen({
+    super.key,
+    required this.session,
+  });
+
+  final SessionModel session;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = '${session.firstName ?? ''} ${session.lastName ?? ''}'.trim();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSectionHeader(
+          title: name.isEmpty ? 'Staff Medical' : name,
+          subtitle: 'Suivi medical et prevention des blessures.',
+        ),
+        const SizedBox(height: AppSpacing.s24),
+        const _ActionCard(
+          title: 'Analyse medicale',
+          subtitle: 'Selectionner un joueur pour analyser.',
+          icon: Icons.monitor_heart,
+          route: AppRoutes.medicalPlayers,
+        ),
+        const SizedBox(height: AppSpacing.s12),
+        const _ActionCard(
+          title: 'Simulation de match',
+          subtitle: 'Simuler blessures et charge.',
+          icon: Icons.sports_soccer,
+          route: AppRoutes.medicalSimulation,
+        ),
+        const SizedBox(height: AppSpacing.s12),
+        const _ActionCard(
+          title: 'Calendrier de recuperation',
+          subtitle: 'Suivre les dates de retour estimees.',
+          icon: Icons.calendar_month,
+          route: AppRoutes.medicalRecoveryCalendar,
+        ),
+        const SizedBox(height: AppSpacing.s12),
+        const _ActionCard(
+          title: 'Historique des matchs',
+          subtitle: 'Consulter les simulations deja jouees.',
+          icon: Icons.history_rounded,
+          route: AppRoutes.medicalMatchHistory,
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionCard extends StatelessWidget {
+  const _ActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.route,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    final shell = AppShellScope.of(context);
+    return AppCard(
+      onTap: () {
+        if (shell != null) {
+          shell.navigate(route);
+        } else {
+          Navigator.of(context).pushNamed(route);
+        }
+      },
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+            child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(width: AppSpacing.s16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: AppSpacing.s4),
+                Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
