@@ -85,6 +85,13 @@ class StaffTechniqueDashboardScreen extends StatelessWidget {
           icon: Icons.sports,
           route: AppRoutes.tests,
         ),
+        const SizedBox(height: AppSpacing.s12),
+        const _ActionCard(
+          title: 'Labo Cognitif IA',
+          subtitle: 'Evaluer la fatigue mentale des joueurs.',
+          icon: Icons.psychology_outlined,
+          route: AppRoutes.squadCognitiveOverview,
+        ),
       ],
     );
   }

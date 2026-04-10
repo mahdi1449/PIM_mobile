@@ -10,6 +10,7 @@ import 'theme/theme_controller.dart';
 import 'screens/login_screen.dart';
 import 'services/api_service.dart';
 import 'providers/campaign_provider.dart';
+import 'sports_performance/cognitive_lab/providers/cognitive_lab_provider.dart';
 import 'utils/role_router.dart';
 import 'user_management/models/user_management_models.dart';
 
@@ -20,8 +21,11 @@ void main() {
   }
   runApp(
     ProviderScope(
-      child: prov.ChangeNotifierProvider(
-        create: (_) => CampaignProvider(),
+      child: prov.MultiProvider(
+        providers: [
+          prov.ChangeNotifierProvider(create: (_) => CampaignProvider()),
+          prov.ChangeNotifierProvider(create: (_) => CognitiveLabProvider()),
+        ],
         child: const MyApp(),
       ),
     ),

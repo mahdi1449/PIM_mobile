@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../sports_performance/cognitive_lab/screens/cognitive_dashboard_screen.dart';
 import '../../user_management/models/user_management_models.dart';
 import '../../ui/components/app_card.dart';
 import '../../ui/components/app_section_header.dart';
@@ -34,6 +35,20 @@ class JoueurDashboardScreen extends StatelessWidget {
           subtitle: 'Suivez votre forme et votre recuperation.',
           icon: Icons.health_and_safety,
         ),
+        const SizedBox(height: AppSpacing.s12),
+        _InfoCard(
+          title: 'Labo Cognitif IA',
+          subtitle: 'Evaluez votre fatigue mentale avant de vous entrainer.',
+          icon: Icons.psychology_outlined,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CognitiveDashboardScreen(session: session),
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -44,34 +59,40 @@ class _InfoCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.onTap,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-            child: Icon(icon, color: Theme.of(context).colorScheme.primary),
-          ),
-          const SizedBox(width: AppSpacing.s16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: AppSpacing.s4),
-                Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-              ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: AppCard(
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
             ),
-          ),
-        ],
+            const SizedBox(width: AppSpacing.s16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: AppSpacing.s4),
+                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

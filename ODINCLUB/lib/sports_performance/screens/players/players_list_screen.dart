@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../ui/shell/app_shell.dart';
+import '../../cognitive_lab/screens/cognitive_dashboard_screen.dart';
 import '../../models/player.dart';
 import '../../providers/players_provider.dart';
 import '../../theme/sp_colors.dart';
@@ -130,6 +132,19 @@ class _PlayersListScreenState extends ConsumerState<PlayersListScreen> {
         border: Border.all(color: SPColors.borderPrimary.withOpacity(0.3)),
       ),
       child: ListTile(
+        onTap: () {
+          final session = AppShellScope.of(context)?.session;
+          if (session == null) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CognitiveDashboardScreen(
+                session: session,
+                targetPlayerId: player.id,
+              ),
+            ),
+          );
+        },
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Hero(
           tag: 'player_${player.id}',

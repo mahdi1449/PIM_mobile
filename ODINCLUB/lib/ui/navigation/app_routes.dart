@@ -19,6 +19,8 @@ import '../../sports_performance/screens/players/players_list_screen.dart';
 import '../../sports_performance/screens/reports/all_events_reports_screen.dart';
 import '../../sports_performance/screens/test_types/test_types_list_screen.dart';
 import '../../sports_performance/screens/exercises/library_screen.dart';
+import '../../sports_performance/cognitive_lab/screens/cognitive_dashboard_screen.dart';
+import '../../sports_performance/cognitive_lab/screens/squad_cognitive_overview_screen.dart';
 import '../../screens/ai/ai_campaign_screen.dart';
 import '../../user_management/models/user_management_models.dart';
 import '../screens/communication_shell_screen.dart';
@@ -76,6 +78,8 @@ class AppRoutes {
   static const String financeTreasury = '/finance/treasury';
   static const String financeAudit = '/finance/audit';
   static const String aiCampaigns = '/ai/campaigns';
+  static const String cognitiveDashboard = '/cognitive/dashboard';
+  static const String squadCognitiveOverview = '/cognitive/squad-overview';
   static const String communication = '/communication';
 
   static const String messages = '/messages';
@@ -251,6 +255,20 @@ class AppRoutes {
         return AppRouteData(
           title: 'AI Campaigns',
           builder: (_) => const AiCampaignScreen(),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case cognitiveDashboard:
+        return AppRouteData(
+          title: 'Labo Cognitif IA',
+          builder: (_) => CognitiveDashboardScreen(session: session),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case squadCognitiveOverview:
+        return AppRouteData(
+          title: 'Vue Equipe Cognitive',
+          builder: (_) => const SquadCognitiveOverviewScreen(),
           showAppBar: false,
           usePadding: false,
         );

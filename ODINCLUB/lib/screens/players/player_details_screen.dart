@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../sports_performance/cognitive_lab/screens/cognitive_dashboard_screen.dart';
 import '../../theme/app_theme.dart';
+import '../../ui/shell/app_shell.dart';
 
 class PlayerDetailsScreen extends StatefulWidget {
   final String playerId;
@@ -82,6 +84,33 @@ class _PlayerDetailsScreenState extends State<PlayerDetailsScreen> {
                     _detailRow('Injured', _player!['isInjured'] == true ? 'Yes' : 'No'),
                     if ((_player!['injuryDetails'] ?? '').toString().isNotEmpty)
                       _detailRow('Injury details', _player!['injuryDetails']),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.psychology),
+                      label: const Text('Bilan Cognitif & IA'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.odinDarkBlue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        final session = AppShellScope.of(context)?.session;
+                        if (session == null) return;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CognitiveDashboardScreen(
+                              session: session,
+                              targetPlayerId: widget.playerId,
+                              isReadOnly: true,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 24),
                     Text(
                       'Analyses',

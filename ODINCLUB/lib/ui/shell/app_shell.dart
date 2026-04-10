@@ -57,6 +57,8 @@ class _AppShellState extends State<AppShell> {
       AppRoutes.messages,
       AppRoutes.notifications,
       AppRoutes.profile,
+      AppRoutes.cognitiveDashboard,
+      AppRoutes.squadCognitiveOverview,
       AppRoutes.seasonPlanning,
       AppRoutes.tactics,
       if (menuRoutes.contains(AppRoutes.analysis)) AppRoutes.uploadVideo,
