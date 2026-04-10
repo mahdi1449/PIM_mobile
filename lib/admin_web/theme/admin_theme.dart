@@ -10,20 +10,19 @@ class AdminPalette {
   static bool get isDark => _dark;
 
   static Color get night =>
-      _dark ? const Color(0xFF050B2D) : const Color(0xFF051C34);
+      _dark ? const Color(0xFF071720) : const Color(0xFFF7FBFD);
   static Color get deep =>
-      _dark ? const Color(0xFF121C4D) : const Color(0xFF0A2E57);
-  static Color get electric =>
-      _dark ? const Color(0xFF2F53FF) : const Color(0xFF1D7BEA);
+      _dark ? const Color(0xFF0B2530) : const Color(0xFFFFFFFF);
+  static Color get electric => const Color(0xFF23AED1);
   static Color get mist =>
-      _dark ? const Color(0xFF070E33) : const Color(0xFFF4F7FC);
+      _dark ? const Color(0xFF071720) : const Color(0xFFF7FBFD);
   static Color get ink =>
-      _dark ? const Color(0xFFE9EEFF) : const Color(0xFF122033);
+      _dark ? const Color(0xFFE6F5FA) : const Color(0xFF0F2F3A);
   static Color get muted =>
-      _dark ? const Color(0xFFA9B4D9) : const Color(0xFF66718E);
-  static Color get surface => _dark ? const Color(0xFF121A43) : Colors.white;
+      _dark ? const Color(0xFF9BC2D1) : const Color(0xFF7FA1AF);
+  static Color get surface => _dark ? const Color(0xFF0B2530) : Colors.white;
   static Color get panel =>
-      _dark ? const Color(0xFF181F4C) : const Color(0xFFF5F8FD);
+      _dark ? const Color(0xFF0F2E3B) : const Color(0xFFEEF6F9);
   static Color get ok => const Color(0xFF1DAA74);
   static Color get danger => const Color(0xFFD64545);
 }
@@ -34,7 +33,7 @@ ThemeData buildAdminWebLightTheme() {
     scaffold: AdminPalette.mist,
     surface: AdminPalette.surface,
     onSurface: AdminPalette.ink,
-    border: const Color(0xFFD6DFED),
+    border: const Color(0xFFD6E6EE),
   );
 }
 
@@ -44,7 +43,7 @@ ThemeData buildAdminWebDarkTheme() {
     scaffold: AdminPalette.mist,
     surface: AdminPalette.surface,
     onSurface: AdminPalette.ink,
-    border: const Color(0xFF2B356A),
+    border: const Color(0xFF1B3C4A),
   );
 }
 

@@ -57,7 +57,7 @@ class AdminWebApp extends StatefulWidget {
 }
 
 class _AdminWebAppState extends State<AdminWebApp> {
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode _themeMode = ThemeMode.light;
 
   void _toggleTheme() {
     setState(() {

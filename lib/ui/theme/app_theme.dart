@@ -9,9 +9,9 @@ class AppTheme {
   static bool get _isDark => ThemeController.mode.value == ThemeMode.dark;
 
   // Compatibility getters for legacy screens
-  static Color get blueFonce => _isDark ? AppColors.darkTextPrimary : AppColors.primary;
-  static Color get blueCiel => _isDark ? AppColors.primaryLight : AppColors.accent;
-  static Color get odinDarkBlue => _isDark ? AppColors.darkSurfaceAlt : AppColors.primary;
+  static Color get blueFonce => _isDark ? AppColors.darkTextPrimary : AppColors.secondary;
+  static Color get blueCiel => _isDark ? AppColors.primaryLight : AppColors.primary;
+  static Color get odinDarkBlue => _isDark ? AppColors.darkSurfaceAlt : AppColors.secondary;
   static Color get odinSkyBlue => _isDark ? AppColors.primaryLight : AppColors.accent;
   static Color get white => _isDark ? AppColors.darkSurface : AppColors.surface;
   static Color get lightGrey => _isDark ? AppColors.darkBackground : AppColors.background;
@@ -24,7 +24,7 @@ class AppTheme {
   static Color get card => surface;
   static Color get cardBorder => _isDark ? AppColors.darkBorder : AppColors.border;
   static Color get primaryBlue => _isDark ? AppColors.primaryLight : AppColors.primary;
-  static Color get accentBlue => _isDark ? AppColors.accent : AppColors.primaryLight;
+  static Color get accentBlue => _isDark ? AppColors.accent : AppColors.secondary;
   static Color get textPrimary => _isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
   static Color get textSecondary => _isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
   static Color get textMuted => _isDark ? AppColors.darkTextSecondary : AppColors.textMuted;
@@ -44,7 +44,8 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: base.colorScheme.copyWith(
         primary: AppColors.primary,
-        secondary: AppColors.primaryLight,
+        secondary: AppColors.secondary,
+        tertiary: AppColors.accent,
         surface: AppColors.surface,
         background: AppColors.background,
         onPrimary: AppColors.white,
@@ -56,6 +57,7 @@ class AppTheme {
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: false,
@@ -65,6 +67,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.surface,
         surfaceTintColor: Colors.transparent,
+        shadowColor: const Color(0x14000000),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -101,7 +104,7 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: AppColors.secondary,
           side: const BorderSide(color: AppColors.border),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: textTheme.labelLarge,
@@ -118,8 +121,9 @@ class AppTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.darkBackground,
       colorScheme: base.colorScheme.copyWith(
-        primary: AppColors.primaryLight,
+        primary: AppColors.primary,
         secondary: AppColors.accent,
+        tertiary: AppColors.secondary,
         surface: AppColors.darkSurface,
         background: AppColors.darkBackground,
         onPrimary: AppColors.white,
@@ -131,6 +135,7 @@ class AppTheme {
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.darkSurface,
+        surfaceTintColor: Colors.transparent,
         foregroundColor: AppColors.darkTextPrimary,
         elevation: 0,
         titleTextStyle: textTheme.titleLarge,
@@ -139,6 +144,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
+        shadowColor: const Color(0x26000000),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -166,7 +172,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryLight,
+          backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -175,7 +181,7 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primaryLight,
+          foregroundColor: AppColors.accent,
           side: const BorderSide(color: AppColors.darkBorder),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: textTheme.labelLarge,
@@ -207,8 +213,8 @@ class AppTheme {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: _isDark
-              ? [AppColors.primaryLight, AppColors.primary]
-              : [AppColors.primary, AppColors.primaryLight],
+              ? [AppColors.primary, AppColors.accent]
+              : [AppColors.primary, AppColors.accent],
         ),
         borderRadius: BorderRadius.circular(12),
       );

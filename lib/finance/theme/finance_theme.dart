@@ -11,8 +11,8 @@ class FinancePalette {
 
   static bool get isDark => _dark;
 
-  static Color get navy => _dark ? AppColors.darkBackground : AppColors.background;
-  static Color get blue => _dark ? AppColors.primaryLight : AppColors.primary;
+  static Color get navy => _dark ? AppColors.darkBackground : AppColors.secondary;
+  static Color get blue => _dark ? AppColors.primary : AppColors.primary;
   static Color get cyan => AppColors.accent;
   static Color get ink => _dark ? AppColors.darkTextPrimary : AppColors.textPrimary;
   static Color get soft => _dark ? AppColors.darkSurfaceAlt : AppColors.surfaceAlt;
@@ -21,7 +21,7 @@ class FinancePalette {
   static Color get danger => AppColors.danger;
   static Color get warning => AppColors.warning;
   static Color get scaffold => _dark ? AppColors.darkBackground : AppColors.background;
-  static Color get muted => _dark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+  static Color get muted => _dark ? AppColors.darkTextSecondary : AppColors.textMuted;
 }
 
 ThemeData buildFinanceLightTheme() {
@@ -58,7 +58,8 @@ ThemeData _buildFinanceTheme({required Brightness brightness}) {
       seedColor: FinancePalette.blue,
       brightness: brightness,
       primary: FinancePalette.blue,
-      secondary: FinancePalette.cyan,
+      secondary: FinancePalette.navy,
+      tertiary: FinancePalette.cyan,
       surface: FinancePalette.card,
       error: FinancePalette.danger,
       onPrimary: Colors.white,

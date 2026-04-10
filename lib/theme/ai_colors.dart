@@ -6,29 +6,29 @@ class AiColors {
   AiColors._();
 
   // Primary — matches SPColors.primaryBlue
-  static const Color primary = Color(0xFF5B7CFF);
-  static const Color primaryLight = Color(0xFF7B96FF);
-  static const Color primaryDark = Color(0xFF4C6FFF);
+  static const Color primary = Color(0xFF23AED1);
+  static const Color primaryLight = Color(0xFF90CCDD);
+  static const Color primaryDark = Color(0xFF05708D);
 
   // Backgrounds — matches SPColors backgrounds
-  static const Color backgroundDark = Color(0xFF0A0E1A);
+  static const Color backgroundDark = Color(0xFFF7FBFD);
 
   // Cards & Surfaces
-  static const Color cardDark = Color(0xFF141825);
+  static const Color cardDark = Color(0xFFFFFFFF);
 
   // Borders — matches SPColors.borderPrimary
-  static const Color borderDark = Color(0xFF2D3648);
+  static const Color borderDark = Color(0xFFD6E6EE);
 
   // Text — matches SPColors text system
-  static const Color textSecondary = Color(0xFFB8BCC8);
-  static const Color textTertiary = Color(0xFF6B7280);
-  static const Color textMuted = Color(0xFFB8BCC8);
+  static const Color textSecondary = Color(0xFF486A78);
+  static const Color textTertiary = Color(0xFF7FA1AF);
+  static const Color textMuted = Color(0xFF7FA1AF);
 
   // Status — matches SPColors status colors
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
-  static const Color info = Color(0xFF3B82F6);
+  static const Color info = Color(0xFF23AED1);
 
   static Color matchColor(double percentage) {
     if (percentage >= 90) return primary;
@@ -38,6 +38,6 @@ class AiColors {
   }
 
   // Glass effect — matches SP card style (backgroundSecondary with border)
-  static const Color glassBackground = Color(0xFF141825);
-  static const Color glassBorder = Color(0xFF2D3648);
+  static const Color glassBackground = Color(0xFFFFFFFF);
+  static const Color glassBorder = Color(0xFFD6E6EE);
 }

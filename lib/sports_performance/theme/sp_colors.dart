@@ -6,40 +6,40 @@ class SPColors {
   SPColors._();
 
   // Background Colors
-  static const Color backgroundPrimary = Color(0xFF0A0E1A);  // Très sombre, presque noir
-  static const Color backgroundSecondary = Color(0xFF141825); // Cards/Containers
-  static const Color backgroundTertiary = Color(0xFF1E2433);  // Inputs, sections
+  static const Color backgroundPrimary = Color(0xFFF7FBFD);  // App background
+  static const Color backgroundSecondary = Color(0xFFFFFFFF); // Cards/Containers
+  static const Color backgroundTertiary = Color(0xFFEEF6F9);  // Inputs, sections
   
   // Primary Blue - Couleur principale
-  static const Color primaryBlue = Color(0xFF5B7CFF);         // Bleu principal (boutons, accents)
-  static const Color primaryBlueDark = Color(0xFF4C6FFF);     // Bleu plus foncé
-  static const Color primaryBlueLight = Color(0xFF7B96FF);    // Bleu plus clair
+  static const Color primaryBlue = Color(0xFF23AED1);         // Bleu principal (boutons, accents)
+  static const Color primaryBlueDark = Color(0xFF05708D);     // Bleu plus foncé
+  static const Color primaryBlueLight = Color(0xFF90CCDD);    // Bleu plus clair
   
   // Text Colors
-  static const Color textPrimary = Color(0xFFFFFFFF);         // Blanc pur
-  static const Color textSecondary = Color(0xFFB8BCC8);       // Gris clair
-  static const Color textTertiary = Color(0xFF6B7280);        // Gris moyen
-  static const Color textDisabled = Color(0xFF4B5563);        // Gris foncé
+  static const Color textPrimary = Color(0xFF0F2F3A);         // Texte principal
+  static const Color textSecondary = Color(0xFF486A78);       // Texte secondaire
+  static const Color textTertiary = Color(0xFF7FA1AF);        // Texte discret
+  static const Color textDisabled = Color(0xFFA4BCC7);        // Désactivé
   
   // Status Colors
   static const Color success = Color(0xFF10B981);             // Vert (confirmé, complété)
   static const Color warning = Color(0xFFF59E0B);             // Orange (en attente)
   static const Color error = Color(0xFFEF4444);               // Rouge (absent, erreur)
-  static const Color info = Color(0xFF3B82F6);                // Bleu info
+  static const Color info = Color(0xFF23AED1);                // Bleu info
   
   // Badge Colors
   static const Color badgePhysical = Color(0xFFEF4444);       // Rouge pour physique
-  static const Color badgeTechnical = Color(0xFF8B5CF6);      // Violet pour technique
+  static const Color badgeTechnical = Color(0xFF23AED1);      // Bleu pour technique
   static const Color badgeMedical = Color(0xFF10B981);        // Vert pour médical
-  static const Color badgeMental = Color(0xFF3B82F6);         // Bleu pour mental
+  static const Color badgeMental = Color(0xFF05708D);         // Bleu profond pour mental
   
   // Border Colors
-  static const Color borderPrimary = Color(0xFF2D3648);       // Bordures principales
-  static const Color borderSecondary = Color(0xFF1E2433);     // Bordures secondaires
+  static const Color borderPrimary = Color(0xFFD6E6EE);       // Bordures principales
+  static const Color borderSecondary = Color(0xFFE6F1F6);     // Bordures secondaires
   
   // Overlay Colors
-  static const Color overlay = Color(0x80000000);             // Overlay semi-transparent
-  static const Color shimmer = Color(0xFF2D3648);             // Pour loading shimmer
+  static const Color overlay = Color(0x33000000);             // Overlay semi-transparent
+  static const Color shimmer = Color(0xFFE6F1F6);             // Pour loading shimmer
   
   // Gradient Colors (pour effets spéciaux)
   static const LinearGradient primaryGradient = LinearGradient(
@@ -59,10 +59,10 @@ class SPColors {
 class SPTheme {
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
     
     // Color Scheme
-    colorScheme: const ColorScheme.dark(
+    colorScheme: const ColorScheme.light(
       primary: SPColors.primaryBlue,
       secondary: SPColors.primaryBlueLight,
       surface: SPColors.backgroundSecondary,
@@ -80,7 +80,7 @@ class SPTheme {
     
     // AppBar Theme
     appBarTheme: const AppBarTheme(
-      backgroundColor: SPColors.backgroundPrimary,
+      backgroundColor: SPColors.backgroundSecondary,
       elevation: 0,
       centerTitle: true,
       titleTextStyle: TextStyle(
