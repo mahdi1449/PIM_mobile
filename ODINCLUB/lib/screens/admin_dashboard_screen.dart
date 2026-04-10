@@ -6,6 +6,7 @@ import 'login_screen.dart';
 import 'account_settings_screen.dart';
 import 'players/players_list_view.dart';
 import 'coaches/coaches_list_view.dart';
+import '../utils/role_mapper.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -33,12 +34,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   
   final List<String> _roles = [
     'All',
-    'Administrateur',
-    'Responsable du club',
-    'Entraîneur',
-    'Scout',
-    'Comptable',
-    'Joueur',
+    ...RoleMapper.labels,
   ];
   
   final List<String> _positions = [
@@ -77,8 +73,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
   }
 
-  bool get _isAdmin => _userRole == 'Administrateur';
-  bool get _isManager => _userRole == 'Administrateur' || _userRole == 'Responsable du club';
+  bool get _isAdmin => RoleMapper.isAdmin(_userRole);
+  bool get _isManager =>
+      RoleMapper.isAdmin(_userRole) || RoleMapper.normalize(_userRole) == 'CLUB_RESPONSABLE';
 
   Future<void> _handleLogout() async {
     await _apiService.removeToken();
@@ -160,7 +157,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     List<dynamic> filtered = List.from(_allUsers);
     
     if (_selectedRoleFilter != null && _selectedRoleFilter != 'All') {
-      filtered = filtered.where((u) => u['role'] == _selectedRoleFilter).toList();
+      final selectedCode = RoleMapper.toCode(_selectedRoleFilter!);
+      filtered = filtered
+          .where((u) => RoleMapper.normalize(u['role']?.toString()) == selectedCode)
+          .toList();
     }
     
     if (_selectedPositionFilter != null && _selectedPositionFilter != 'All') {
@@ -982,7 +982,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '€42.5M',
+                    '42.5M DT',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
@@ -1475,6 +1475,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final fullName = '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim();
     final email = user['email'] ?? '';
     final role = user['role'] ?? '';
+    final roleCode = RoleMapper.normalize(role);
+    final roleLabel = RoleMapper.toLabel(roleCode);
     final position = user['position'] ?? '';
     final isApproved = user['isApprovedByAdmin'] ?? false;
     final isActive = user['isActive'] ?? false;
@@ -1522,15 +1524,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: _getRoleColor(role).withOpacity(0.2),
+                        color: _getRoleColor(roleCode).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        role,
+                        roleLabel,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: _getRoleColor(role),
+                          color: _getRoleColor(roleCode),
                         ),
                       ),
                     ),
@@ -1629,17 +1631,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Color _getRoleColor(String role) {
     switch (role) {
-      case 'Administrateur':
+      case 'ADMIN':
         return AppTheme.blueFonce;
-      case 'Responsable du club':
+      case 'CLUB_RESPONSABLE':
         return AppTheme.blueFonce;
-      case 'Entraîneur':
+      case 'STAFF_TECHNIQUE':
         return AppTheme.blueCiel;
-      case 'Scout':
+      case 'SCOUT':
         return AppTheme.blueCiel;
-      case 'Comptable':
+      case 'FINANCIER':
         return AppTheme.blueFonce;
-      case 'Joueur':
+      case 'JOUEUR':
         return AppTheme.blueCiel;
       default:
         return Colors.grey;

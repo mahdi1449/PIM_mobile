@@ -96,8 +96,8 @@ class Player {
   }
 
   Map<String, dynamic> toJson() {
-     final Map<String, dynamic> data = {
-      'userId': userId,
+    final Map<String, dynamic> data = {
+      // 'userId' omitted because backend strictly forbids non-whitelisted properties
       'firstName': firstName,
       'lastName': lastName,
       'dateOfBirth': dateOfBirth.toIso8601String(),

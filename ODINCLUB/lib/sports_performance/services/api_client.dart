@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../config/app_config.dart';
 
 class ApiClient {
   // Android Emulator accesses host machine via 10.0.2.2
   // For physical device, use your local IP e.g., 192.168.1.X
-  static const String baseUrl = 'http://10.0.2.2:3000/api';
+  static String get baseUrl => AppConfig.apiBaseUrl;
   
   final Dio dio;
 
@@ -11,14 +13,27 @@ class ApiClient {
       : dio = Dio(
           BaseOptions(
             baseUrl: baseUrl,
-            connectTimeout: const Duration(seconds: 5),
-            receiveTimeout: const Duration(seconds: 5),
+            connectTimeout: const Duration(seconds: 60),
+            receiveTimeout: const Duration(seconds: 60),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
           ),
         ) {
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final prefs = await SharedPreferences.getInstance();
+          final token = prefs.getString('access_token');
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+
     // Ajouter intercepteurs pour logging en développement
     dio.interceptors.add(
       LogInterceptor(

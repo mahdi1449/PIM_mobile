@@ -1,13 +1,18 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class AppConfig {
-  // Backend API base URL
-  // For Android emulator, use: http://10.0.2.2:3000
-  // For iOS simulator, use: http://localhost:3000
-  // For physical device, use your computer's IP address: http://YOUR_IP:3000
-  static const String baseUrl = 'http://10.0.2.2:3000';
-  
-  // Example for Android emulator:
-  // static const String baseUrl = 'http://10.0.2.2:3000';
-  
-  // Example for physical device (replace with your actual IP):
-  // static const String baseUrl = 'http://192.168.1.100:3000';
+  // Backend base URL
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:3000/api';
+    } else if (Platform.isAndroid) {
+      // 10.0.2.2 est l'alias localhost pour l'émulateur Android
+      return 'http://10.0.2.2:3000/api';
+    } else {
+      // Pour iOS ou desktop
+      return 'http://localhost:3000/api';
+    }
+  }
+  static String get apiBaseUrl => baseUrl;
 }

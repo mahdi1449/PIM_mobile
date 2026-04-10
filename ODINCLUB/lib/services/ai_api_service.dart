@@ -1,23 +1,26 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 import '../models/ai_player.dart';
 import '../models/ai_prediction.dart';
 
 /// Service to interact with the NestJS Backend (port 3000)
 /// which proxies AI requests to the Python FastAPI model (port 8000).
 class AiApiService {
-  static String get _baseUrl {
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000';
-    }
-    return 'http://localhost:3000';
-  }
+  static String get _baseUrl => AppConfig.apiBaseUrl;
 
-  static final Map<String, String> _headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
+  static Future<Map<String, String>> get _headers async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+    
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
 
   static String _parseError(http.Response response) {
     try {
@@ -37,7 +40,7 @@ class AiApiService {
   static Future<List<AiPlayer>> fetchPlayers() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/players'), headers: _headers)
+          .get(Uri.parse('$_baseUrl/players'), headers: await _headers)
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -53,7 +56,7 @@ class AiApiService {
   static Future<AiPlayer> getPlayer(String id) async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/players/$id'), headers: _headers)
+          .get(Uri.parse('$_baseUrl/players/$id'), headers: await _headers)
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -69,8 +72,8 @@ class AiApiService {
     try {
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/players'),
-            headers: _headers,
+            Uri.parse('$_baseUrl/players'),
+            headers: await _headers,
             body: json.encode(player.toJson()),
           )
           .timeout(const Duration(seconds: 10));
@@ -95,8 +98,8 @@ class AiApiService {
     try {
       final response = await http
           .put(
-            Uri.parse('$_baseUrl/api/players/${player.id}'),
-            headers: _headers,
+            Uri.parse('$_baseUrl/players/${player.id}'),
+            headers: await _headers,
             body: json.encode(player.toJson()),
           )
           .timeout(const Duration(seconds: 10));
@@ -113,7 +116,7 @@ class AiApiService {
   static Future<void> deletePlayer(String id) async {
     try {
       final response = await http
-          .delete(Uri.parse('$_baseUrl/api/players/$id'), headers: _headers)
+          .delete(Uri.parse('$_baseUrl/players/$id'), headers: await _headers)
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode != 200 && response.statusCode != 204) {
@@ -127,7 +130,7 @@ class AiApiService {
   static Future<int> getPlayerCount() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/players/count'), headers: _headers)
+          .get(Uri.parse('$_baseUrl/players/count'), headers: await _headers)
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -168,7 +171,7 @@ class AiApiService {
       final response = await http
           .post(
             Uri.parse('$_baseUrl/ai/predict'),
-            headers: _headers,
+            headers: await _headers,
             body: json.encode(_buildAiPayload(player)),
           )
           .timeout(const Duration(seconds: 15));
@@ -189,7 +192,7 @@ class AiApiService {
       final response = await http
           .post(
             Uri.parse('$_baseUrl/ai/train'),
-            headers: _headers,
+            headers: await _headers,
             body: json.encode(payload),
           )
           .timeout(const Duration(seconds: 30));
@@ -206,7 +209,7 @@ class AiApiService {
   static Future<Map<String, dynamic>> getAiMetrics() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/ai/metrics'), headers: _headers)
+          .get(Uri.parse('$_baseUrl/ai/metrics'), headers: await _headers)
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -221,7 +224,7 @@ class AiApiService {
   static Future<Map<String, dynamic>> getAiStatus() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/ai/status'), headers: _headers)
+          .get(Uri.parse('$_baseUrl/ai/status'), headers: await _headers)
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -236,7 +239,7 @@ class AiApiService {
   static Future<bool> healthCheck() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/ai/health'), headers: _headers)
+          .get(Uri.parse('$_baseUrl/ai/health'), headers: await _headers)
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
@@ -257,7 +260,7 @@ class AiApiService {
       final response = await http
           .post(
             Uri.parse('$_baseUrl/ai/similar'),
-            headers: _headers,
+            headers: await _headers,
             body: json.encode(_buildAiPayload(player)),
           )
           .timeout(const Duration(seconds: 15));
@@ -277,7 +280,7 @@ class AiApiService {
       final response = await http
           .post(
             Uri.parse('$_baseUrl/ai/potential'),
-            headers: _headers,
+            headers: await _headers,
             body: json.encode(_buildAiPayload(player)),
           )
           .timeout(const Duration(seconds: 15));
@@ -297,7 +300,7 @@ class AiApiService {
       final response = await http
           .post(
             Uri.parse('$_baseUrl/ai/development-plan'),
-            headers: _headers,
+            headers: await _headers,
             body: json.encode(_buildAiPayload(player)),
           )
           .timeout(const Duration(seconds: 15));
@@ -317,8 +320,8 @@ class AiApiService {
     try {
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/players/archive'),
-            headers: _headers,
+            Uri.parse('$_baseUrl/players/archive'),
+            headers: await _headers,
             body: json.encode({'ids': ids}),
           )
           .timeout(const Duration(seconds: 10));
@@ -335,7 +338,7 @@ class AiApiService {
   static Future<List<AiPlayer>> fetchArchivedPlayers() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/players/archived'), headers: _headers)
+          .get(Uri.parse('$_baseUrl/players/archived'), headers: await _headers)
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {

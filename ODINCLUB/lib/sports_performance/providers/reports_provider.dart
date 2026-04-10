@@ -38,6 +38,13 @@ final topPlayersProvider =
   return service.getTopPlayers(eventId);
 });
 
+// Player Progression Provider
+final playerProgressionProvider =
+    FutureProvider.family<Map<String, dynamic>, String>((ref, playerId) async {
+  final service = ref.read(reportsServiceProvider);
+  return service.getPlayerProgression(playerId);
+});
+
 // Report Generation State Provider
 final reportGenerationProvider =
     StateNotifierProvider<ReportGenerationNotifier, AsyncValue<bool>>((ref) {

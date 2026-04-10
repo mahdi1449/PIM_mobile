@@ -17,6 +17,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'ai/ai_campaign_screen.dart';
 import 'package:provider/provider.dart' as prov;
 import '../providers/campaign_provider.dart';
+import '../sports_performance/screens/exercises/library_screen.dart';
+import '../utils/role_mapper.dart';
+import '../../season_planning/screens/season_list_screen.dart';
+import '../../tactics/screens/tactics_board_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -218,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        _userRole!,
+                        RoleMapper.toLabel(_userRole),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -293,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       activeColor: AppTheme.blueCiel,
                     ),
                   ),
-                  if (_userRole == 'Administrateur')
+                  if (RoleMapper.isAdmin(_userRole))
                     ListTile(
                       leading: Icon(Icons.admin_panel_settings, color: AppTheme.blueFonce),
                       title: Text(
@@ -342,6 +346,33 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
+                  ListTile(
+                    leading: Icon(Icons.fitness_center, color: AppTheme.blueFonce),
+                    title: Text(
+                      'Exercise Library',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.blueFonce,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Smart drills & AI Generator',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.darkGrey,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      // Import is needed but I'll add it or it will be auto-imported by IDE
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const LibraryScreen(),
+                        ),
+                      );
+                    },
+                  ),
                   const Divider(height: 24),
                   ListTile(
                     leading: Icon(Icons.logout, color: Colors.red.shade700),
@@ -386,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         return _buildDashboardView();
       case 3:
-        return _buildFinanceView();
+        return const LibraryScreen();
       case 4:
         return const AllEventsReportsScreen();
       default:
@@ -401,6 +432,10 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: EdgeInsets.fromLTRB(20 * scale, 24 * scale, 20 * scale, 100 * scale),
       children: [
         _buildExecutiveHeader(scale),
+        const SizedBox(height: 24),
+        _buildSeasonPlanButton(scale),
+        const SizedBox(height: 16),
+        _buildTacticsButton(scale),
         const SizedBox(height: 32),
         _buildStatsGrid(scale),
         const SizedBox(height: 32),
@@ -452,6 +487,126 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSeasonPlanButton(double scale) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SeasonListScreen()),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [SPColors.primaryBlue, SPColors.primaryBlueLight],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: SPColors.primaryBlue.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.date_range, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Planification Saison',
+                    style: SPTypography.h3.copyWith(color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Gérer les macro et micro cycles',
+                    style: SPTypography.bodyMedium.copyWith(color: Colors.white.withOpacity(0.8)),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTacticsButton(double scale) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const TacticsBoardScreen()),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.indigo.shade800, Colors.indigo.shade400],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.indigo.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.sports_soccer, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Analyse Tactique & Adversaire',
+                    style: SPTypography.h3.copyWith(color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Générer un XI de départ sur-mesure (IA)',
+                    style: SPTypography.bodyMedium.copyWith(color: Colors.white.withOpacity(0.8)),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
     );
   }
 
@@ -896,8 +1051,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _centerNavItem(),
               _navItem(
                 index: 3,
-                icon: Icons.account_balance_wallet_outlined,
-                label: 'Finance',
+                icon: Icons.fitness_center,
+                label: 'Exercises',
               ),
               _navItem(
                 index: 4,

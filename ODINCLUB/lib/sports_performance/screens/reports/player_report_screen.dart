@@ -6,10 +6,13 @@ import '../../models/event_player.dart';
 import '../../providers/reports_provider.dart';
 import '../../theme/sp_colors.dart';
 import '../../theme/sp_typography.dart';
+import '../../widgets/performance_progression_chart.dart';
+import '../../providers/reports_provider.dart';
 import '../../../services/ai_scouting_bridge.dart';
 import '../../../screens/ai/ai_campaign_screen.dart';
 import 'package:provider/provider.dart' as prov;
 import '../../../providers/campaign_provider.dart';
+import '../exercises/generator_form.dart';
 
 class PlayerReportScreen extends ConsumerWidget {
   final String eventPlayerId;
@@ -21,10 +24,20 @@ class PlayerReportScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reportAsyncValue = ref.watch(playerReportProvider(eventPlayerId));
+    final reportAsync = ref.watch(playerReportProvider(eventPlayerId));
 
-    return Scaffold(
-      backgroundColor: SPColors.backgroundPrimary,
+    return reportAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('Error: $error', style: const TextStyle(color: Colors.white))),
+      data: (report) {
+        final playerId = report.eventPlayer is String 
+            ? report.eventPlayer 
+            : (report.eventPlayer as EventPlayer).player.id;
+        
+        final progressionAsync = ref.watch(playerProgressionProvider(playerId));
+
+        return Scaffold(
+          backgroundColor: SPColors.backgroundPrimary,
       appBar: AppBar(
         title: Text(
           'RAPPORT JOUEUR',
@@ -43,11 +56,7 @@ class PlayerReportScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: reportAsyncValue.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error', style: const TextStyle(color: Colors.white))),
-        data: (report) {
-          return SingleChildScrollView(
+      body: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -60,16 +69,28 @@ class PlayerReportScreen extends ConsumerWidget {
                 const SizedBox(height: 40),
                 _buildRadarChartSection(report),
                 const SizedBox(height: 32),
-                _buildAISynthesis(report),
+                
+                // New Progression Section
+                progressionAsync.when(
+                  data: (data) => PerformanceProgressionChart(
+                    tests: data['tests'] ?? [],
+                    matches: data['matches'] ?? [],
+                  ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, r) => const Text('Erreur historique progression'),
+                ),
+                
+                const SizedBox(height: 32),
+                _buildAISynthesis(context, report),
                 const SizedBox(height: 20),
                 _buildSendToAiButton(context, report),
                 const SizedBox(height: 32),
                 _buildDetailedMetrics(report),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -307,45 +328,148 @@ class PlayerReportScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAISynthesis(PlayerReport report) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: SPColors.primaryBlue.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: SPColors.primaryBlue.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+  Widget _buildAISynthesis(BuildContext context, PlayerReport report) {
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: SPColors.primaryBlue.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: SPColors.primaryBlue.withOpacity(0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.bolt, color: SPColors.primaryBlue, size: 20),
-              const SizedBox(width: 8),
+              Row(
+                children: [
+                  const Icon(Icons.bolt, color: SPColors.primaryBlue, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'SYNTHÈSE DE PERFORMANCE IA',
+                    style: SPTypography.overline.copyWith(
+                      color: SPColors.primaryBlue,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.auto_awesome, color: SPColors.primaryBlue, size: 16),
+                ],
+              ),
+              const SizedBox(height: 16),
               Text(
-                'SYNTHÈSE DE PERFORMANCE IA',
-                style: SPTypography.overline.copyWith(
-                  color: SPColors.primaryBlue,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.1,
+                report.recommendation.isNotEmpty 
+                  ? report.recommendation 
+                  : "Aucune recommandation disponible pour le moment.",
+                style: SPTypography.bodyMedium.copyWith(
+                  color: SPColors.textSecondary,
+                  height: 1.5,
                 ),
               ),
-              const Spacer(),
-              const Icon(Icons.auto_awesome, color: SPColors.primaryBlue, size: 16),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            report.recommendation.isNotEmpty 
-              ? report.recommendation 
-              : "Aucune recommandation disponible pour le moment.",
-            style: SPTypography.bodyMedium.copyWith(
-              color: SPColors.textSecondary,
-              height: 1.5,
+        ),
+        const SizedBox(height: 24),
+        _buildProfessionalPrescription(context, report),
+      ],
+    );
+  }
+
+  Widget _buildProfessionalPrescription(BuildContext context, PlayerReport report) {
+    // Identifier les lacunes (scores < 70 dans les métriques détaillées)
+    final weaknesses = report.testScores.where((s) => s.score < 70).toList();
+    
+    if (weaknesses.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.medical_services_outlined, color: SPColors.warning, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'PRESCRIPTIONS D\'ENTRAÎNEMENT',
+              style: SPTypography.overline.copyWith(
+                color: SPColors.warning,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...weaknesses.map((w) => _buildPrescriptionCard(context, w, report)),
+      ],
+    );
+  }
+
+  Widget _buildPrescriptionCard(BuildContext context, TestScore weakness, PlayerReport report) {
+    final player = report.eventPlayer is EventPlayer ? (report.eventPlayer as EventPlayer).player : null;
+    final playerId = player?.id;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: SPColors.warning.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SPColors.warning.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'LACUNE DÉTECTÉE : ${weakness.testName.toUpperCase()}',
+                  style: SPTypography.caption.copyWith(
+                    color: SPColors.warning,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 9,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'L\'IA recommande un travail de ${weakness.category.toLowerCase()} ciblé.',
+                  style: SPTypography.bodySmall.copyWith(color: SPColors.textSecondary),
+                ),
+              ],
             ),
           ),
+          ElevatedButton(
+            onPressed: () {
+              _navigateToGenerator(context, report, weakness.testName);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: SPColors.warning,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('RÉSOUDRE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToGenerator(BuildContext context, PlayerReport report, String objective) {
+    final player = report.eventPlayer is EventPlayer 
+        ? (report.eventPlayer as EventPlayer).player 
+        : null;
+    
+    if (player == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GeneratorForm(
+          initialPlayerId: player.id,
+          initialObjective: objective,
+        ),
       ),
     );
   }

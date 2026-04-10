@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/role_mapper.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -109,8 +110,8 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
 
     if (result['success'] && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User approved successfully'),
+        SnackBar(
+          content: const Text('User approved successfully'),
           backgroundColor: AppTheme.primaryGreen,
         ),
       );
@@ -154,8 +155,8 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
 
     if (result['success'] && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User rejected successfully'),
+        SnackBar(
+          content: const Text('User rejected successfully'),
           backgroundColor: AppTheme.blueCiel,
         ),
       );
@@ -175,6 +176,8 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
     final fullName = '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim();
     final email = user['email'] ?? '';
     final role = user['role'] ?? '';
+    final roleCode = RoleMapper.normalize(role);
+    final roleLabel = RoleMapper.toLabel(roleCode);
     final isApproved = user['isApprovedByAdmin'] ?? false;
     final isActive = user['isActive'] ?? false;
     final isEmailVerified = user['isEmailVerified'] ?? false;
@@ -198,7 +201,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                     children: [
                       Text(
                         fullName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.darkGrey,
@@ -209,7 +212,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                         email,
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.darkGrey.withOpacity(0.7),
+                          color: AppTheme.darkGrey.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -218,15 +221,15 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: _getRoleColor(role).withOpacity(0.2),
+                    color: _getRoleColor(roleCode).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    role,
+                    roleLabel,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: _getRoleColor(role),
+                      color: _getRoleColor(roleCode),
                     ),
                   ),
                 ),
@@ -278,7 +281,7 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isActive ? color.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+        color: isActive ? color.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -305,17 +308,17 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
 
   Color _getRoleColor(String role) {
     switch (role) {
-      case 'Administrateur':
+      case 'ADMIN':
         return AppTheme.blueFonce;
-      case 'Responsable du club':
+      case 'CLUB_RESPONSABLE':
         return AppTheme.blueCiel;
-      case 'Entraîneur':
+      case 'STAFF_TECHNIQUE':
         return AppTheme.blueCiel;
-      case 'Scout':
+      case 'SCOUT':
         return AppTheme.blueCiel;
-      case 'Comptable':
+      case 'FINANCIER':
         return AppTheme.blueFonce;
-      case 'Joueur':
+      case 'JOUEUR':
         return AppTheme.primaryGreen;
       default:
         return Colors.grey;
@@ -362,14 +365,14 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                             Icon(
                               Icons.check_circle_outline,
                               size: 80,
-                              color: AppTheme.primaryGreen.withOpacity(0.5),
+                              color: AppTheme.primaryGreen.withValues(alpha: 0.5),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'No pending users',
                               style: TextStyle(
                                 fontSize: 18,
-                                color: AppTheme.darkGrey.withOpacity(0.7),
+                                color: AppTheme.darkGrey.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -400,14 +403,14 @@ class _AdminScreenState extends State<AdminScreen> with SingleTickerProviderStat
                             Icon(
                               Icons.people_outline,
                               size: 80,
-                              color: AppTheme.primaryGreen.withOpacity(0.5),
+                              color: AppTheme.primaryGreen.withValues(alpha: 0.5),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'No users found',
                               style: TextStyle(
                                 fontSize: 18,
-                                color: AppTheme.darkGrey.withOpacity(0.7),
+                                color: AppTheme.darkGrey.withValues(alpha: 0.7),
                               ),
                             ),
                           ],

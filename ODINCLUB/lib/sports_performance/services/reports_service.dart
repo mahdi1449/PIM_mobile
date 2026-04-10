@@ -63,4 +63,13 @@ class ReportsService {
           'Erreur lors de la récupération des top players: $e');
     }
   }
+  // Get player progression (Tests vs Matches)
+  Future<Map<String, dynamic>> getPlayerProgression(String playerId) async {
+    try {
+      final response = await _apiClient.get('/players/$playerId/progression');
+      return response.data;
+    } catch (e) {
+      throw Exception('Erreur lors de la récupération de la progression: $e');
+    }
+  }
 }

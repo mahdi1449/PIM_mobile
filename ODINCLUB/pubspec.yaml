@@ -49,6 +49,8 @@ dependencies:
   # AI Scouting Module dependencies
   provider: ^6.1.2              # State management for AI module
   file_picker: ^8.0.0           # Import scouting reports
+  image_picker: ^1.1.2          # Auth module (profile photo)
+  audioplayers: ^5.2.1          # Audio commentary
 
 dev_dependencies:
   flutter_test:
@@ -68,8 +70,7 @@ dev_dependencies:
 flutter:
 
   # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
+  # included with the Material Icons class.
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:

@@ -254,12 +254,13 @@ class CampaignProvider extends ChangeNotifier {
 
   Future<void> skipPlayer(AiPlayer player) async {
     try {
-      final updatedPlayer = player.copyWith(label: 0);
+      final updatedPlayer = player.copyWith(label: 0, status: 'archived');
 
       final index = _players
           .indexWhere((p) => p.id == player.id || p.name == player.name);
       if (index != -1) {
-        _players[index] = updatedPlayer;
+        _players.removeAt(index);
+        _archivedPlayers.add(updatedPlayer);
         notifyListeners();
       }
 
@@ -275,7 +276,10 @@ class CampaignProvider extends ChangeNotifier {
 
   Future<void> _autoRetrain() async {
     try {
+      // Include both active labeled players (recruited) and archived labeled players (skipped)
       final labeledPlayers = _players.where((p) => p.label != null).toList();
+      labeledPlayers.addAll(_archivedPlayers.where((p) => p.label != null));
+      
       if (labeledPlayers.isEmpty) return;
 
       debugPrint(
