@@ -8,6 +8,17 @@ import '../../screens/roles/club_responsable_dashboard_screen.dart';
 import '../../screens/roles/analyst_dashboard_screen.dart';
 import '../../screens/roles/joueur_dashboard_screen.dart';
 import '../../screens/roles/staff_technique_dashboard_screen.dart';
+import '../../screens/roles/staff_technique_dashboard_hub_screen.dart';
+import '../../screens/roles/staff_technique_calendar_hub_screen.dart';
+import '../../screens/roles/staff_technique_chemistry_hub_screen.dart';
+import '../../screens/roles/staff_technique_analysis_hub_screen.dart';
+import '../../screens/roles/staff_technique_players_screen.dart';
+import '../../screens/roles/staff_technique_reports_hub_screen.dart';
+import '../../screens/roles/staff_technique_tests_hub_screen.dart';
+import '../../screens/roles/staff_technique_exercises_hub_screen.dart';
+import '../../screens/roles/staff_technique_season_hub_screen.dart';
+import '../../screens/roles/staff_technique_cognitive_hub_screen.dart';
+import '../../screens/roles/staff_technique_tactics_hub_screen.dart';
 import '../../screens/roles/staff_medical_dashboard_screen.dart';
 import '../../screens/roles/finance_dashboard_screen.dart';
 import '../../screens/roles/scout_dashboard_screen.dart';
@@ -32,6 +43,7 @@ import '../screens/communication_notifications_shell_screen.dart';
 import '../../season_planning/screens/season_list_screen.dart';
 import '../../tactics/screens/tactics_board_screen.dart';
 import '../../screens/chemistry/team_chemistry_screen.dart';
+import '../../utils/role_mapper.dart';
 
 class AppRouteData {
   const AppRouteData({
@@ -128,7 +140,10 @@ class AppRoutes {
       case coachDashboard:
         return AppRouteData(
           title: 'Coach Dashboard',
-          builder: (_) => StaffTechniqueDashboardScreen(session: session),
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? StaffTechniqueDashboardHubScreen(session: session)
+              : StaffTechniqueDashboardScreen(session: session),
         );
       case medicalDashboard:
         return AppRouteData(
@@ -226,8 +241,12 @@ class AppRoutes {
       case analysis:
         return AppRouteData(
           title: 'Match Analysis',
-          builder: (_) => AnalysisShellScreen(session: session),
-          showAppBar: true,
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? StaffTechniqueAnalysisHubScreen(session: session)
+              : AnalysisShellScreen(session: session),
+          showAppBar:
+              RoleMapper.normalize(session.role) != RoleMapper.staffTechnique,
           usePadding: false,
         );
       case uploadVideo:
@@ -265,36 +284,52 @@ class AppRoutes {
       case players:
         return AppRouteData(
           title: 'Players',
-          builder: (_) => const PlayersListScreen(),
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? const StaffTechniquePlayersScreen()
+              : const PlayersListScreen(),
           showAppBar: true,
           usePadding: false,
         );
       case calendar:
         return AppRouteData(
           title: 'Calendar',
-          builder: (_) => const CalendarScreen(),
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? const StaffTechniqueCalendarHubScreen()
+              : const CalendarScreen(),
           showAppBar: true,
           usePadding: false,
         );
       case reports:
         return AppRouteData(
           title: 'Performance Reports',
-          builder: (_) => const AllEventsReportsScreen(),
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? const StaffTechniqueReportsHubScreen()
+              : const AllEventsReportsScreen(),
           showAppBar: true,
           usePadding: false,
         );
       case tests:
         return AppRouteData(
           title: 'Tests & Test Types',
-          builder: (_) => const TestTypesListScreen(),
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? const StaffTechniqueTestsHubScreen()
+              : const TestTypesListScreen(),
           showAppBar: true,
           usePadding: false,
         );
       case exercises:
         return AppRouteData(
           title: 'Exercises Library',
-          builder: (_) => const LibraryScreen(),
-          showAppBar: true,
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? const StaffTechniqueExercisesHubScreen()
+              : const LibraryScreen(),
+          showAppBar:
+              RoleMapper.normalize(session.role) != RoleMapper.staffTechnique,
           usePadding: false,
         );
       case aiCampaigns:
@@ -314,7 +349,10 @@ class AppRoutes {
       case squadCognitiveOverview:
         return AppRouteData(
           title: 'Vue Equipe Cognitive',
-          builder: (_) => const SquadCognitiveOverviewScreen(),
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? const StaffTechniqueCognitiveHubScreen()
+              : const SquadCognitiveOverviewScreen(),
           showAppBar: false,
           usePadding: false,
         );
@@ -348,23 +386,35 @@ class AppRoutes {
       case seasonPlanning:
         return AppRouteData(
           title: 'Planification de Saison',
-          builder: (_) => const SeasonListScreen(),
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? const StaffTechniqueSeasonHubScreen()
+              : const SeasonListScreen(),
           showAppBar: false,
           usePadding: false,
         );
       case tactics:
         return AppRouteData(
           title: 'IA Tactique',
-          builder: (_) => const TacticsBoardScreen(),
-          showAppBar: false,
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? const StaffTechniqueTacticsHubScreen()
+              : const TacticsBoardScreen(),
+          showAppBar:
+              RoleMapper.normalize(session.role) != RoleMapper.staffTechnique,
           usePadding: false,
         );
       case chemistry:
         return AppRouteData(
           title: 'Team Chemistry',
-          builder: (_) => const TeamChemistryScreen(),
-          showAppBar: true,
-          usePadding: true,
+          builder: (_) =>
+              RoleMapper.normalize(session.role) == RoleMapper.staffTechnique
+              ? const StaffTechniqueChemistryHubScreen()
+              : const TeamChemistryScreen(),
+          showAppBar:
+              RoleMapper.normalize(session.role) != RoleMapper.staffTechnique,
+          usePadding:
+              RoleMapper.normalize(session.role) != RoleMapper.staffTechnique,
         );
       default:
         return AppRouteData(
@@ -374,5 +424,3 @@ class AppRoutes {
     }
   }
 }
-
-

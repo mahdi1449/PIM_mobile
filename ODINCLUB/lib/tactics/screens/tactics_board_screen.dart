@@ -6,6 +6,8 @@ import '../services/tactics_service.dart';
 import '../../theme/app_theme.dart';
 import '../../ui/navigation/menu_config.dart';
 import '../../ui/shell/app_shell.dart';
+import '../../ui/theme/staff_technique_hub.dart';
+import '../../utils/role_mapper.dart';
 
 class TacticsBoardScreen extends StatefulWidget {
   const TacticsBoardScreen({super.key});
@@ -19,11 +21,14 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
   bool _isLoading = false;
   TacticalPlan? _plan;
   bool _showAdvancedInputs = false;
+  bool _useHubTheme = false;
   final List<_OpponentPlayerDraft> _retiredOpponentDrafts = [];
 
   final TextEditingController _opponentTeamController = TextEditingController();
-  final TextEditingController _preferredFormationController = TextEditingController();
-  final TextEditingController _detailedOpponentStyleController = TextEditingController();
+  final TextEditingController _preferredFormationController =
+      TextEditingController();
+  final TextEditingController _detailedOpponentStyleController =
+      TextEditingController();
   final TextEditingController _strengthsController = TextEditingController();
   final TextEditingController _weaknessesController = TextEditingController();
   final List<_OpponentPlayerDraft> _opponentPlayerDrafts = [
@@ -33,22 +38,37 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
 
   final List<Map<String, String>> _oppStyles = [
     {'value': 'POSSESSION', 'label': 'Jeu de Possession (ex: Man City)'},
-    {'value': 'COUNTER_ATTACK', 'label': 'Gros pressing & Contre (ex: Liverpool)'},
+    {
+      'value': 'COUNTER_ATTACK',
+      'label': 'Gros pressing & Contre (ex: Liverpool)',
+    },
     {'value': 'HIGH_PRESS', 'label': 'Pressing très haut (ex: Bayern)'},
     {'value': 'PARK_THE_BUS', 'label': 'Bloc très bas / Défensif'},
   ];
 
-  Color get _surface => AppTheme.surface;
-  Color get _surfaceAlt => AppTheme.surfaceAlt;
-  Color get _border => AppTheme.cardBorder;
-  Color get _primary => AppTheme.blueFonce;
-  Color get _accent => AppTheme.blueCiel;
-  Color get _textPrimary => AppTheme.textPrimary;
-  Color get _textSecondary => AppTheme.textSecondary;
-  Color get _textMuted => AppTheme.textMuted;
-  Color get _success => AppTheme.success;
-  Color get _warning => AppTheme.warning;
-  Color get _danger => AppTheme.danger;
+  Color get _surface =>
+      _useHubTheme ? StaffTechniqueHubTheme.surface : AppTheme.surface;
+  Color get _surfaceAlt =>
+      _useHubTheme ? StaffTechniqueHubTheme.surfaceSoft : AppTheme.surfaceAlt;
+  Color get _border =>
+      _useHubTheme ? StaffTechniqueHubTheme.border : AppTheme.cardBorder;
+  Color get _primary =>
+      _useHubTheme ? StaffTechniqueHubTheme.primary : AppTheme.blueFonce;
+  Color get _accent =>
+      _useHubTheme ? StaffTechniqueHubTheme.secondary : AppTheme.blueCiel;
+  Color get _textPrimary =>
+      _useHubTheme ? StaffTechniqueHubTheme.textPrimary : AppTheme.textPrimary;
+  Color get _textSecondary => _useHubTheme
+      ? StaffTechniqueHubTheme.textSecondary
+      : AppTheme.textSecondary;
+  Color get _textMuted =>
+      _useHubTheme ? StaffTechniqueHubTheme.textSecondary : AppTheme.textMuted;
+  Color get _success =>
+      _useHubTheme ? StaffTechniqueHubTheme.success : AppTheme.success;
+  Color get _warning =>
+      _useHubTheme ? StaffTechniqueHubTheme.warning : AppTheme.warning;
+  Color get _danger =>
+      _useHubTheme ? StaffTechniqueHubTheme.danger : AppTheme.danger;
 
   BoxDecoration _panelDecoration({
     Color? color,
@@ -62,12 +82,95 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
       boxShadow: elevated
           ? [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: (_useHubTheme ? _primary : Colors.black).withValues(
+                  alpha: _useHubTheme ? 0.08 : 0.04,
+                ),
+                blurRadius: _useHubTheme ? 24 : 10,
+                offset: Offset(0, _useHubTheme ? 10 : 4),
               ),
             ]
           : const [],
+    );
+  }
+
+  ThemeData _hubTheme(BuildContext context) {
+    final base = Theme.of(context);
+    return base.copyWith(
+      scaffoldBackgroundColor: Colors.transparent,
+      dividerColor: _border,
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: StaffTechniqueHubTheme.surfaceSoft.withValues(alpha: 0.95),
+        labelStyle: TextStyle(color: _textSecondary),
+        hintStyle: TextStyle(color: _textMuted),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: _border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: _border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(color: _primary, width: 1.4),
+        ),
+      ),
+      switchTheme: base.switchTheme.copyWith(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? _primary
+              : StaffTechniqueHubTheme.surface,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? _primary.withValues(alpha: 0.28)
+              : _border,
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: _primary,
+        contentTextStyle: const TextStyle(color: Colors.white),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Widget _buildHubHero(bool detailedModeActive) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StaffTechniqueHeroCard(
+          eyebrow: 'Tactical Lab',
+          title: 'IA Tactique',
+          subtitle: detailedModeActive
+              ? 'Le rapport detaille pilote deja la recommandation. Tu peux encore relire les signaux clés avant de regenerer le plan.'
+              : 'Cadre l adversaire, active si besoin le rapport detaille, puis laisse le module sortir un onze et des consignes lisibles pour le staff.',
+          icon: Icons.dashboard_customize_rounded,
+        ),
+        const SizedBox(height: 18),
+        const StaffTechniqueSectionTitle(title: 'Profil adverse'),
+        const SizedBox(height: 6),
+        const Text(
+          'Style, contexte de match, forces et faiblesses avant la generation.',
+          style: TextStyle(
+            color: StaffTechniqueHubTheme.textSecondary,
+            height: 1.45,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _wrapBody(BuildContext context, Widget child) {
+    return Theme(
+      data: _useHubTheme ? _hubTheme(context) : Theme.of(context),
+      child: _useHubTheme
+          ? StaffTechniquePageBackground(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: child,
+            )
+          : child,
     );
   }
 
@@ -92,7 +195,9 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
     try {
       final opponentTeamName = _cleanText(_opponentTeamController.text);
       final preferredFormation = _cleanText(_preferredFormationController.text);
-      final detailedOpponentStyle = _cleanText(_detailedOpponentStyleController.text);
+      final detailedOpponentStyle = _cleanText(
+        _detailedOpponentStyleController.text,
+      );
       final strengths = _splitTags(_strengthsController.text);
       final weaknesses = _splitTags(_weaknessesController.text);
       final opponentSquad = _opponentPlayerDrafts
@@ -101,10 +206,13 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
           .toList();
 
       // In detailed mode (JSON/manual), rely only on detailed report data.
-      final useDetailedReportData = _showAdvancedInputs && _hasDetailedReportInput();
+      final useDetailedReportData =
+          _showAdvancedInputs && _hasDetailedReportInput();
 
       final plan = await TacticsService.suggestFormation(
-        opponentStyle: useDetailedReportData ? detailedOpponentStyle : _selectedStyle,
+        opponentStyle: useDetailedReportData
+            ? detailedOpponentStyle
+            : _selectedStyle,
         opponentTeamName: opponentTeamName,
         preferredFormation: preferredFormation,
         strengths: strengths,
@@ -188,7 +296,8 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
                     minLines: 8,
                     maxLines: 14,
                     decoration: const InputDecoration(
-                      hintText: '{\n  "opponentStyle": "HIGH_PRESS",\n  "opponentSquad": [...]\n}',
+                      hintText:
+                          '{\n  "opponentStyle": "HIGH_PRESS",\n  "opponentSquad": [...]\n}',
                       border: OutlineInputBorder(),
                       alignLabelWithHint: true,
                     ),
@@ -240,7 +349,8 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
           _showAdvancedInputs = true;
           _detailedOpponentStyleController.text = imported.opponentStyle ?? '';
           _opponentTeamController.text = imported.opponentTeamName ?? '';
-          _preferredFormationController.text = imported.preferredFormation ?? '';
+          _preferredFormationController.text =
+              imported.preferredFormation ?? '';
           _strengthsController.text = imported.strengths.join(', ');
           _weaknessesController.text = imported.weaknesses.join(', ');
           _replaceOpponentDrafts(imported.players);
@@ -374,7 +484,6 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
         _opponentPlayerDrafts.add(draft);
       }
     }
-
   }
 
   _ImportedOpponentReport _parseImportedReport(Map<String, dynamic> root) {
@@ -503,7 +612,8 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
         continue;
       }
 
-      final stats = _asMap(row['stats']) ??
+      final stats =
+          _asMap(row['stats']) ??
           _asMap(row['statistics']) ??
           _asMap(row['player_stats']);
 
@@ -523,7 +633,10 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
         continue;
       }
 
-      final rating = _toDouble(row['rating']) ?? _toDouble(stats?['rating']) ?? _toDouble(row['note']);
+      final rating =
+          _toDouble(row['rating']) ??
+          _toDouble(stats?['rating']) ??
+          _toDouble(row['note']);
       final goals = _toInt(row['goals']) ?? _toInt(stats?['goals']);
       final assists = _toInt(row['assists']) ?? _toInt(stats?['assists']);
       final shots = _toInt(row['shots']) ?? _toInt(stats?['shots']);
@@ -594,14 +707,19 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
   @override
   Widget build(BuildContext context) {
     final shell = AppShellScope.of(context);
+    _useHubTheme =
+        shell != null &&
+        RoleMapper.normalize(shell.session.role) == RoleMapper.staffTechnique;
     final canGoBack = Navigator.of(context).canPop() || shell != null;
     final detailedModeActive = _showAdvancedInputs && _hasDetailedReportInput();
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: _useHubTheme ? Colors.transparent : AppTheme.background,
       appBar: AppBar(
         title: const Text('IA Tactique'),
         centerTitle: false,
-        backgroundColor: _surface,
+        backgroundColor: _useHubTheme
+            ? Colors.white.withValues(alpha: 0.82)
+            : _surface,
         foregroundColor: _textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -617,7 +735,9 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
                   }
 
                   if (shell != null) {
-                    final fallbackRoute = MenuConfig.defaultRouteForRole(shell.session.role);
+                    final fallbackRoute = MenuConfig.defaultRouteForRole(
+                      shell.session.role,
+                    );
                     shell.navigate(fallbackRoute);
                   }
                 },
@@ -628,180 +748,276 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
           child: Container(height: 1, color: _border),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Formulaire
-            Text(
-              'Profil rapide de l\'adversaire',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: _primary),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: _panelDecoration(radius: 12, elevated: false),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: _selectedStyle,
-                  items: _oppStyles.map((s) {
-                    return DropdownMenuItem<String>(
-                      value: s['value'],
-                      child: Text(s['label']!),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedStyle = val);
-                  },
-                ),
-              ),
-            ),
-            if (detailedModeActive) ...[
-              const SizedBox(height: 8),
+      body: _wrapBody(
+        context,
+        SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_useHubTheme) ...[
+                _buildHubHero(detailedModeActive),
+                const SizedBox(height: 18),
+              ],
               Text(
-                'Mode rapport detaille actif: cette selection de style est ignoree pour l\'analyse.',
-                style: TextStyle(fontSize: 12, color: _warning, fontWeight: FontWeight.w600),
-              ),
-            ],
-            const SizedBox(height: 16),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              value: _showAdvancedInputs,
-              onChanged: (value) => setState(() => _showAdvancedInputs = value),
-              title: Text(
-                'Rapport adverse detaille',
-                style: TextStyle(fontWeight: FontWeight.w700, color: _primary),
-              ),
-              subtitle: const Text(
-                'Ajouter equipe reelle, style, formation, forces, faiblesses et joueurs cles.',
-              ),
-            ),
-            if (_showAdvancedInputs) ...[
-              const SizedBox(height: 8),
-              _buildAdvancedOpponentForm(),
-              const SizedBox(height: 16),
-            ],
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _generateTactics,
-                icon: _isLoading 
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.psychology, color: Colors.white),
-                label: const Text('Générer le 11 de départ via IA', style: TextStyle(color: Colors.white, fontSize: 16)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _accent,
-                  padding: const EdgeInsets.all(16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                'Profil rapide de l\'adversaire',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: _primary,
                 ),
               ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Plan de jeu
-            if (_plan != null) ...[
-              // Cartouche Instructions
+              const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.all(16),
-                decoration: _panelDecoration(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.shield, color: _primary),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Formation : ${_plan!.formation}',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _primary),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                decoration: _panelDecoration(radius: 12, elevated: false),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedStyle,
+                    items: _oppStyles.map((s) {
+                      return DropdownMenuItem<String>(
+                        value: s['value'],
+                        child: Text(
+                          s['label']!,
+                          style: TextStyle(color: _textPrimary),
                         ),
-                      ],
-                    ),
-                    Text(
-                      _plan!.instructions,
-                      style: TextStyle(fontSize: 15, color: _textSecondary, height: 1.4),
-                    ),
-                    if (_plan!.strengths.isNotEmpty || _plan!.weaknesses.isNotEmpty) ...[
-                      const Divider(height: 24),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(children: [Icon(Icons.add_circle, color: _success, size: 16), const SizedBox(width: 6), Text('Forces', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _success))]),
-                                const SizedBox(height: 6),
-                                ..._plan!.strengths.map((s) => Text('• $s', style: const TextStyle(fontSize: 12))),
-                              ],
-                            ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedStyle = val);
+                    },
+                  ),
+                ),
+              ),
+              if (detailedModeActive) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Mode rapport detaille actif: cette selection de style est ignoree pour l\'analyse.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _warning,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: _showAdvancedInputs,
+                onChanged: (value) =>
+                    setState(() => _showAdvancedInputs = value),
+                title: Text(
+                  'Rapport adverse detaille',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: _primary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Ajouter equipe reelle, style, formation, forces, faiblesses et joueurs cles.',
+                  style: TextStyle(color: _textSecondary),
+                ),
+              ),
+              if (_showAdvancedInputs) ...[
+                const SizedBox(height: 8),
+                _buildAdvancedOpponentForm(),
+                const SizedBox(height: 16),
+              ],
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _generateTactics,
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(children: [Icon(Icons.remove_circle, color: _danger, size: 16), const SizedBox(width: 6), Text('Faiblesses', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _danger))]),
-                                const SizedBox(height: 6),
-                                ..._plan!.weaknesses.map((w) => Text('• $w', style: const TextStyle(fontSize: 12))),
-                              ],
+                        )
+                      : const Icon(Icons.psychology, color: Colors.white),
+                  label: const Text(
+                    'Générer le 11 de départ via IA',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent,
+                    padding: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        _useHubTheme ? 20 : 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Plan de jeu
+              if (_plan != null) ...[
+                // Cartouche Instructions
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: _panelDecoration(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.shield, color: _primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Formation : ${_plan!.formation}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: _primary,
                             ),
                           ),
                         ],
                       ),
+                      Text(
+                        _plan!.instructions,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: _textSecondary,
+                          height: 1.4,
+                        ),
+                      ),
+                      if (_plan!.strengths.isNotEmpty ||
+                          _plan!.weaknesses.isNotEmpty) ...[
+                        const Divider(height: 24),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.add_circle,
+                                        color: _success,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Forces',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                          color: _success,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  ..._plan!.strengths.map(
+                                    (s) => Text(
+                                      '• $s',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.remove_circle,
+                                        color: _danger,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Faiblesses',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                          color: _danger,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  ..._plan!.weaknesses.map(
+                                    (w) => Text(
+                                      '• $w',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-
-              if (_plan!.opponent != null ||
-                  _plan!.summaryByPosition.isNotEmpty ||
-                  _plan!.keyPlayers.isNotEmpty ||
-                  _plan!.tacticalFocus.isNotEmpty ||
-                  _plan!.realism != null) ...[
-                _buildOpponentInsights(_plan!),
                 const SizedBox(height: 24),
-              ],
 
-              if (_plan!.dangerPrincipal != null) ...[
-                _buildDangerPrincipal(_plan!.dangerPrincipal!),
-                const SizedBox(height: 24),
-              ],
-              
-              if (_plan!.consignesCollectives != null) ...[
-                _buildConsignesCollectives(_plan!.consignesCollectives!),
-                const SizedBox(height: 24),
-              ],
+                if (_plan!.opponent != null ||
+                    _plan!.summaryByPosition.isNotEmpty ||
+                    _plan!.keyPlayers.isNotEmpty ||
+                    _plan!.tacticalFocus.isNotEmpty ||
+                    _plan!.realism != null) ...[
+                  _buildOpponentInsights(_plan!),
+                  const SizedBox(height: 24),
+                ],
 
-              // Terrain de football
-              Text(
-                'Composition suggérée',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: _primary),
-              ),
-              const SizedBox(height: 12),
-              _buildFootballPitch(),
-              const SizedBox(height: 24),
+                if (_plan!.dangerPrincipal != null) ...[
+                  _buildDangerPrincipal(_plan!.dangerPrincipal!),
+                  const SizedBox(height: 24),
+                ],
 
-              if (_plan!.phasesArretees != null) ...[
-                _buildPhasesArretees(_plan!.phasesArretees!),
-                const SizedBox(height: 24),
-              ],
+                if (_plan!.consignesCollectives != null) ...[
+                  _buildConsignesCollectives(_plan!.consignesCollectives!),
+                  const SizedBox(height: 24),
+                ],
 
-              if (_plan!.variantesSelonScore != null) ...[
-                _buildVariantesScore(_plan!.variantesSelonScore!),
+                // Terrain de football
+                Text(
+                  'Composition suggérée',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: _primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildFootballPitch(),
                 const SizedBox(height: 24),
-              ],
 
-              if (_plan!.messageVestiaire != null) ...[
-                _buildMessageVestiaire(_plan!.messageVestiaire!),
-                const SizedBox(height: 24),
+                if (_plan!.phasesArretees != null) ...[
+                  _buildPhasesArretees(_plan!.phasesArretees!),
+                  const SizedBox(height: 24),
+                ],
+
+                if (_plan!.variantesSelonScore != null) ...[
+                  _buildVariantesScore(_plan!.variantesSelonScore!),
+                  const SizedBox(height: 24),
+                ],
+
+                if (_plan!.messageVestiaire != null) ...[
+                  _buildMessageVestiaire(_plan!.messageVestiaire!),
+                  const SizedBox(height: 24),
+                ],
               ],
-            ]
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -818,7 +1034,11 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
             children: [
               Text(
                 'Rapport adverse',
-                style: TextStyle(fontWeight: FontWeight.bold, color: _primary, fontSize: 16),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: _primary,
+                  fontSize: 16,
+                ),
               ),
               const Spacer(),
               OutlinedButton.icon(
@@ -896,7 +1116,9 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
               TextButton.icon(
                 onPressed: _opponentPlayerDrafts.length >= 8
                     ? null
-                    : () => setState(() => _opponentPlayerDrafts.add(_OpponentPlayerDraft())),
+                    : () => setState(
+                        () => _opponentPlayerDrafts.add(_OpponentPlayerDraft()),
+                      ),
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Ajouter'),
               ),
@@ -904,7 +1126,10 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
           ),
           const SizedBox(height: 6),
           ...List.generate(_opponentPlayerDrafts.length, (index) {
-            return _buildOpponentPlayerDraftCard(index, _opponentPlayerDrafts[index]);
+            return _buildOpponentPlayerDraftCard(
+              index,
+              _opponentPlayerDrafts[index],
+            );
           }),
         ],
       ),
@@ -924,147 +1149,152 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
         ),
         child: Column(
           children: [
-          Row(
-            children: [
-              Text(
-                'Joueur ${index + 1}',
-                style: TextStyle(fontWeight: FontWeight.bold, color: _primary),
-              ),
-              const Spacer(),
-              if (_opponentPlayerDrafts.length > 1)
-                IconButton(
-                  tooltip: 'Retirer',
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: () {
-                    late _OpponentPlayerDraft removed;
-                    setState(() {
-                      removed = _opponentPlayerDrafts.removeAt(index);
-                      _retiredOpponentDrafts.add(removed);
-                    });
-                  },
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: draft.nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+            Row(
+              children: [
+                Text(
+                  'Joueur ${index + 1}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: _primary,
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: draft.positionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Poste',
-                    hintText: 'RW, CM, CB',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                const Spacer(),
+                if (_opponentPlayerDrafts.length > 1)
+                  IconButton(
+                    tooltip: 'Retirer',
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () {
+                      late _OpponentPlayerDraft removed;
+                      setState(() {
+                        removed = _opponentPlayerDrafts.removeAt(index);
+                        _retiredOpponentDrafts.add(removed);
+                      });
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: draft.nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nom',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: draft.ratingController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Note',
-                    hintText: '7.4',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: draft.positionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Poste',
+                      hintText: 'RW, CM, CB',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: draft.goalsController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Buts',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: draft.ratingController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Note',
+                      hintText: '7.4',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: draft.assistsController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Passes D',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: draft.goalsController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Buts',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: draft.shotsController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Tirs',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: draft.assistsController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Passes D',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: draft.passesController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Passes',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: draft.shotsController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Tirs',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: draft.tacklesController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Tacles',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: draft.passesController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Passes',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: draft.minutesController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Minutes',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: draft.tacklesController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Tacles',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: draft.minutesController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Minutes',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -1090,19 +1320,30 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
               Expanded(
                 child: Text(
                   'Analyse adverse enrichie',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: _primary),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: _primary,
+                  ),
                 ),
               ),
               if (plan.aiSource != null && plan.aiSource!.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     plan.aiSource!,
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _primary),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _primary,
+                    ),
                   ),
                 ),
             ],
@@ -1126,47 +1367,86 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildRealismChip('Squad reel', plan.realism!.hasRealOpponentSquad),
-                _buildRealismChip('Stats joueurs', plan.realism!.hasIndividualPlayerStats),
-                _buildRealismChip('Forces renseignees', plan.realism!.hasDeclaredStrengths),
-                _buildRealismChip('Faiblesses renseignees', plan.realism!.hasDeclaredWeaknesses),
+                _buildRealismChip(
+                  'Squad reel',
+                  plan.realism!.hasRealOpponentSquad,
+                ),
+                _buildRealismChip(
+                  'Stats joueurs',
+                  plan.realism!.hasIndividualPlayerStats,
+                ),
+                _buildRealismChip(
+                  'Forces renseignees',
+                  plan.realism!.hasDeclaredStrengths,
+                ),
+                _buildRealismChip(
+                  'Faiblesses renseignees',
+                  plan.realism!.hasDeclaredWeaknesses,
+                ),
               ],
             ),
           ],
           if (plan.tacticalFocus.isNotEmpty) ...[
             const SizedBox(height: 14),
-            Text('Focus tactique recommande', style: TextStyle(fontWeight: FontWeight.bold, color: _primary)),
+            Text(
+              'Focus tactique recommande',
+              style: TextStyle(fontWeight: FontWeight.bold, color: _primary),
+            ),
             const SizedBox(height: 6),
-            ...plan.tacticalFocus.take(4).map((focus) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text('• $focus', style: const TextStyle(fontSize: 13)),
-                )),
+            ...plan.tacticalFocus
+                .take(4)
+                .map(
+                  (focus) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '• $focus',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ),
           ],
           if (plan.keyPlayers.isNotEmpty) ...[
             const SizedBox(height: 14),
-            Text('Joueurs adverses a surveiller', style: TextStyle(fontWeight: FontWeight.bold, color: _primary)),
+            Text(
+              'Joueurs adverses a surveiller',
+              style: TextStyle(fontWeight: FontWeight.bold, color: _primary),
+            ),
             const SizedBox(height: 6),
-            ...plan.keyPlayers.take(4).map((player) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${player.name} (${player.position})',
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ...plan.keyPlayers
+                .take(4)
+                .map(
+                  (player) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${player.name} (${player.position})',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ),
-                      Text(
-                        'Threat ${player.threatScore.toStringAsFixed(1)}',
-                        style: TextStyle(fontSize: 12, color: _warning, fontWeight: FontWeight.w600),
-                      ),
-                    ],
+                        Text(
+                          'Threat ${player.threatScore.toStringAsFixed(1)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _warning,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                )),
+                ),
           ],
           if (displayedSummaryKeys.isNotEmpty) ...[
             const SizedBox(height: 14),
-            Text('Resume par ligne', style: TextStyle(fontWeight: FontWeight.bold, color: _primary)),
+            Text(
+              'Resume par ligne',
+              style: TextStyle(fontWeight: FontWeight.bold, color: _primary),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -1184,11 +1464,26 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(key, style: TextStyle(fontWeight: FontWeight.bold, color: _primary)),
+                      Text(
+                        key,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: _primary,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text('Joueurs: ${summary.count}', style: const TextStyle(fontSize: 12)),
-                      Text('Note moy: ${summary.averageRating.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
-                      Text('Buts: ${summary.totalGoals}', style: const TextStyle(fontSize: 12)),
+                      Text(
+                        'Joueurs: ${summary.count}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      Text(
+                        'Note moy: ${summary.averageRating.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      Text(
+                        'Buts: ${summary.totalGoals}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     ],
                   ),
                 );
@@ -1212,11 +1507,19 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(enabled ? Icons.check_circle : Icons.info_outline, size: 14, color: color),
+          Icon(
+            enabled ? Icons.check_circle : Icons.info_outline,
+            size: 14,
+            color: color,
+          ),
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -1227,7 +1530,8 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final double width = constraints.maxWidth;
-        final double height = width * 1.5; // Aspect ratio classique d'un terrain
+        final double height =
+            width * 1.5; // Aspect ratio classique d'un terrain
 
         return Container(
           width: width,
@@ -1239,7 +1543,7 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
           ),
           child: Stack(
             children: [
-              // Lignes du terrain 
+              // Lignes du terrain
               Center(
                 child: Container(
                   height: 2,
@@ -1252,7 +1556,10 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
                   height: width * 0.3,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.white.withValues(alpha: 0.5), width: 2),
+                    border: Border.all(
+                      color: AppTheme.white.withValues(alpha: 0.5),
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -1264,9 +1571,18 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
                   height: height * 0.15,
                   decoration: BoxDecoration(
                     border: Border(
-                      bottom: BorderSide(color: AppTheme.white.withValues(alpha: 0.5), width: 2),
-                      left: BorderSide(color: AppTheme.white.withValues(alpha: 0.5), width: 2),
-                      right: BorderSide(color: AppTheme.white.withValues(alpha: 0.5), width: 2),
+                      bottom: BorderSide(
+                        color: AppTheme.white.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                      left: BorderSide(
+                        color: AppTheme.white.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                      right: BorderSide(
+                        color: AppTheme.white.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -1279,9 +1595,18 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
                   height: height * 0.15,
                   decoration: BoxDecoration(
                     border: Border(
-                      top: BorderSide(color: AppTheme.white.withValues(alpha: 0.5), width: 2),
-                      left: BorderSide(color: AppTheme.white.withValues(alpha: 0.5), width: 2),
-                      right: BorderSide(color: AppTheme.white.withValues(alpha: 0.5), width: 2),
+                      top: BorderSide(
+                        color: AppTheme.white.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                      left: BorderSide(
+                        color: AppTheme.white.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                      right: BorderSide(
+                        color: AppTheme.white.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -1306,18 +1631,30 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
                               color: AppTheme.white,
                               shape: BoxShape.circle,
                               border: Border.all(color: _primary, width: 2),
-                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4)],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                ),
+                              ],
                             ),
                             child: Center(
                               child: Text(
                                 p.role,
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: _primary),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: _primary,
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: _primary.withValues(alpha: 0.72),
                               borderRadius: BorderRadius.circular(4),
@@ -1326,7 +1663,11 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
                               p.playerName.split(' ').last,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ),
@@ -1355,12 +1696,16 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
           child: Padding(
             padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: mediaQuery.size.height * 0.82),
+              constraints: BoxConstraints(
+                maxHeight: mediaQuery.size.height * 0.82,
+              ),
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: _surface,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
                   border: Border.all(color: _border),
                 ),
                 child: SingleChildScrollView(
@@ -1373,70 +1718,155 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
                           width: 40,
                           height: 4,
                           margin: const EdgeInsets.only(bottom: 24),
-                          decoration: BoxDecoration(color: _border, borderRadius: BorderRadius.circular(2)),
+                          decoration: BoxDecoration(
+                            color: _border,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
                       ),
                       Row(
                         children: [
                           CircleAvatar(
                             backgroundColor: _primary.withValues(alpha: 0.1),
-                            child: Text(p.role, style: TextStyle(color: _primary, fontWeight: FontWeight.bold)),
+                            child: Text(
+                              p.role,
+                              style: TextStyle(
+                                color: _primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(p.playerName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _primary)),
-                                Text(p.roleLabel.isNotEmpty ? p.roleLabel : 'Rôle: ${p.role}', style: TextStyle(fontSize: 13, color: _textSecondary)),
+                                Text(
+                                  p.playerName,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: _primary,
+                                  ),
+                                ),
+                                Text(
+                                  p.roleLabel.isNotEmpty
+                                      ? p.roleLabel
+                                      : 'Rôle: ${p.role}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: _textSecondary,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 24),
-                      const Text('Consigne Spécifique', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const Text(
+                        'Consigne Spécifique',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: _accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: _accent.withValues(alpha: 0.3))),
+                        decoration: BoxDecoration(
+                          color: _accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _accent.withValues(alpha: 0.3),
+                          ),
+                        ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Icon(Icons.lightbulb, color: _accent, size: 20),
                             const SizedBox(width: 12),
-                            Expanded(child: Text(p.instruction ?? 'Aucune consigne spécifique.', style: const TextStyle(fontSize: 14, height: 1.4))),
+                            Expanded(
+                              child: Text(
+                                p.instruction ?? 'Aucune consigne spécifique.',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       if (p.actionsCles.isNotEmpty) ...[
                         const SizedBox(height: 20),
-                        const Text('Actions Clés', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        const Text(
+                          'Actions Clés',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        ...p.actionsCles.map((action) => Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(Icons.check_circle, color: _success, size: 16),
-                                  const SizedBox(width: 8),
-                                  Expanded(child: Text(action, style: TextStyle(fontSize: 13, color: _textPrimary))),
-                                ],
-                              ),
-                            )),
+                        ...p.actionsCles.map(
+                          (action) => Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  color: _success,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    action,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: _textPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                       if (p.joueurAdverseASurveiller != null) ...[
                         const SizedBox(height: 20),
-                        Text('Attention Marquage', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: _warning)),
+                        Text(
+                          'Attention Marquage',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: _warning,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: _warning.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: _warning.withValues(alpha: 0.3))),
+                          decoration: BoxDecoration(
+                            color: _warning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _warning.withValues(alpha: 0.3),
+                            ),
+                          ),
                           child: Row(
                             children: [
                               Icon(Icons.visibility, color: _warning, size: 18),
                               const SizedBox(width: 8),
-                              Expanded(child: Text(p.joueurAdverseASurveiller!, style: TextStyle(fontSize: 13, color: _textPrimary))),
+                              Expanded(
+                                child: Text(
+                                  p.joueurAdverseASurveiller!,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: _textPrimary,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -1470,9 +1900,23 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Danger Principal Adversaire', style: TextStyle(fontWeight: FontWeight.bold, color: _warning, fontSize: 15)),
+                Text(
+                  'Danger Principal Adversaire',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: _warning,
+                    fontSize: 15,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text(danger, style: TextStyle(color: _textPrimary, fontSize: 13, height: 1.4)),
+                Text(
+                  danger,
+                  style: TextStyle(
+                    color: _textPrimary,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1492,15 +1936,33 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
             children: [
               Icon(Icons.people, color: _primary),
               const SizedBox(width: 8),
-              Text('Consignes Collectives', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _primary)),
+              Text(
+                'Consignes Collectives',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: _primary,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildPhaseList('Phase Défensive', consignes.phasesDefensives, Icons.shield),
+          _buildPhaseList(
+            'Phase Défensive',
+            consignes.phasesDefensives,
+            Icons.shield,
+          ),
           const Divider(),
-          _buildPhaseList('Phase Offensive', consignes.phasesOffensives, Icons.sports_soccer),
+          _buildPhaseList(
+            'Phase Offensive',
+            consignes.phasesOffensives,
+            Icons.sports_soccer,
+          ),
           const Divider(),
-          _buildPhaseList('Transitions', [...consignes.transitionsOffensives, ...consignes.transitionsDefensives], Icons.swap_horiz),
+          _buildPhaseList('Transitions', [
+            ...consignes.transitionsOffensives,
+            ...consignes.transitionsDefensives,
+          ], Icons.swap_horiz),
         ],
       ),
     );
@@ -1517,20 +1979,34 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
             children: [
               Icon(icon, size: 16, color: _textSecondary),
               const SizedBox(width: 6),
-              Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: _textPrimary, fontSize: 14)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: _textPrimary,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          ...items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
-                Expanded(child: Text(item, style: const TextStyle(fontSize: 13))),
-              ],
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '• ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Expanded(
+                    child: Text(item, style: const TextStyle(fontSize: 13)),
+                  ),
+                ],
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -1543,7 +2019,10 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Phases Arrêtées', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Phases Arrêtées',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
           _buildInfoRow('Corners Pour', phases.cornersPour),
           _buildInfoRow('Corners Contre', phases.cornersContre),
@@ -1561,7 +2040,17 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 100, child: Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: _textSecondary))),
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: _textSecondary,
+              ),
+            ),
+          ),
           Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
         ],
       ),
@@ -1579,7 +2068,14 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
             children: [
               Icon(Icons.score, color: _primary),
               const SizedBox(width: 8),
-              Text('Variantes selon Score', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _primary)),
+              Text(
+                'Variantes selon Score',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _primary,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -1598,7 +2094,14 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(state, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: color)),
+          Text(
+            state,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: color,
+            ),
+          ),
           const SizedBox(height: 2),
           Text(instruction, style: const TextStyle(fontSize: 13)),
         ],
@@ -1617,13 +2120,25 @@ class _TacticsBoardScreenState extends State<TacticsBoardScreen> {
             children: [
               Icon(Icons.record_voice_over, color: _primary, size: 20),
               const SizedBox(width: 8),
-              Text('Message Vestiaire (Coach)', style: TextStyle(fontWeight: FontWeight.bold, color: _primary, fontSize: 16)),
+              Text(
+                'Message Vestiaire (Coach)',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: _primary,
+                  fontSize: 16,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             '"$message"',
-            style: TextStyle(color: _textPrimary, fontStyle: FontStyle.italic, fontSize: 15, height: 1.5),
+            style: TextStyle(
+              color: _textPrimary,
+              fontStyle: FontStyle.italic,
+              fontSize: 15,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -1666,7 +2181,8 @@ class _OpponentPlayerDraft {
   void applyFromInput(OpponentSquadPlayerInput player) {
     nameController.text = player.name;
     positionController.text = player.position;
-    ratingController.text = player.rating?.toString() ?? player.stats?.rating?.toString() ?? '';
+    ratingController.text =
+        player.rating?.toString() ?? player.stats?.rating?.toString() ?? '';
     goalsController.text = player.stats?.goals?.toString() ?? '';
     assistsController.text = player.stats?.assists?.toString() ?? '';
     shotsController.text = player.stats?.shots?.toString() ?? '';
