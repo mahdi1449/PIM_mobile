@@ -7,6 +7,7 @@ import '../../screens/login_screen.dart';
 import '../navigation/menu_config.dart';
 import '../navigation/app_routes.dart';
 import '../theme/app_spacing.dart';
+import '../theme/staff_technique_hub.dart';
 import '../../theme/theme_controller.dart';
 import '../../user_management/models/user_management_models.dart';
 
@@ -153,13 +154,22 @@ class _AppShellState extends State<AppShell> {
     final routeData = AppRoutes.resolve(_currentRoute, widget.session);
     final canGoBack =
         Navigator.of(context).canPop() || _routeHistory.length > 1;
+    final isTechnicalStaff =
+        RoleMapper.normalize(widget.session.role) == RoleMapper.staffTechnique;
 
-    final scaffoldColor = Theme.of(context).scaffoldBackgroundColor;
+    final scaffoldColor = isTechnicalStaff
+        ? StaffTechniqueHubTheme.background
+        : Theme.of(context).scaffoldBackgroundColor;
     return Scaffold(
       backgroundColor: scaffoldColor,
       appBar: routeData.showAppBar
           ? AppBar(
               title: Text(routeData.title),
+              backgroundColor: isTechnicalStaff
+                  ? Colors.white.withValues(alpha: 0.88)
+                  : null,
+              surfaceTintColor: Colors.transparent,
+              shadowColor: isTechnicalStaff ? const Color(0x14003D49) : null,
               leading: canGoBack
                   ? IconButton(
                       icon: const Icon(Icons.arrow_back_rounded),
@@ -186,36 +196,48 @@ class _AppShellState extends State<AppShell> {
               ],
             )
           : null,
-      drawer: isWide ? null : _buildDrawer(items),
+      drawer: isWide ? null : _buildDrawer(items, isTechnicalStaff),
       body: AppShellScope(
         session: widget.session,
         navigate: _navigate,
-        child: Row(
-          children: [
-            if (isWide) _buildRail(items),
-            Expanded(
-              child: Container(
-                color: scaffoldColor,
-                padding: routeData.usePadding
-                    ? const EdgeInsets.all(AppSpacing.s24)
-                    : EdgeInsets.zero,
-                child: routeData.builder(context),
+        child: DecoratedBox(
+          decoration: isTechnicalStaff
+              ? const BoxDecoration(
+                  gradient: StaffTechniqueHubTheme.pageGradient,
+                )
+              : BoxDecoration(color: scaffoldColor),
+          child: Row(
+            children: [
+              if (isWide) _buildRail(items, isTechnicalStaff),
+              Expanded(
+                child: Container(
+                  color: Colors.transparent,
+                  padding: routeData.usePadding
+                      ? const EdgeInsets.all(AppSpacing.s24)
+                      : EdgeInsets.zero,
+                  child: routeData.builder(context),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDrawer(List<MenuItemConfig> items) {
+  Widget _buildDrawer(List<MenuItemConfig> items, bool isTechnicalStaff) {
     final scheme = Theme.of(context).colorScheme;
     return Drawer(
-      backgroundColor: scheme.surface,
+      backgroundColor: isTechnicalStaff
+          ? StaffTechniqueHubTheme.background
+          : scheme.surface,
       child: SafeArea(
         child: Column(
           children: [
-            _DrawerHeader(session: widget.session),
+            _DrawerHeader(
+              session: widget.session,
+              isTechnicalStaff: isTechnicalStaff,
+            ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
@@ -224,6 +246,7 @@ class _AppShellState extends State<AppShell> {
                     _DrawerTile(
                       item: item,
                       selected: item.route == _currentRoute,
+                      isTechnicalStaff: isTechnicalStaff,
                       onTap: () => _navigate(item.route),
                     ),
                 ],
@@ -240,7 +263,7 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  Widget _buildRail(List<MenuItemConfig> items) {
+  Widget _buildRail(List<MenuItemConfig> items, bool isTechnicalStaff) {
     final scheme = Theme.of(context).colorScheme;
     final selectedIndex = items.indexWhere(
       (item) => item.route == _currentRoute,
@@ -253,21 +276,36 @@ class _AppShellState extends State<AppShell> {
         }
       },
       labelType: NavigationRailLabelType.all,
-      backgroundColor: scheme.surface,
-      selectedIconTheme: IconThemeData(color: scheme.primary),
+      backgroundColor: isTechnicalStaff
+          ? Colors.white.withValues(alpha: 0.86)
+          : scheme.surface,
+      selectedIconTheme: IconThemeData(
+        color: isTechnicalStaff
+            ? StaffTechniqueHubTheme.primary
+            : scheme.primary,
+      ),
       selectedLabelTextStyle: TextStyle(
-        color: scheme.primary,
+        color: isTechnicalStaff
+            ? StaffTechniqueHubTheme.primary
+            : scheme.primary,
         fontWeight: FontWeight.w600,
       ),
       unselectedIconTheme: IconThemeData(
-        color: scheme.onSurface.withValues(alpha: 0.6),
+        color: isTechnicalStaff
+            ? StaffTechniqueHubTheme.textSecondary
+            : scheme.onSurface.withValues(alpha: 0.6),
       ),
       unselectedLabelTextStyle: TextStyle(
-        color: scheme.onSurface.withValues(alpha: 0.6),
+        color: isTechnicalStaff
+            ? StaffTechniqueHubTheme.textSecondary
+            : scheme.onSurface.withValues(alpha: 0.6),
       ),
       leading: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.s16),
-        child: _RailHeader(session: widget.session),
+        child: _RailHeader(
+          session: widget.session,
+          isTechnicalStaff: isTechnicalStaff,
+        ),
       ),
       trailing: Expanded(
         child: Align(
@@ -279,7 +317,9 @@ class _AppShellState extends State<AppShell> {
               onPressed: _handleLogout,
               icon: Icon(
                 Icons.logout,
-                color: scheme.onSurface.withValues(alpha: 0.6),
+                color: isTechnicalStaff
+                    ? StaffTechniqueHubTheme.textSecondary
+                    : scheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -350,9 +390,7 @@ class _UserMenu extends StatelessWidget {
           enabled: false,
           child: Text(
             club.isEmpty ? 'No club assigned' : club,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: scheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
@@ -371,9 +409,7 @@ class _UserMenu extends StatelessWidget {
               Text(isDark ? 'Light mode' : 'Dark mode'),
               const Spacer(),
               Icon(
-                isDark
-                    ? Icons.toggle_on_rounded
-                    : Icons.toggle_off_rounded,
+                isDark ? Icons.toggle_on_rounded : Icons.toggle_off_rounded,
                 color: scheme.primary,
               ),
             ],
@@ -462,9 +498,10 @@ class _NotificationButton extends StatelessWidget {
 }
 
 class _DrawerHeader extends StatelessWidget {
-  const _DrawerHeader({required this.session});
+  const _DrawerHeader({required this.session, required this.isTechnicalStaff});
 
   final SessionModel session;
+  final bool isTechnicalStaff;
 
   @override
   Widget build(BuildContext context) {
@@ -474,20 +511,26 @@ class _DrawerHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.s16),
-      decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.95),
-        border: Border(bottom: BorderSide(color: divider)),
-      ),
+      decoration: isTechnicalStaff
+          ? StaffTechniqueHubTheme.glassDecoration()
+          : BoxDecoration(
+              color: scheme.surface.withValues(alpha: 0.95),
+              border: Border(bottom: BorderSide(color: divider)),
+            ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
             radius: 26,
-            backgroundColor: scheme.primary.withValues(alpha: 0.18),
+            backgroundColor: isTechnicalStaff
+                ? StaffTechniqueHubTheme.primarySoft
+                : scheme.primary.withValues(alpha: 0.18),
             child: Text(
               (session.email.isNotEmpty ? session.email[0] : 'U').toUpperCase(),
               style: TextStyle(
-                color: scheme.primary,
+                color: isTechnicalStaff
+                    ? StaffTechniqueHubTheme.primary
+                    : scheme.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -509,11 +552,13 @@ class _DrawerTile extends StatelessWidget {
   const _DrawerTile({
     required this.item,
     required this.selected,
+    required this.isTechnicalStaff,
     required this.onTap,
   });
 
   final MenuItemConfig item;
   final bool selected;
+  final bool isTechnicalStaff;
   final VoidCallback onTap;
 
   @override
@@ -523,18 +568,30 @@ class _DrawerTile extends StatelessWidget {
       leading: Icon(
         item.icon,
         color: selected
-            ? scheme.primary
-            : scheme.onSurface.withValues(alpha: 0.6),
+            ? (isTechnicalStaff
+                  ? StaffTechniqueHubTheme.primary
+                  : scheme.primary)
+            : (isTechnicalStaff
+                  ? StaffTechniqueHubTheme.textSecondary
+                  : scheme.onSurface.withValues(alpha: 0.6)),
       ),
       title: Text(
         item.title,
         style: TextStyle(
-          color: selected ? scheme.primary : scheme.onSurface,
+          color: selected
+              ? (isTechnicalStaff
+                    ? StaffTechniqueHubTheme.primary
+                    : scheme.primary)
+              : (isTechnicalStaff
+                    ? StaffTechniqueHubTheme.textPrimary
+                    : scheme.onSurface),
           fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
         ),
       ),
       selected: selected,
-      selectedTileColor: scheme.primary.withValues(alpha: 0.08),
+      selectedTileColor: isTechnicalStaff
+          ? StaffTechniqueHubTheme.primarySoft.withValues(alpha: 0.56)
+          : scheme.primary.withValues(alpha: 0.08),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: onTap,
     );
@@ -542,9 +599,10 @@ class _DrawerTile extends StatelessWidget {
 }
 
 class _RailHeader extends StatelessWidget {
-  const _RailHeader({required this.session});
+  const _RailHeader({required this.session, required this.isTechnicalStaff});
 
   final SessionModel session;
+  final bool isTechnicalStaff;
 
   @override
   Widget build(BuildContext context) {
@@ -553,11 +611,15 @@ class _RailHeader extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 18,
-          backgroundColor: scheme.primary.withValues(alpha: 0.18),
+          backgroundColor: isTechnicalStaff
+              ? StaffTechniqueHubTheme.primarySoft
+              : scheme.primary.withValues(alpha: 0.18),
           child: Text(
             (session.email.isNotEmpty ? session.email[0] : 'U').toUpperCase(),
             style: TextStyle(
-              color: scheme.primary,
+              color: isTechnicalStaff
+                  ? StaffTechniqueHubTheme.primary
+                  : scheme.primary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -565,9 +627,11 @@ class _RailHeader extends StatelessWidget {
         const SizedBox(height: AppSpacing.s8),
         Text(
           'ODIN',
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(color: scheme.primary),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: isTechnicalStaff
+                ? StaffTechniqueHubTheme.primary
+                : scheme.primary,
+          ),
         ),
       ],
     );

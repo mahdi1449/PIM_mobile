@@ -1,9 +1,14 @@
+// ignore_for_file: unused_element, unused_field
+
 import 'package:flutter/material.dart';
 
 import '../../services/api_service.dart';
 import '../../ui/components/app_card.dart';
 import '../../ui/components/app_section_header.dart';
 import '../../ui/theme/app_spacing.dart';
+import '../../ui/shell/app_shell.dart';
+import '../../ui/theme/staff_technique_hub.dart';
+import '../../utils/role_mapper.dart';
 
 class TeamChemistryScreen extends StatefulWidget {
   const TeamChemistryScreen({super.key});
@@ -195,10 +200,87 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
     return Theme.of(context).colorScheme.onSurface;
   }
 
-  List<Map<String, dynamic>> _extractSquadPlayers(Map<String, dynamic> payload) {
+  bool _isTechnicalStaff(BuildContext context) {
+    final shell = AppShellScope.of(context);
+    if (shell == null) {
+      return false;
+    }
+    return RoleMapper.normalize(shell.session.role) ==
+        RoleMapper.staffTechnique;
+  }
+
+  ThemeData _pageTheme(BuildContext context) {
+    if (!_isTechnicalStaff(context)) {
+      return Theme.of(context);
+    }
+
+    final base = Theme.of(context);
+    return base.copyWith(
+      scaffoldBackgroundColor: Colors.transparent,
+      cardTheme: base.cardTheme.copyWith(color: StaffTechniqueHubTheme.surface),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: StaffTechniqueHubTheme.surfaceSoft.withValues(alpha: 0.95),
+        labelStyle: const TextStyle(
+          color: StaffTechniqueHubTheme.textSecondary,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: StaffTechniqueHubTheme.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: StaffTechniqueHubTheme.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(
+            color: StaffTechniqueHubTheme.primary,
+            width: 1.4,
+          ),
+        ),
+      ),
+      tabBarTheme: base.tabBarTheme.copyWith(
+        indicator: BoxDecoration(
+          color: StaffTechniqueHubTheme.primary,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        labelColor: Colors.white,
+        unselectedLabelColor: StaffTechniqueHubTheme.textSecondary,
+        dividerColor: Colors.transparent,
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: StaffTechniqueHubTheme.primary,
+        contentTextStyle: TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _surfaceCard(
+    BuildContext context, {
+    required Widget child,
+    EdgeInsetsGeometry? padding,
+  }) {
+    if (!_isTechnicalStaff(context)) {
+      return AppCard(padding: padding, child: child);
+    }
+
+    return Container(
+      padding: padding ?? const EdgeInsets.all(20),
+      decoration: StaffTechniqueHubTheme.cardDecoration(),
+      child: child,
+    );
+  }
+
+  List<Map<String, dynamic>> _extractSquadPlayers(
+    Map<String, dynamic> payload,
+  ) {
     final directPlayers = _asList(payload['players']).map(_asMap).toList();
     if (directPlayers.isNotEmpty) {
-      return directPlayers.where((player) => _playerId(player).isNotEmpty).toList();
+      return directPlayers
+          .where((player) => _playerId(player).isNotEmpty)
+          .toList();
     }
 
     final playerIds = _asList(payload['playerIds']).map(_asMap).toList();
@@ -224,7 +306,9 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
           : _extractList(result['data']).map(_asMap).toList();
       if (season.isNotEmpty) {
         starterIds.addAll(
-          _asList(root['starterIds']).map((item) => item.toString()).where((id) => id.isNotEmpty),
+          _asList(
+            root['starterIds'],
+          ).map((item) => item.toString()).where((id) => id.isNotEmpty),
         );
       }
       for (final row in rows) {
@@ -245,7 +329,13 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
           _players = loadedPlayers;
           _selectedLineupIds
             ..clear()
-            ..addAll(starterIds.where((id) => _players.any((player) => _playerId(player) == id)).take(11));
+            ..addAll(
+              starterIds
+                  .where(
+                    (id) => _players.any((player) => _playerId(player) == id),
+                  )
+                  .take(11),
+            );
           _playerAId = _players.isNotEmpty ? _playerId(_players.first) : null;
           _playerBId = _players.length > 1
               ? _playerId(_players[1])
@@ -721,7 +811,9 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
         'Chemistry XI generated (${chemistryScore.toStringAsFixed(2)}/10)',
       );
     } else {
-      _showMessage(result['message'] ?? 'Failed to generate chemistry starting XI');
+      _showMessage(
+        result['message'] ?? 'Failed to generate chemistry starting XI',
+      );
     }
 
     if (mounted) {
@@ -753,11 +845,12 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
       final currentLineup = _asMap(data['currentLineup']);
       final bestPairs = _asMap(data['bestPairs']);
       final conflicts = _asMap(data['conflicts']);
-      final rows = (_asList(bestFormation['startingXi']).isNotEmpty
-              ? _asList(bestFormation['startingXi'])
-              : _asList(bestFormation['starting_xi']))
-          .map(_asMap)
-          .toList();
+      final rows =
+          (_asList(bestFormation['startingXi']).isNotEmpty
+                  ? _asList(bestFormation['startingXi'])
+                  : _asList(bestFormation['starting_xi']))
+              .map(_asMap)
+              .toList();
 
       final ids = <String>[];
       for (final row in rows) {
@@ -770,7 +863,9 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
       if (mounted) {
         setState(() {
           _squadAnalysisData = data;
-          _generatedLineupData = bestFormation.isNotEmpty ? bestFormation : null;
+          _generatedLineupData = bestFormation.isNotEmpty
+              ? bestFormation
+              : null;
           _lineupScoreData = bestFormation.isNotEmpty
               ? _asMap(bestFormation['chemistryEvaluation'])
               : currentLineup;
@@ -859,42 +954,71 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
+    final isTechnicalStaff = _isTechnicalStaff(context);
+    final content = DefaultTabController(
       length: 2,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSectionHeader(
-            title: 'Chemistry',
-            subtitle:
-                'Analyse simple du squad: profils, note du groupe, meilleure formation et XI recommande.',
-            action: const SizedBox.shrink(),
-          ),
+          if (isTechnicalStaff)
+            const StaffTechniqueHeroCard(
+              eyebrow: 'Squad Chemistry',
+              title: 'Chemistry Room',
+              subtitle:
+                  'Analyse simple du groupe, lecture des paires fortes et proposition du meilleur XI dans un seul espace staff technique.',
+              icon: Icons.hub_rounded,
+            )
+          else
+            const AppSectionHeader(
+              title: 'Chemistry',
+              subtitle:
+                  'Analyse simple du squad: profils, note du groupe, meilleure formation et XI recommande.',
+              action: SizedBox.shrink(),
+            ),
           const SizedBox(height: AppSpacing.s16),
           _buildTopControls(context),
           const SizedBox(height: AppSpacing.s16),
-          const TabBar(
-            tabs: [
-              Tab(text: 'Essentiel'),
-              Tab(text: 'XI'),
-            ],
-          ),
+          if (isTechnicalStaff)
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: StaffTechniqueHubTheme.cardDecoration(
+                color: StaffTechniqueHubTheme.surfaceSoft,
+              ),
+              child: const TabBar(
+                tabs: [
+                  Tab(text: 'Essentiel'),
+                  Tab(text: 'XI'),
+                ],
+              ),
+            )
+          else
+            const TabBar(
+              tabs: [
+                Tab(text: 'Essentiel'),
+                Tab(text: 'XI'),
+              ],
+            ),
           const SizedBox(height: AppSpacing.s12),
           Expanded(
             child: TabBarView(
-              children: [
-                _buildOverviewTab(context),
-                _buildLineupTab(context),
-              ],
+              children: [_buildOverviewTab(context), _buildLineupTab(context)],
             ),
           ),
         ],
       ),
     );
+
+    return Theme(
+      data: _pageTheme(context),
+      child: isTechnicalStaff
+          ? StaffTechniquePageBackground(child: content)
+          : content,
+    );
   }
 
   Widget _buildTopControls(BuildContext context) {
-    return AppCard(
+    return _surfaceCard(
+      context,
       child: Column(
         children: [
           Row(
@@ -943,7 +1067,8 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
   Widget _buildOverviewTab(BuildContext context) {
     return ListView(
       children: [
-        AppCard(
+        _surfaceCard(
+          context,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -987,7 +1112,8 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
   Widget _buildSquadSummaryCard(BuildContext context) {
     final data = _squadAnalysisData;
     if (data == null) {
-      return AppCard(
+      return _surfaceCard(
+        context,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1008,10 +1134,12 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
     final profiles = _asMap(data['profiles']);
     final groupProfile = _asMap(data['groupProfile']);
     final style = _asMap(groupProfile['style']);
-    final formationComparisons =
-        _asList(data['formationComparisons']).map(_asMap).toList();
+    final formationComparisons = _asList(
+      data['formationComparisons'],
+    ).map(_asMap).toList();
 
-    return AppCard(
+    return _surfaceCard(
+      context,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1615,7 +1743,8 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
   }
 
   Widget _buildPairsListCard(BuildContext context) {
-    return AppCard(
+    return _surfaceCard(
+      context,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1708,7 +1837,8 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
   Widget _buildLineupTab(BuildContext context) {
     return ListView(
       children: [
-        AppCard(
+        _surfaceCard(
+          context,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1743,7 +1873,7 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
   Widget _buildLineupResultCard(BuildContext context) {
     final data = _lineupScoreData;
     if (data == null) {
-      return const AppCard(child: Text('No lineup score yet.'));
+      return _surfaceCard(context, child: const Text('No lineup score yet.'));
     }
 
     final summary = _asMap(data['summary']);
@@ -1757,13 +1887,15 @@ class _TeamChemistryScreenState extends State<TeamChemistryScreen> {
     final generatedData = _asMap(_generatedLineupData);
     final generatedFormation = (generatedData['formation'] ?? '').toString();
     final generatedRowsRaw = _asList(generatedData['startingXi']);
-    final generatedRows = (generatedRowsRaw.isNotEmpty
-        ? generatedRowsRaw
-        : _asList(generatedData['starting_xi']))
-      .map(_asMap)
-      .toList();
+    final generatedRows =
+        (generatedRowsRaw.isNotEmpty
+                ? generatedRowsRaw
+                : _asList(generatedData['starting_xi']))
+            .map(_asMap)
+            .toList();
 
-    return AppCard(
+    return _surfaceCard(
+      context,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

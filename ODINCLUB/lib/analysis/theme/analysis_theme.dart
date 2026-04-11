@@ -1,28 +1,43 @@
 import 'package:flutter/material.dart';
 import '../../finance/theme/finance_theme.dart';
+import '../../ui/theme/staff_technique_hub.dart';
 
 class AnalysisPalette {
   static void setDarkMode(bool dark) {
     FinancePalette.setDarkMode(dark);
   }
 
-  static Color get bgTop =>
-      FinancePalette.isDark ? FinancePalette.scaffold : const Color(0xFFEAF4FF);
+  static Color get bgTop => FinancePalette.isDark
+      ? const Color(0xFF0B2931)
+      : StaffTechniqueHubTheme.background;
   static Color get bgBottom =>
-      FinancePalette.isDark ? const Color(0xFF090F36) : const Color(0xFFF8FBFF);
-  static Color get panel => FinancePalette.card;
-  static Color get panel2 =>
-      Color.lerp(FinancePalette.card, FinancePalette.soft, 0.32)!;
-  static Color get border => FinancePalette.soft;
-  static Color get neonBlue => FinancePalette.blue;
-  static Color get electric => FinancePalette.blue;
-  static Color get cyan => FinancePalette.cyan;
-  static Color get violet =>
-      Color.lerp(FinancePalette.blue, FinancePalette.cyan, 0.45)!;
-  static Color get mint => FinancePalette.success;
-  static Color get text => FinancePalette.ink;
-  static Color get muted => FinancePalette.muted;
-  static Color get softLine => FinancePalette.soft;
+      FinancePalette.isDark ? const Color(0xFF16414D) : const Color(0xFFE7F4F8);
+  static Color get panel => FinancePalette.isDark
+      ? const Color(0xFF123844)
+      : StaffTechniqueHubTheme.surface;
+  static Color get panel2 => FinancePalette.isDark
+      ? const Color(0xFF184653)
+      : StaffTechniqueHubTheme.surfaceSoft;
+  static Color get border => FinancePalette.isDark
+      ? const Color(0xFF2B5D69)
+      : StaffTechniqueHubTheme.border;
+  static Color get neonBlue => StaffTechniqueHubTheme.primary;
+  static Color get electric => StaffTechniqueHubTheme.primary;
+  static Color get cyan => StaffTechniqueHubTheme.secondary;
+  static Color get violet => Color.lerp(
+    StaffTechniqueHubTheme.primary,
+    StaffTechniqueHubTheme.secondary,
+    0.5,
+  )!;
+  static Color get mint =>
+      FinancePalette.isDark ? const Color(0xFF61C7AE) : const Color(0xFF2C8B79);
+  static Color get text => FinancePalette.isDark
+      ? const Color(0xFFF2FBFC)
+      : StaffTechniqueHubTheme.textPrimary;
+  static Color get muted => FinancePalette.isDark
+      ? const Color(0xFFA1C1C8)
+      : StaffTechniqueHubTheme.textSecondary;
+  static Color get softLine => border;
   static Color get danger => FinancePalette.danger;
   static Color get warning => FinancePalette.warning;
   static Color get overlayCard =>
@@ -41,9 +56,9 @@ class AnalysisPalette {
   static Color get errorBannerBg =>
       FinancePalette.isDark ? const Color(0xFF17141F) : const Color(0xFFFFF3F6);
   static Color get pitchGrassTop =>
-      FinancePalette.isDark ? const Color(0xFF1D3D33) : const Color(0xFF2F6B59);
+      FinancePalette.isDark ? const Color(0xFF1C4A40) : const Color(0xFF2A7565);
   static Color get pitchGrassBottom =>
-      FinancePalette.isDark ? const Color(0xFF0B1E14) : const Color(0xFF173A2A);
+      FinancePalette.isDark ? const Color(0xFF0D261F) : const Color(0xFF174E43);
   static Color get pitchLine =>
       FinancePalette.isDark ? const Color(0x66E6FFF2) : const Color(0x88F4FFFB);
   static Color get ringTrackBase =>
