@@ -62,13 +62,16 @@ class FinanceAiService {
 
     // Python model returns 'predicted_value' and 'confidence'
     final value = (prediction['predicted_value'] ?? 0).toDouble();
-    final confidence = (prediction['confidence'] ?? prediction['confidence_score'] ?? 0).toDouble();
+    final confidence =
+        (prediction['confidence'] ?? prediction['confidence_score'] ?? 0)
+            .toDouble();
     final roi = (finances['roi_percentage'] ?? 0).toDouble();
     final trend = prediction['trend']?.toString() ?? 'STABLE';
 
     final insight = FinanceAiInsight(
       title: 'Évaluation Marché: $playerName',
-      summary: 'Valeur predite: ${_fmtMoney(value)} DT (Confiance ${(confidence * 100).toStringAsFixed(0)}%)',
+      summary:
+          'Valeur predite: ${_fmtMoney(value)} DT (Confiance ${(confidence * 100).toStringAsFixed(0)}%)',
       details: [
         'Analyse basée sur stats performance, médical et historique transferts.',
         'Valeur marchande estimée: ${_fmtMoney(value)} DT',
@@ -89,7 +92,7 @@ class FinanceAiService {
     );
 
     return FinanceAiBundle(
-      forecast: insight, 
+      forecast: insight,
       cashflowRisk: insight,
       sponsorTransferImpact: insight,
       playerValuation: insight,
@@ -189,9 +192,12 @@ class FinanceAiService {
     final hasHeavyConcentration = topShare >= 0.45;
 
     final salaryLike = sorted.where((e) => e.key.contains('SALAIRES')).toList();
-    final travelLike = sorted.where((e) => e.key.contains('TRANSPORT')).toList();
-    final marketingLike =
-        sorted.where((e) => e.key.contains('MARKETING')).toList();
+    final travelLike = sorted
+        .where((e) => e.key.contains('TRANSPORT'))
+        .toList();
+    final marketingLike = sorted
+        .where((e) => e.key.contains('MARKETING'))
+        .toList();
 
     final summary = hasHeavyConcentration
         ? 'Dépenses très concentrées sur ${top.first.key}.'
@@ -229,13 +235,65 @@ class FinanceAiService {
     }
 
     final data = response['data'] as Map<String, dynamic>? ?? {};
-    final forecastData = data['forecast'] as Map<String, dynamic>? ?? {};
-    final riskData = data['risk'] as Map<String, dynamic>? ?? {};
-    final source = (data['source']?.toString() ?? 'finance-ai-ml').toLowerCase();
+    // Backend implementations may return:
+    // - forecast as List<Record> (raw /forecast response), or
+    // - forecast as Map { forecast: [...], chart: {...} }
+    final rawForecast = data['forecast'];
+    final Map<String, dynamic> forecastData = rawForecast is List
+        ? <String, dynamic>{'forecast': rawForecast}
+        : rawForecast is Map
+        ? Map<String, dynamic>.from(rawForecast)
+        : <String, dynamic>{};
+
+    // Likewise, /risk may be either the "risk_alerts" contract or a simple
+    // { risk_score, risk_level, factors } contract.
+    final rawRisk = data['risk'];
+    Map<String, dynamic> riskData = rawRisk is Map
+        ? Map<String, dynamic>.from(rawRisk)
+        : <String, dynamic>{};
+
+    if (!riskData.containsKey('risk_alerts') &&
+        (riskData['risk_score'] != null || riskData['risk_level'] != null)) {
+      final score = (riskData['risk_score'] as num?)?.toDouble() ?? 0.0;
+      final level = (riskData['risk_level'] ?? riskData['riskLevel'] ?? '')
+          .toString()
+          .toUpperCase();
+      final factors = (riskData['factors'] as List? ?? [])
+          .map((e) => e.toString())
+          .toList();
+
+      final alerts = <String>[
+        if (score >= 70 || level.contains('HIGH') || level.contains('ELEV'))
+          'RISK_HIGH',
+        if ((score >= 40 && score < 70) || level.contains('MED')) 'RISK_MEDIUM',
+        if (score < 40 && (level.isNotEmpty)) 'RISK_LOW',
+        ...factors,
+      ];
+
+      // Build a minimal chart based on forecast gaps so the UI can render a meaningful delta.
+      final forecastList = (forecastData['forecast'] as List? ?? []);
+      final dates = <dynamic>[];
+      final gap = <double>[];
+      for (final p in forecastList) {
+        if (p is Map) {
+          dates.add(p['date']);
+          final rev = (p['revenue'] as num?)?.toDouble() ?? 0.0;
+          final exp = (p['expenses'] as num?)?.toDouble() ?? 0.0;
+          gap.add(exp - rev);
+        }
+      }
+
+      riskData = {
+        'risk_alerts': alerts.where((e) => e.isNotEmpty).toList(),
+        'chart': {'dates': dates, 'gap': gap},
+      };
+    }
+    final source = (data['source']?.toString() ?? 'finance-ai-ml')
+        .toLowerCase();
 
     final forecastInsight = _buildForecastInsight(forecastData, source);
     final cashflowInsight = _buildCashflowInsight(riskData, source);
-    
+
     // Impact analysis from forecast scenarios
     final impactInsight = _buildImpactInsight(forecastData, source);
 
@@ -290,10 +348,12 @@ class FinanceAiService {
     final alerts = (data['risk_alerts'] as List? ?? []);
     final chart = data['chart'] as Map<String, dynamic>? ?? {};
     final gaps = (chart['gap'] as List? ?? []);
-    
+
     String level = 'FAIBLE';
     if (alerts.isNotEmpty) {
-      level = alerts.any((a) => a.toString().contains('RISK')) ? 'ÉLEVÉ' : 'MOYEN';
+      level = alerts.any((a) => a.toString().contains('RISK'))
+          ? 'ÉLEVÉ'
+          : 'MOYEN';
     }
 
     return FinanceAiInsight(
@@ -301,8 +361,10 @@ class FinanceAiService {
       summary: 'Risque global: $level • ${alerts.length} alertes',
       details: [
         'Analyse de l\'écart Revenus/Dépenses.',
-        if (alerts.isEmpty) 'Aucun risque bloquant détecté.'
-        else 'Points de vigilance:',
+        if (alerts.isEmpty)
+          'Aucun risque bloquant détecté.'
+        else
+          'Points de vigilance:',
         ...alerts.map((a) => '- $a'),
         if (gaps.isNotEmpty) ...[
           '',
@@ -320,7 +382,8 @@ class FinanceAiService {
     return FinanceAiInsight(
       title: 'Simulation Stratégique',
       summary: 'Analyse d\'impact sur la marge opérationnelle',
-      details: 'Utilisez les simulations pour calculer l\'impact des nouveaux sponsors ou transferts sur le résultat net.',
+      details:
+          'Utilisez les simulations pour calculer l\'impact des nouveaux sponsors ou transferts sur le résultat net.',
       source: source,
     );
   }

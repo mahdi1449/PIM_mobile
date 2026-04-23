@@ -14,6 +14,7 @@ import 'screens/treasury_screen.dart';
 import 'theme/finance_theme.dart';
 import 'widgets/finance_widgets.dart';
 import '../player_value_ai/player_value_screen.dart';
+import '../player_value_ai/player_value_grid_screen.dart';
 
 class FinanceMobileShell extends StatefulWidget {
   const FinanceMobileShell({
@@ -53,7 +54,8 @@ class _FinanceMobileShellState extends State<FinanceMobileShell> {
     ('Depenses', Icons.money_off_csred_rounded),
     ('Audit', Icons.verified_user_rounded),
     ('AI Finance', Icons.psychology_alt_rounded),
-    ('Player Value AI', Icons.trending_up_rounded),
+    ('Predict Player Value', Icons.auto_graph_rounded),
+    ('Detailed AI Analysis', Icons.trending_up_rounded),
   ];
 
   final _screens = const [
@@ -67,6 +69,7 @@ class _FinanceMobileShellState extends State<FinanceMobileShell> {
     AuditScreen(),
     AiFinanceScreen(),
     PlayerValueScreen(),
+    PlayerValueGridScreen(),
   ];
 
   @override

@@ -293,6 +293,11 @@ class MenuConfig {
             route: AppRoutes.playerDashboard,
           ),
           MenuItemConfig(
+            title: 'E-Learning',
+            icon: Icons.school_outlined,
+            route: AppRoutes.learning,
+          ),
+          MenuItemConfig(
             title: 'Calendar',
             icon: Icons.calendar_month_outlined,
             route: AppRoutes.calendar,

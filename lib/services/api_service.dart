@@ -416,6 +416,49 @@ class ApiService {
     }
   }
 
+  // --- AI Player Valuation Endpoints ---
+
+  Future<Map<String, dynamic>> getAiDashboardPlayers() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/ai/dashboard/players'),
+        headers: await _authHeaders(),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get dashboard players',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getAiPlayerValuePrediction(String playerId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/ai/predict-player-value'),
+        headers: await _authHeaders(),
+        body: jsonEncode({'playerId': playerId}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get player prediction',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // --- End AI Endpoints ---
+
   Future<Map<String, dynamic>> getSeasonSquad(String season) async {
     try {
       final response = await http.get(
@@ -957,26 +1000,6 @@ class ApiService {
   }
 
   // --- AI Valuation & ROI ---
-
-  Future<Map<String, dynamic>> getAiPlayerValuePrediction(String playerId) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/ai/predict-player-value'),
-        headers: await _authHeaders(),
-        body: jsonEncode({'playerId': playerId}),
-      );
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {'success': true, 'data': data};
-      }
-      return {
-        'success': false,
-        'message': data['message'] ?? 'Failed to get player value prediction',
-      };
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: ${e.toString()}'};
-    }
-  }
 
   Future<Map<String, dynamic>> getAiPlayerAnalysis(String playerId) async {
     try {
