@@ -32,7 +32,6 @@ import '../screens/communication_notifications_shell_screen.dart';
 import '../../season_planning/screens/season_list_screen.dart';
 import '../../tactics/screens/tactics_board_screen.dart';
 import '../../screens/chemistry/team_chemistry_screen.dart';
-import '../../learning/presentation/learning_shell_screen.dart';
 
 class AppRouteData {
   const AppRouteData({
@@ -92,7 +91,6 @@ class AppRoutes {
   static const String cognitiveDashboard = '/cognitive/dashboard';
   static const String squadCognitiveOverview = '/cognitive/squad-overview';
   static const String communication = '/communication';
-  static const String learning = '/learning';
 
   static const String messages = '/messages';
   static const String notifications = '/notifications';
@@ -212,13 +210,6 @@ class AppRoutes {
         return AppRouteData(
           title: 'Espace Joueur',
           builder: (_) => JoueurDashboardScreen(session: session),
-        );
-      case learning:
-        return AppRouteData(
-          title: 'E-Learning',
-          builder: (_) => LearningShellScreen(session: session),
-          showAppBar: false,
-          usePadding: false,
         );
       case scoutDashboard:
         return AppRouteData(

@@ -50,20 +50,6 @@ class JoueurDashboardScreen extends StatelessWidget {
             }
           },
         ),
-        const SizedBox(height: AppSpacing.s12),
-        _InfoCard(
-          title: 'E-Learning: English for Sport',
-          subtitle: 'Cours, quiz et coach IA pour vos interviews.',
-          icon: Icons.school_outlined,
-          onTap: () {
-            final shell = AppShellScope.of(context);
-            if (shell != null) {
-              shell.navigate(AppRoutes.learning);
-            } else {
-              Navigator.of(context).pushNamed(AppRoutes.learning);
-            }
-          },
-        ),
       ],
     );
   }
