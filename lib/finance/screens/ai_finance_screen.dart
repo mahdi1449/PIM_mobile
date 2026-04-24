@@ -167,18 +167,6 @@ class _AiFinanceScreenState extends State<AiFinanceScreen> {
                 tint: FinancePalette.danger,
               ),
             ],
-            const SizedBox(height: 20),
-            Center(
-              child: TextButton.icon(
-                onPressed: () => _showPlayerSelector(context),
-                icon: const Icon(Icons.person_search_rounded),
-                label: Text(
-                  isPlayerView
-                      ? 'Changer de joueur'
-                      : 'Analyser un joueur spécifique',
-                ),
-              ),
-            ),
           ],
         );
       },
@@ -848,10 +836,15 @@ class _CashflowCard extends StatelessWidget {
             children: [
               _IconBadge(icon: Icons.warning_amber_rounded),
               const SizedBox(width: 10),
-              _Tag(text: 'DATA-DRIVEN AI', color: FinancePalette.cyan),
-              const Spacer(),
-              _RiskSegmentedControl(selected: selected),
+              Expanded(
+                child: _Tag(text: 'DATA-DRIVEN AI', color: FinancePalette.cyan),
+              ),
             ],
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: _RiskSegmentedControl(selected: selected),
           ),
           const SizedBox(height: 12),
           Text(
