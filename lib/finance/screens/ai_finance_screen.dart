@@ -34,10 +34,12 @@ class _AiFinanceScreenState extends State<AiFinanceScreen> {
     final store = FinanceStore.instance;
     try {
       await Future.delayed(const Duration(seconds: 2));
-      
+
       FinanceAiBundle bundle;
       if (_selectedPlayerId != null) {
-        bundle = await FinanceAiService.instance.fetchPlayerValuation(_selectedPlayerId!);
+        bundle = await FinanceAiService.instance.fetchPlayerValuation(
+          _selectedPlayerId!,
+        );
       } else {
         bundle = await FinanceAiService.instance.loadRemoteInsights(store);
       }
@@ -88,11 +90,14 @@ class _AiFinanceScreenState extends State<AiFinanceScreen> {
         final revenue = numVal(nextPoint['revenue']);
         final expense = numVal(nextPoint['expenses']);
         final net = numVal(nextPoint['net']);
-        final confidence = '92'; // Python service currently doesn't provide global confidence
+        final confidence =
+            '92'; // Python service currently doesn't provide global confidence
 
         // Cash-flow Risk Mapping
         final alerts = (cashflowData['risk_alerts'] as List? ?? []);
-        final cashLevel = alerts.any((a) => a.toString().contains('RISK')) ? 'ÉLEVÉ' : (alerts.isNotEmpty ? 'MOYEN' : 'FAIBLE');
+        final cashLevel = alerts.any((a) => a.toString().contains('RISK'))
+            ? 'ÉLEVÉ'
+            : (alerts.isNotEmpty ? 'MOYEN' : 'FAIBLE');
         final cashScore = (100 - (alerts.length * 15)).clamp(0, 100).toString();
         final projected = net;
         final outflows = expense;
@@ -107,7 +112,7 @@ class _AiFinanceScreenState extends State<AiFinanceScreen> {
         final isPlayerView = bundle?.playerValuation != null;
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 104),
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 112),
           children: [
             _ResultsHeader(
               generationTimeMs: bundle?.generationTimeMs,
@@ -120,13 +125,16 @@ class _AiFinanceScreenState extends State<AiFinanceScreen> {
                 value: numVal(valuationData['prediction']?['predicted_value']),
                 confidence: numVal(valuationData['prediction']?['confidence']),
                 factors: [
-                  valuationData['prediction']?['explanation']?.toString() ?? 'Facteurs techniques analysés.',
+                  valuationData['prediction']?['explanation']?.toString() ??
+                      'Facteurs techniques analysés.',
                 ],
               ),
               const SizedBox(height: 14),
               _RoiCard(
                 roi: numVal(valuationData['prediction']?['growth_percent']),
-                recommendation: valuationData['prediction']?['trend']?.toString() ?? 'STABLE',
+                recommendation:
+                    valuationData['prediction']?['trend']?.toString() ??
+                    'STABLE',
               ),
             ] else ...[
               _ForecastCard(
@@ -164,7 +172,11 @@ class _AiFinanceScreenState extends State<AiFinanceScreen> {
               child: TextButton.icon(
                 onPressed: () => _showPlayerSelector(context),
                 icon: const Icon(Icons.person_search_rounded),
-                label: Text(isPlayerView ? 'Changer de joueur' : 'Analyser un joueur spécifique'),
+                label: Text(
+                  isPlayerView
+                      ? 'Changer de joueur'
+                      : 'Analyser un joueur spécifique',
+                ),
               ),
             ),
           ],
@@ -231,17 +243,21 @@ class _AiFinanceScreenState extends State<AiFinanceScreen> {
             children: [
               Text(
                 'Selectionner un joueur',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              ...players.map((p) => ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.person)),
-                title: Text(p['name']!),
-                onTap: () {
-                  Navigator.pop(context);
-                  _loadAiInsights(p['id']);
-                },
-              )),
+              ...players.map(
+                (p) => ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.person)),
+                  title: Text(p['name']!),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _loadAiInsights(p['id']);
+                  },
+                ),
+              ),
               const SizedBox(height: 8),
               ListTile(
                 leading: const Icon(Icons.analytics_rounded),
@@ -277,9 +293,9 @@ class _ShortcutChip extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: FinancePalette.ink,
-              fontWeight: FontWeight.w700,
-            ),
+          color: FinancePalette.ink,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -324,15 +340,18 @@ class _AiFinanceHero extends StatelessWidget {
                   color: FinancePalette.blue,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.psychology_alt_rounded, color: Colors.white),
+                child: const Icon(
+                  Icons.psychology_alt_rounded,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'AI Finance',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               _InfoPill(
@@ -346,9 +365,9 @@ class _AiFinanceHero extends StatelessWidget {
           Text(
             'Prévisions intelligentes et actions d’optimisation pour le profil FINANCIER.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: FinancePalette.muted,
-                  height: 1.4,
-                ),
+              color: FinancePalette.muted,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
@@ -363,11 +382,7 @@ class _AiFinanceHero extends StatelessWidget {
 }
 
 class _InfoPill extends StatelessWidget {
-  const _InfoPill({
-    required this.text,
-    required this.icon,
-    required this.tint,
-  });
+  const _InfoPill({required this.text, required this.icon, required this.tint});
 
   final String text;
   final IconData icon;
@@ -390,9 +405,9 @@ class _InfoPill extends StatelessWidget {
           Text(
             text,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: tint,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: tint,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -455,15 +470,15 @@ class _InsightCard extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     message,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: FinancePalette.muted,
-                        ),
+                      color: FinancePalette.muted,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   _InfoPill(
@@ -530,15 +545,15 @@ class _AiThinkingView extends StatelessWidget {
               Text(
                 'AI Finance',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
                 'Analyse en cours...',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: FinancePalette.muted,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: FinancePalette.muted),
               ),
               const SizedBox(height: 16),
               Row(
@@ -586,8 +601,8 @@ class _AiThinkingView extends StatelessWidget {
                   Text(
                     'Estimated time: 1.2s',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: FinancePalette.muted,
-                        ),
+                      color: FinancePalette.muted,
+                    ),
                   ),
                   const Spacer(),
                   Icon(Icons.more_horiz, color: FinancePalette.muted),
@@ -615,9 +630,9 @@ class _AiThinkingView extends StatelessWidget {
                 child: Text(
                   'We use real club financial data to generate forecasts, risk alerts, and sponsor impact.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: FinancePalette.ink,
-                        height: 1.4,
-                      ),
+                    color: FinancePalette.ink,
+                    height: 1.4,
+                  ),
                 ),
               ),
             ],
@@ -656,10 +671,10 @@ class _ResultsHeader extends StatelessWidget {
             Text(
               'ENGINE ACTIVE',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: FinancePalette.cyan,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
+                color: FinancePalette.cyan,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+              ),
             ),
             const Spacer(),
             _InfoPill(
@@ -672,17 +687,24 @@ class _ResultsHeader extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Finance AI Results',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         if (generationTimeMs != null) ...[
           const SizedBox(height: 4),
-          Text(
-            'Generated in ${generationTimeMs} ms',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          Row(
+            children: [
+              Icon(Icons.bolt_rounded, size: 14, color: FinancePalette.muted),
+              const SizedBox(width: 6),
+              Text(
+                'Generated in ${generationTimeMs} ms',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: FinancePalette.muted,
+                  fontWeight: FontWeight.w600,
                 ),
+              ),
+            ],
           ),
         ],
       ],
@@ -707,6 +729,7 @@ class _ForecastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final parsedConfidence = int.tryParse(confidence.trim()) ?? 0;
     return _FloatingCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -717,45 +740,71 @@ class _ForecastCard extends StatelessWidget {
               const SizedBox(width: 10),
               _Tag(text: 'DATA-DRIVEN AI', color: FinancePalette.cyan),
               const Spacer(),
-              Text(
-                'CONFIDENCE $confidence%',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'CONFIDENCE',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: FinancePalette.muted,
                       fontWeight: FontWeight.w700,
+                      letterSpacing: 0.9,
                     ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${parsedConfidence.clamp(0, 100)}%',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: FinancePalette.cyan,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            'Season Forecast $seasonLabel',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
+            'Season Forecast\n$seasonLabel',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+              height: 1.08,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _MetricColumn(
+                  label: 'REVENUE',
+                  value: formatCompactMoney(revenue, symbol: 'DT'),
                 ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _MetricColumn(
+                  label: 'EXPENSES',
+                  value: formatCompactMoney(expense, symbol: 'DT'),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
-          _MetricRow(
-            label: 'Revenue',
-            value: formatCompactMoney(revenue, symbol: 'DT'),
-          ),
-          const SizedBox(height: 8),
-          _MetricRow(
-            label: 'Expenses',
-            value: formatCompactMoney(expense, symbol: 'DT'),
-          ),
-          const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: FinancePalette.soft,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
+              color: FinancePalette.soft.withValues(alpha: 0.65),
+              border: Border.all(
+                color: FinancePalette.soft.withValues(alpha: 0.9),
+              ),
             ),
             child: Text(
               'Net impact ${net >= 0 ? '+' : ''}${formatCompactMoney(net, symbol: 'DT')}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: FinancePalette.ink,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: FinancePalette.cyan,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
@@ -781,6 +830,16 @@ class _CashflowCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scoreValue = (int.tryParse(score.trim()) ?? 0).clamp(0, 100);
+    final ringValue = scoreValue / 100.0;
+    final normalizedLevel = level.toUpperCase();
+    final selected =
+        normalizedLevel.contains('ÉLE') || normalizedLevel.contains('HIGH')
+        ? 'HIGH'
+        : normalizedLevel.contains('MOY') || normalizedLevel.contains('MED')
+        ? 'MEDIUM'
+        : 'LOW';
+
     return _FloatingCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -791,30 +850,78 @@ class _CashflowCard extends StatelessWidget {
               const SizedBox(width: 10),
               _Tag(text: 'DATA-DRIVEN AI', color: FinancePalette.cyan),
               const Spacer(),
-              _RiskPill(level: level),
+              _RiskSegmentedControl(selected: selected),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             'Cash-flow Risk',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _MetricRow(label: 'Risk score', value: score),
-              const SizedBox(width: 24),
-              _MetricRow(
-                label: 'Projected',
-                value: formatCompactMoney(projected, symbol: 'DT'),
+              Expanded(
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MetricColumn(
+                            label: 'RISK SCORE',
+                            value: '$scoreValue',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _MetricColumn(
+                            label: 'PROJECTED',
+                            value: formatCompactMoney(projected, symbol: 'DT'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    _MetricColumn(
+                      label: 'OUTFLOWS',
+                      value: formatCompactMoney(outflows, symbol: 'DT'),
+                      highlight: FinancePalette.danger,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 24),
-              _MetricRow(
-                label: 'Outflows',
-                value: formatCompactMoney(outflows, symbol: 'DT'),
-                highlight: FinancePalette.danger,
+              const SizedBox(width: 14),
+              SizedBox(
+                width: 54,
+                height: 54,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: ringValue,
+                      strokeWidth: 6,
+                      backgroundColor: FinancePalette.soft.withValues(
+                        alpha: 0.9,
+                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        selected == 'HIGH'
+                            ? FinancePalette.danger
+                            : selected == 'MEDIUM'
+                            ? FinancePalette.warning
+                            : FinancePalette.cyan,
+                      ),
+                    ),
+                    Text(
+                      '$scoreValue',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -822,9 +929,9 @@ class _CashflowCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               'Analysis notes',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: FinancePalette.muted,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: FinancePalette.muted),
             ),
             const SizedBox(height: 6),
             ...notes.map(
@@ -833,16 +940,18 @@ class _CashflowCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('• ',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: FinancePalette.cyan,
-                            )),
+                    Text(
+                      '• ',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: FinancePalette.cyan,
+                      ),
+                    ),
                     Expanded(
                       child: Text(
                         n,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: FinancePalette.muted,
-                            ),
+                          color: FinancePalette.muted,
+                        ),
                       ),
                     ),
                   ],
@@ -883,27 +992,31 @@ class _ImpactCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Sponsor & Transfer Impact',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
-          _MetricRow(
+          _ImpactLine(
             label: 'Sponsors +10%',
             value: '+${formatCompactMoney(sponsorPlus, symbol: 'DT')}',
-            highlight: FinancePalette.success,
+            icon: Icons.trending_up_rounded,
+            color: FinancePalette.success,
           ),
-          const SizedBox(height: 8),
-          _MetricRow(
+          const SizedBox(height: 10),
+          _ImpactLine(
             label: 'Sponsors -10%',
-            value: '-${formatCompactMoney(sponsorMinus, symbol: 'DT')}',
-            highlight: FinancePalette.danger,
+            value: '${formatCompactMoney(sponsorMinus, symbol: 'DT')}',
+            icon: Icons.trending_down_rounded,
+            color: FinancePalette.danger,
           ),
-          const SizedBox(height: 8),
-          _MetricRow(
+          const SizedBox(height: 10),
+          _ImpactLine(
             label: 'Net transfers',
             value:
                 '${transferNet >= 0 ? '+' : ''}${formatCompactMoney(transferNet, symbol: 'DT')}',
+            icon: Icons.swap_horiz_rounded,
+            color: FinancePalette.cyan,
           ),
         ],
       ),
@@ -946,24 +1059,24 @@ class _ValuationCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             playerName,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
             'Valeur Marchande Estimée',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: FinancePalette.muted,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: FinancePalette.muted),
           ),
           const SizedBox(height: 4),
           Text(
             formatCompactMoney(value, symbol: 'DT'),
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: FinancePalette.blue,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: FinancePalette.blue,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           if (factors.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -972,28 +1085,31 @@ class _ValuationCard extends StatelessWidget {
             Text(
               'Facteurs déterminants',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: FinancePalette.muted,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: FinancePalette.muted,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 8),
-            ...factors.take(3).map((f) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                children: [
-                  Icon(Icons.bolt, size: 14, color: FinancePalette.cyan),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      f,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: FinancePalette.ink,
+            ...factors
+                .take(3)
+                .map(
+                  (f) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        Icon(Icons.bolt, size: 14, color: FinancePalette.cyan),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            f,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: FinancePalette.ink),
                           ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            )),
+                ),
           ],
         ],
       ),
@@ -1002,10 +1118,7 @@ class _ValuationCard extends StatelessWidget {
 }
 
 class _RoiCard extends StatelessWidget {
-  const _RoiCard({
-    required this.roi,
-    required this.recommendation,
-  });
+  const _RoiCard({required this.roi, required this.recommendation});
 
   final double roi;
   final String recommendation;
@@ -1026,9 +1139,9 @@ class _RoiCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Analyse du Rendement',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 14),
           Row(
@@ -1037,7 +1150,9 @@ class _RoiCard extends StatelessWidget {
                 child: _MetricRow(
                   label: 'Rendement Estimé (2s)',
                   value: '+${roi.toStringAsFixed(1)}%',
-                  highlight: roi >= 15 ? FinancePalette.success : FinancePalette.blue,
+                  highlight: roi >= 15
+                      ? FinancePalette.success
+                      : FinancePalette.blue,
                 ),
               ),
               const SizedBox(width: 16),
@@ -1056,14 +1171,16 @@ class _RoiCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: FinancePalette.soft,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: FinancePalette.blue.withValues(alpha: 0.1)),
+                border: Border.all(
+                  color: FinancePalette.blue.withValues(alpha: 0.1),
+                ),
               ),
               child: Text(
                 recommendation,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: FinancePalette.ink,
-                      fontStyle: FontStyle.italic,
-                    ),
+                  color: FinancePalette.ink,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
           ],
@@ -1072,6 +1189,7 @@ class _RoiCard extends StatelessWidget {
     );
   }
 }
+
 class _FloatingCard extends StatelessWidget {
   const _FloatingCard({required this.child});
 
@@ -1079,17 +1197,25 @@ class _FloatingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final top = FinancePalette.card.withValues(alpha: 0.92);
+    final bottom = FinancePalette.soft.withValues(alpha: 0.62);
+    final stroke = FinancePalette.soft.withValues(alpha: 0.9);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: FinancePalette.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: FinancePalette.soft.withValues(alpha: 0.55)),
+        borderRadius: BorderRadius.circular(26),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [top, bottom],
+        ),
+        border: Border.all(color: stroke),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 12),
+            blurRadius: 22,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
@@ -1163,10 +1289,10 @@ class _StepRow extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: status == StepStatus.pending
-                      ? FinancePalette.muted
-                      : FinancePalette.ink,
-                ),
+              color: status == StepStatus.pending
+                  ? FinancePalette.muted
+                  : FinancePalette.ink,
+            ),
           ),
         ),
       ],
@@ -1182,13 +1308,14 @@ class _IconBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 38,
-      height: 38,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        color: FinancePalette.soft,
-        borderRadius: BorderRadius.circular(12),
+        shape: BoxShape.circle,
+        color: FinancePalette.soft.withValues(alpha: 0.8),
+        border: Border.all(color: FinancePalette.soft.withValues(alpha: 0.9)),
       ),
-      child: Icon(icon, color: FinancePalette.cyan),
+      child: Icon(icon, color: FinancePalette.blue),
     );
   }
 }
@@ -1210,17 +1337,48 @@ class _Tag extends StatelessWidget {
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-            ),
+          color: color,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.8,
+        ),
       ),
     );
   }
 }
 
 class _MetricRow extends StatelessWidget {
-  const _MetricRow({
+  const _MetricRow({required this.label, required this.value, this.highlight});
+
+  final String label;
+  final String value;
+  final Color? highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: FinancePalette.muted),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: highlight ?? FinancePalette.ink,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricColumn extends StatelessWidget {
+  const _MetricColumn({
     required this.label,
     required this.value,
     this.highlight,
@@ -1238,48 +1396,125 @@ class _MetricRow extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: FinancePalette.muted,
-              ),
+            color: FinancePalette.muted,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.9,
+          ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: highlight ?? FinancePalette.ink,
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: highlight ?? FinancePalette.ink,
+          ),
         ),
       ],
     );
   }
 }
 
-class _RiskPill extends StatelessWidget {
-  const _RiskPill({required this.level});
+class _RiskSegmentedControl extends StatelessWidget {
+  const _RiskSegmentedControl({required this.selected});
 
-  final String level;
+  final String selected;
 
   @override
   Widget build(BuildContext context) {
-    Color color = FinancePalette.success;
-    if (level.toUpperCase() == 'MEDIUM') {
-      color = FinancePalette.warning;
-    } else if (level.toUpperCase() == 'HIGH') {
-      color = FinancePalette.danger;
+    Widget pill(String label, {required bool active}) {
+      final Color color = label == 'HIGH'
+          ? FinancePalette.danger
+          : label == 'MEDIUM'
+          ? FinancePalette.warning
+          : FinancePalette.cyan;
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: active
+              ? color.withValues(alpha: 0.22)
+              : FinancePalette.soft.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: active
+                ? color.withValues(alpha: 0.55)
+                : FinancePalette.soft.withValues(alpha: 0.7),
+          ),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: active ? color : FinancePalette.muted,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.6,
+          ),
+        ),
+      );
     }
 
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        pill('LOW', active: selected == 'LOW'),
+        const SizedBox(width: 8),
+        pill('MEDIUM', active: selected == 'MEDIUM'),
+        const SizedBox(width: 8),
+        pill('HIGH', active: selected == 'HIGH'),
+      ],
+    );
+  }
+}
+
+class _ImpactLine extends StatelessWidget {
+  const _ImpactLine({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(999),
+        color: FinancePalette.soft.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: FinancePalette.soft.withValues(alpha: 0.8)),
       ),
-      child: Text(
-        level.toUpperCase(),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withValues(alpha: 0.35)),
             ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
       ),
     );
   }
