@@ -79,6 +79,40 @@ class TravelModel {
       default: return status;
     }
   }
+
+  // Countdown UX
+  String get countdownLabel {
+    if (status == 'completed') return 'Terminé';
+    if (status == 'planned') {
+      final now = DateTime.now();
+      final diff = departure.at.difference(now);
+      if (diff.isNegative) return 'Planifié (Retard)';
+      if (diff.inDays == 0) return 'Aujourd\'hui · dans ${diff.inHours}h';
+      if (diff.inDays == 1) return 'Demain';
+      return 'Dans ${diff.inDays} jours';
+    }
+
+    final now = DateTime.now();
+    final diff = departure.at.difference(now);
+    
+    if (diff.isNegative) return 'En cours';
+    if (diff.inDays == 0) {
+      if (diff.inHours > 0) return 'Aujourd\'hui · dans ${diff.inHours}h';
+      return 'Départ imminent';
+    }
+    if (diff.inDays == 1) return 'Demain';
+    return 'Dans ${diff.inDays} jours';
+  }
+
+  Color get countdownColor {
+    if (status == 'completed') return Colors.white38;
+    if (status == 'planned') return const Color(0xFF1D9E75); // Vert pour planifié
+    final now = DateTime.now();
+    final diff = departure.at.difference(now);
+    if (diff.inDays == 0) return const Color(0xFFE24B4A); // Rouge
+    if (diff.inDays == 1) return const Color(0xFFEF9F27); // Orange
+    return const Color(0xFF1D9E75); // Vert
+  }
 }
 
 class TravelDeparture {
@@ -172,6 +206,7 @@ class TravelHotel {
 
   int get singleRooms => rooms.where((r) => r.type == 'single').length;
   int get doubleRooms => rooms.where((r) => r.type == 'double').length;
+  int get suiteRooms => rooms.where((r) => r.type == 'suite').length;
 }
 
 class HotelRoom {
@@ -190,15 +225,26 @@ class HotelRoom {
     this.isStaffRoom = false,
   });
 
-  factory HotelRoom.fromJson(Map<String, dynamic> json) => HotelRoom(
-    roomNumber: json['roomNumber'] ?? '',
-    type: json['type'] ?? 'single',
-    occupant1Id: json['occupant1'] is Map ? json['occupant1']['_id'] : json['occupant1'],
-    occupant1Name: json['occupant1'] is Map ? json['occupant1']['name'] : null,
-    occupant2Id: json['occupant2'] is Map ? json['occupant2']['_id'] : json['occupant2'],
-    occupant2Name: json['occupant2'] is Map ? json['occupant2']['name'] : null,
-    isStaffRoom: json['isStaffRoom'] ?? false,
-  );
+  factory HotelRoom.fromJson(Map<String, dynamic> json) {
+    String? getName(dynamic obj) {
+      if (obj is Map) {
+        if (obj['fullName'] != null) return obj['fullName'];
+        if (obj['firstName'] != null && obj['lastName'] != null) return '${obj['firstName']} ${obj['lastName']}';
+        if (obj['name'] != null) return obj['name'];
+      }
+      return null;
+    }
+
+    return HotelRoom(
+      roomNumber: json['roomNumber'] ?? '',
+      type: json['type'] ?? 'single',
+      occupant1Id: json['occupant1'] is Map ? json['occupant1']['_id'] : json['occupant1'],
+      occupant1Name: getName(json['occupant1']),
+      occupant2Id: json['occupant2'] is Map ? json['occupant2']['_id'] : json['occupant2'],
+      occupant2Name: getName(json['occupant2']),
+      isStaffRoom: json['isStaffRoom'] ?? false,
+    );
+  }
 }
 
 class TravelParticipants {
@@ -219,8 +265,10 @@ class ParticipantInfo {
   final String id;
   final String name;
   final String? position;
+  final String? photo;
+  final int? jerseyNumber;
 
-  ParticipantInfo({required this.id, required this.name, this.position});
+  ParticipantInfo({required this.id, required this.name, this.position, this.photo, this.jerseyNumber});
 
   factory ParticipantInfo.fromJson(dynamic json) {
     if (json == null) return ParticipantInfo(id: '', name: '');
@@ -230,6 +278,8 @@ class ParticipantInfo {
         id: json['_id'] ?? '',
         name: json['name'] ?? '',
         position: json['position'],
+        photo: json['photo'],
+        jerseyNumber: json['jerseyNumber'],
       );
     }
     return ParticipantInfo(id: '', name: '');

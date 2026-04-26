@@ -31,15 +31,20 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
   // Club Data
   List<Player> _allPlayers = [];
   List<Map<String, dynamic>> _allStaff = [];
+  List<Map<String, dynamic>> _upcomingMatches = [];
 
   // Form Data
   final TextEditingController _destController = TextEditingController();
   final TextEditingController _hotelNameController = TextEditingController();
   final TextEditingController _hotelAddressController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _depFlightController = TextEditingController();
+  final TextEditingController _retFlightController = TextEditingController();
   
   double? _destLat, _destLng;
   double? _hotelLat, _hotelLng;
   String? _hotelPhone, _hotelWebsite;
+  String? _selectedMatchId;
   
   String _travelType = 'away';
   String _travelMode = 'bus';
@@ -74,6 +79,7 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
     _returnAt = t.travelReturn.at;
     _depAirport = t.departureAirport;
     _arrAirport = t.arrivalAirport;
+    _selectedMatchId = t.matchId;
     
     _hotelNameController.text = t.hotel.name;
     _hotelAddressController.text = t.hotel.address;
@@ -81,6 +87,9 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
     _hotelLng = t.hotel.lng;
     _hotelPhone = t.hotel.phone;
     _hotelWebsite = t.hotel.website;
+    _notesController.text = t.notes ?? '';
+    _depFlightController.text = t.departure.flightNumber ?? '';
+    _retFlightController.text = t.travelReturn.flightNumber ?? '';
 
     _selectedPlayerIds.addAll(t.participants.players.map((p) => p.id));
     _selectedStaffIds.addAll(t.participants.staff.map((s) => s.id));
@@ -91,12 +100,14 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
     try {
       final players = await ref.read(playersProvider.future);
       final coachesData = await _generalApi.getCoaches();
+      final matches = await _api.fetchUpcomingMatches(widget.clubId);
       
       setState(() {
         _allPlayers = players;
         if (coachesData['success'] == true) {
           _allStaff = List<Map<String, dynamic>>.from(coachesData['data'] ?? []);
         }
+        _upcomingMatches = matches;
         _isDataLoading = false;
       });
     } catch (e) {
@@ -121,8 +132,65 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
     );
     if (picked != null) {
       setState(() {
-        if (isDeparture) _departureAt = picked;
-        else _returnAt = picked;
+        if (isDeparture) {
+          _departureAt = picked;
+          // Si le départ passe après le retour, on décale le retour d'un jour
+          if (_departureAt.isAfter(_returnAt) || _departureAt.isAtSameMomentAs(_returnAt)) {
+            _returnAt = _departureAt.add(const Duration(days: 1));
+          }
+        } else {
+          // Si on choisit un retour avant le départ, on bloque ou on ajuste
+          if (picked.isBefore(_departureAt) || picked.isAtSameMomentAs(_departureAt)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('La date de retour doit être après la date de départ')));
+            return;
+          }
+          _returnAt = picked;
+        }
+      });
+      _generateCoachNotes();
+    }
+  }
+
+  void _generateCoachNotes() {
+    if (_destController.text.isNotEmpty) {
+      final dest = _destController.text;
+      int nights = _returnAt.difference(_departureAt).inDays;
+      if (nights < 1) nights = 1;
+      
+      String typeLabel = '';
+      String instruction = '';
+      
+      switch (_travelType) {
+        case 'away':
+          typeLabel = 'Match à l\'extérieur';
+          instruction = 'Focus sur la récupération post-trajet et préparation tactique.';
+          break;
+        case 'home':
+          typeLabel = 'Match à domicile (Mise au vert)';
+          instruction = 'Mise au vert pour renforcer la cohésion et le repos.';
+          break;
+        case 'tour':
+          typeLabel = 'Tournée / Stage';
+          instruction = 'Alternance entre entraînements intensifs et cohésion de groupe.';
+          break;
+      }
+        
+      final depStr = DateFormat('dd MMM').format(_departureAt);
+      final retStr = DateFormat('dd MMM').format(_returnAt);
+      
+      String matchContext = '';
+      if (_selectedMatchId != null) {
+        try {
+          final match = _upcomingMatches.firstWhere((m) => m['_id'] == _selectedMatchId);
+          matchContext = ' pour le match ${match['homeTeam']} vs ${match['awayTeam']}';
+        } catch (_) {}
+      }
+
+      setState(() {
+        _notesController.text = 'Déplacement à $dest$matchContext ($typeLabel).\n'
+            'Séjour de $nights nuit(s) du $depStr au $retStr.\n'
+            'Note: $instruction';
       });
     }
   }
@@ -130,7 +198,7 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
   void _submit() async {
     if (_destController.text.isEmpty || _hotelNameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez remplir les informations obligatoires')));
+        const SnackBar(content: Text('Veuillez remplir les informations obligatoires (Destination et Hôtel)')));
       return;
     }
 
@@ -138,7 +206,7 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
     try {
       final payload = {
         'clubId': widget.clubId,
-        'matchId': '65f1a2b3c4d5e6f7a8b9c0d1',
+        'matchId': _selectedMatchId,
         'destination': _destController.text,
         'destinationLat': _destLat,
         'destinationLng': _destLng,
@@ -147,11 +215,13 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
           'at': _departureAt.toIso8601String(),
           'from': 'Tunis',
           'mode': _travelMode,
-          'flightNumber': _travelMode == 'flight' ? 'TU711' : null,
+          'flightNumber': _travelMode == 'flight' ? _depFlightController.text : null,
         },
         'return': {
           'at': _returnAt.toIso8601String(),
+          'flightNumber': _travelMode == 'flight' ? _retFlightController.text : null,
         },
+        'notes': _notesController.text,
         'hotel': {
           'name': _hotelNameController.text,
           'address': _hotelAddressController.text,
@@ -261,12 +331,47 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
           label: 'VILLE DE DESTINATION (IA)',
           hint: 'Rechercher une ville...',
           icon: Icons.location_city,
-          onChanged: (val) => setState(() => _destController.text = val),
+          onChanged: (val) {
+            setState(() => _destController.text = val);
+            _generateCoachNotes();
+          },
           onSelected: (name, addr, lat, lng, extra) {
             setState(() {
               _destController.text = name;
               _destLat = lat;
               _destLng = lng;
+              _generateCoachNotes();
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildTravelTypeSelector(),
+        const SizedBox(height: 16),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String>(
+          value: _selectedMatchId,
+          dropdownColor: SPColors.backgroundSecondary,
+          decoration: const InputDecoration(
+            labelText: 'MATCH ASSOCIÉ',
+            prefixIcon: Icon(Icons.sports_soccer, color: SPColors.primaryBlue),
+          ),
+          items: _upcomingMatches.isEmpty 
+            ? [const DropdownMenuItem<String>(value: null, child: Text('Aucun match prévu', style: TextStyle(color: Colors.white24, fontSize: 13)))]
+            : _upcomingMatches.map((m) {
+                DateTime? date;
+                try { date = DateTime.parse(m['date']); } catch (e) {}
+                return DropdownMenuItem<String>(
+                  value: m['_id'],
+                  child: Text(
+                    '${m['homeTeam']} vs ${m['awayTeam']} ${date != null ? "(${DateFormat('dd/MM').format(date)})" : ""}',
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                );
+              }).toList(),
+          onChanged: (val) {
+            setState(() {
+               _selectedMatchId = val;
+               _generateCoachNotes();
             });
           },
         ),
@@ -277,6 +382,64 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
             const SizedBox(width: 12),
             Expanded(child: _dateTile('Retour', _returnAt, () => _selectDate(context, false))),
           ],
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _notesController,
+          maxLines: 3,
+          style: const TextStyle(color: Colors.white, fontSize: 13),
+          decoration: const InputDecoration(
+            labelText: 'REMARQUES / INSTRUCTIONS DU COACH',
+            hintText: 'Précisions sur le trajet, besoins spécifiques...',
+            alignLabelWithHint: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTravelTypeSelector() {
+    final types = [
+      {'id': 'away', 'label': 'EXTÉRIEUR', 'icon': Icons.flight_takeoff},
+      {'id': 'home', 'label': 'DOMICILE', 'icon': Icons.home},
+      {'id': 'tour', 'label': 'TOURNÉE', 'icon': Icons.map},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('TYPE DE VOYAGE', style: TextStyle(color: SPColors.textTertiary, fontSize: 10, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Row(
+          children: types.map((t) {
+            final isSelected = _travelType == t['id'];
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: t['id'] == 'tour' ? 0 : 8),
+                child: InkWell(
+                  onTap: () {
+                    setState(() => _travelType = t['id'] as String);
+                    _generateCoachNotes();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? SPColors.primaryBlue.withOpacity(0.2) : SPColors.backgroundTertiary,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isSelected ? SPColors.primaryBlue : SPColors.borderPrimary),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(t['icon'] as IconData, color: isSelected ? SPColors.primaryBlue : Colors.white24, size: 20),
+                        const SizedBox(height: 4),
+                        Text(t['label'] as String, style: TextStyle(color: isSelected ? Colors.white : Colors.white24, fontSize: 9, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -305,21 +468,74 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
   }
 
   Widget _buildTransportStep() {
+    final modes = [
+      {'id': 'flight', 'label': 'VOL', 'icon': Icons.flight},
+      {'id': 'bus', 'label': 'BUS', 'icon': Icons.directions_bus},
+      {'id': 'train', 'label': 'TRAIN', 'icon': Icons.train},
+      {'id': 'car', 'label': 'VOITURE', 'icon': Icons.directions_car},
+    ];
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DropdownButtonFormField<String>(
-          value: _travelMode,
-          dropdownColor: SPColors.backgroundSecondary,
-          decoration: const InputDecoration(labelText: 'Mode de transport'),
-          items: ['bus', 'flight', 'train', 'car'].map((m) => DropdownMenuItem(
-            value: m, child: Text(m.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 13)))).toList(),
-          onChanged: (val) => setState(() => _travelMode = val!),
+        const Text('MODE DE TRANSPORT', style: TextStyle(color: SPColors.textTertiary, fontSize: 10, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Row(
+          children: modes.map((m) {
+            final isSelected = _travelMode == m['id'];
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: m['id'] == 'car' ? 0 : 8),
+                child: InkWell(
+                  onTap: () => setState(() => _travelMode = m['id'] as String),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? SPColors.primaryBlue.withOpacity(0.2) : SPColors.backgroundTertiary,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isSelected ? SPColors.primaryBlue : SPColors.borderPrimary),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(m['icon'] as IconData, color: isSelected ? SPColors.primaryBlue : Colors.white24, size: 20),
+                        const SizedBox(height: 4),
+                        Text(m['label'] as String, style: TextStyle(color: isSelected ? Colors.white : Colors.white24, fontSize: 9, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
         if (_travelMode == 'flight') ...[
           const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _depFlightController,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: const InputDecoration(labelText: 'N° VOL ALLER', hintText: 'ex: TU214'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _retFlightController,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: const InputDecoration(labelText: 'N° VOL RETOUR', hintText: 'ex: TU215'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           AirportSearchWidget(
             label: 'Aéroport de départ (IA)',
-            onSelected: (a) => setState(() => _depAirport = a),
+            onSelected: (a) => setState(() {
+              _depAirport = a;
+              _generateFlightNumbers();
+            }),
           ),
           const SizedBox(height: 12),
           AirportSearchWidget(
@@ -329,12 +545,32 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
               if (_destController.text.isEmpty) {
                 _destController.text = a.name.split(' ').first;
               }
+              _generateFlightNumbers();
             }),
           ),
         ]
       ],
     );
   }
+
+  void _generateFlightNumbers() {
+    if (_depAirport != null && _arrAirport != null) {
+      // Génère des numéros de vol crédibles si les champs sont encore vides ou générés automatiquement
+      String depIata = _depAirport!.code.toUpperCase();
+      String arrIata = _arrAirport!.code.toUpperCase();
+      
+      // On utilise l'heure pour avoir un numéro aléatoire cohérent mais changeant
+      int randNum = 1000 + (DateTime.now().millisecond * 7) % 8999;
+      
+      if (_depFlightController.text.isEmpty || _depFlightController.text.length > 3) {
+        _depFlightController.text = '${depIata.substring(0, 2)}$randNum';
+      }
+      if (_retFlightController.text.isEmpty || _retFlightController.text.length > 3) {
+        _retFlightController.text = '${arrIata.substring(0, 2)}${randNum + 5}';
+      }
+    }
+  }
+
 
   Widget _buildHotelStep() {
     return Column(
@@ -527,8 +763,27 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
             hint: const Text('Choisir...', style: TextStyle(color: Colors.white12, fontSize: 12)),
             dropdownColor: SPColors.backgroundTertiary,
             items: [
-              ...players.map((p) => DropdownMenuItem(value: p.id, child: Text(p.fullName, style: const TextStyle(color: Colors.white, fontSize: 12)))),
-              ...staff.map((s) => DropdownMenuItem(value: s['_id'], child: Text(s['fullName'] ?? s['name'], style: const TextStyle(color: Colors.white70, fontSize: 12)))),
+              ...players.map((p) => DropdownMenuItem(
+                value: p.id, 
+                child: Row(
+                  children: [
+                    if (p.photo != null) CircleAvatar(radius: 8, backgroundImage: NetworkImage(p.photo!))
+                    else CircleAvatar(radius: 8, backgroundColor: SPColors.primaryBlue.withOpacity(0.2), child: Text(p.fullName[0], style: const TextStyle(fontSize: 8))),
+                    const SizedBox(width: 8),
+                    Text(p.fullName, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  ],
+                ),
+              )),
+              ...staff.map((s) => DropdownMenuItem(
+                value: s['_id'], 
+                child: Row(
+                  children: [
+                    CircleAvatar(radius: 8, backgroundColor: Colors.orange.withOpacity(0.2), child: Text((s['fullName'] ?? s['name'])[0], style: const TextStyle(fontSize: 8))),
+                    const SizedBox(width: 8),
+                    Text(s['fullName'] ?? s['name'], style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  ],
+                ),
+              )),
             ],
             onChanged: (val) {
               setState(() {

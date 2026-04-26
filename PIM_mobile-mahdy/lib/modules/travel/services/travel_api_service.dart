@@ -32,6 +32,18 @@ class TravelApiService {
     throw Exception('Erreur lors du chargement des voyages: ${response.statusCode}');
   }
 
+  // ─── Matchs à venir ──────────────────────────────────────────────────────
+  Future<List<Map<String, dynamic>>> fetchUpcomingMatches(String clubId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/matches?clubId=$clubId&upcoming=true'),
+      headers: await _authHeaders(),
+    );
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    }
+    return [];
+  }
+
   // ─── Voyages d'un joueur ────────────────────────────────────────────────
   Future<List<TravelModel>> fetchPlayerTravels(String clubId, String playerId) async {
     final response = await http.get(
@@ -81,6 +93,30 @@ class TravelApiService {
       return TravelModel.fromJson(jsonDecode(response.body));
     }
     throw Exception('Erreur mise à jour voyage: ${response.body}');
+  }
+
+  // ─── Mettre à jour le statut ──────────────────────────────────────────────
+  Future<void> updateTravelStatus(String id, String clubId, String status) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/travel/$id/status?clubId=$clubId'),
+      headers: await _authHeaders(),
+      body: jsonEncode({'status': status}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Erreur changement statut: ${response.body}');
+    }
+  }
+
+  // ─── Statistiques ─────────────────────────────────────────────────────────
+  Future<List<dynamic>> fetchTravelStats(String clubId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/travel/stats?clubId=$clubId'),
+      headers: await _authHeaders(),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return [];
   }
 
   // ─── Rechercher des aéroports (IA géo) ──────────────────────────────────

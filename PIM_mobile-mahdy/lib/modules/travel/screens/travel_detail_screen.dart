@@ -69,6 +69,17 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
                     });
                   },
                 ),
+                if (travel.status != 'completed')
+                  IconButton(
+                    icon: const Icon(Icons.check_circle_outline, color: TravelTheme.accentGreen),
+                    tooltip: 'Marquer comme terminé',
+                    onPressed: () async {
+                      await _api.updateTravelStatus(widget.travelId, widget.clubId, 'completed');
+                      setState(() {
+                        _travel = _api.fetchTravelDetail(widget.travelId, widget.clubId);
+                      });
+                    },
+                  ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                   onPressed: () => _confirmDelete(context),
@@ -94,6 +105,10 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
       children: [
         _buildDetailHeader(travel),
         const SizedBox(height: 24),
+        if (travel.notes != null && travel.notes!.isNotEmpty) ...[
+          _buildNotesSection(travel.notes!),
+          const SizedBox(height: 24),
+        ],
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -105,6 +120,10 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
           ],
         ),
         const SizedBox(height: 32),
+        if (travel.departure.mode == 'flight') ...[
+          _buildFlightExtraInfo(travel),
+          const SizedBox(height: 32),
+        ],
         const Text('Chronologie du voyage', style: TextStyle(color: TravelTheme.textMuted, fontSize: 13, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
         
@@ -135,11 +154,105 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
         ),
         
         const SizedBox(height: 32),
-        const Text('Hôtel', style: TextStyle(color: TravelTheme.textMuted, fontSize: 13, fontWeight: FontWeight.bold)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Hôtel', style: TextStyle(color: TravelTheme.textMuted, fontSize: 13, fontWeight: FontWeight.bold)),
+            if (travel.destinationLat != null)
+              _buildWeatherMini(travel.destinationLat!, travel.destinationLng!),
+          ],
+        ),
         const SizedBox(height: 16),
         _buildHotelCard(travel),
       ],
     );
+  }
+
+  Widget _buildNotesSection(String notes) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.deepPurple.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.deepPurple.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.purpleAccent, size: 16),
+              const SizedBox(width: 8),
+              Text('NOTES DU COACH', style: TextStyle(color: Colors.purpleAccent, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(notes, style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.5)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeatherMini(double lat, double lng) {
+    return Row(
+      children: [
+        const Icon(Icons.wb_cloudy_outlined, color: Colors.white38, size: 14),
+        const SizedBox(width: 6),
+        const Text('Destination : 24°C', style: TextStyle(color: TravelTheme.textMuted, fontSize: 11)),
+      ],
+    );
+  }
+
+  Widget _buildFlightExtraInfo(TravelModel travel) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: TravelTheme.cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _iataCode(travel.departureAirport?.code ?? '???'),
+              const SizedBox(width: 20),
+              const Icon(Icons.arrow_forward, color: Colors.white24, size: 16),
+              const SizedBox(width: 20),
+              _iataCode(travel.arrivalAirport?.code ?? '???'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _flightMiniStat('N° Vol Aller', travel.departure.flightNumber ?? 'N/A'),
+              _flightMiniStat('N° Vol Retour', travel.travelReturn.flightNumber ?? 'N/A'),
+              _flightMiniStat('Durée approx.', _calculateDuration(travel)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iataCode(String code) {
+    return Text(code, style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 2));
+  }
+
+  Widget _flightMiniStat(String label, String value) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(color: TravelTheme.textMuted, fontSize: 9)),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  String _calculateDuration(TravelModel travel) {
+     return '2h 15m';
   }
 
   Widget _buildDetailHeader(TravelModel travel) {
@@ -178,6 +291,10 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
               _miniBadge('${travel.hotel.doubleRooms} doubles'),
               const SizedBox(width: 8),
               _miniBadge('${travel.hotel.singleRooms} singles'),
+              if (travel.hotel.suiteRooms > 0) ...[
+                const SizedBox(width: 8),
+                _miniBadge('${travel.hotel.suiteRooms} suites', color: Colors.amber.withOpacity(0.2)),
+              ],
             ],
           )
         ],
@@ -185,10 +302,10 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
     );
   }
 
-  Widget _miniBadge(String text) {
+  Widget _miniBadge(String text, {Color? color}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: color ?? Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(8)),
       child: Text(text, style: const TextStyle(color: Colors.white60, fontSize: 10)),
     );
   }
@@ -217,8 +334,20 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
   }
 
   Widget _participantTile(ParticipantInfo p, TravelModel travel, {bool isStaff = false}) {
-    // Simuler un numéro de chambre pour le design
-    String roomNo = '104'; 
+    // Calcul de la couleur selon le poste
+    Color posColor = TravelTheme.accentGreen;
+    if (!isStaff) {
+       final pos = p.position?.toUpperCase() ?? '';
+       if (pos.contains('GK') || pos.contains('GARD')) posColor = Colors.orange;
+       else if (pos.contains('DEF')) posColor = Colors.blueAccent;
+       else if (pos.contains('MID') || pos.contains('MIL')) posColor = Colors.greenAccent;
+       else if (pos.contains('ATT') || pos.contains('BU')) posColor = Colors.redAccent;
+    } else {
+       posColor = Colors.amber;
+    }
+
+    // Trouver le numéro de chambre
+    String? roomNo;
     try {
       final room = travel.hotel.rooms.firstWhere((r) => r.occupant1Id == p.id || r.occupant2Id == p.id);
       roomNo = room.roomNumber;
@@ -229,8 +358,10 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: (isStaff ? Colors.orangeAccent : TravelTheme.accentGreen).withOpacity(0.2),
-            child: Text(p.initials, style: TextStyle(color: isStaff ? Colors.orangeAccent : TravelTheme.accentGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+            radius: 20,
+            backgroundColor: posColor.withOpacity(0.1),
+            backgroundImage: (!isStaff && p.photo != null) ? NetworkImage(p.photo!) : null,
+            child: (!isStaff && p.photo != null) ? null : Text(p.initials, style: TextStyle(color: posColor, fontSize: 12, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -238,13 +369,33 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(p.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                Text('Chambre $roomNo', style: const TextStyle(color: TravelTheme.textMuted, fontSize: 11)),
+                if (roomNo != null)
+                   InkWell(
+                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TravelRoomScreen(travel: travel, clubId: widget.clubId))),
+                     child: Row(
+                       children: [
+                         const Icon(Icons.hotel_outlined, size: 10, color: TravelTheme.textMuted),
+                         const SizedBox(width: 4),
+                         Text('Chambre $roomNo', style: const TextStyle(color: TravelTheme.textMuted, fontSize: 11)),
+                       ],
+                     ),
+                   )
+                else
+                   const Text('Chambre non assignée', style: TextStyle(color: Colors.white24, fontSize: 11)),
               ],
             ),
           ),
-          Text(p.position ?? (isStaff ? 'Staff' : 'Joueur'), style: const TextStyle(color: Colors.white24, fontSize: 11, fontWeight: FontWeight.bold)),
+          _positionBadge(p.position ?? (isStaff ? 'Staff' : 'Joueur'), posColor),
         ],
       ),
+    );
+  }
+
+  Widget _positionBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+      child: Text(text, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -270,8 +421,8 @@ class _TravelDetailScreenState extends State<TravelDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: TravelTheme.cardBg,
-        title: const Text('Supprimer le voyage', style: TextStyle(color: Colors.white)),
-        content: const Text('Êtes-vous sûr de vouloir supprimer ce voyage ? Cette action est irréversible.', style: TextStyle(color: TravelTheme.textMuted)),
+        title: const Text('Supprimer ce voyage ?', style: TextStyle(color: Colors.white)),
+        content: const Text('Action irréversible. Toutes les données logistiques seront perdues.', style: TextStyle(color: TravelTheme.textMuted)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('ANNULER', style: TextStyle(color: Colors.white38))),
           TextButton(

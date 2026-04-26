@@ -112,30 +112,82 @@ class _TravelRoomScreenState extends State<TravelRoomScreen> {
 
   Widget _roomTile(HotelRoom room) {
     bool isSelected = _selectedRoom?.roomNumber == room.roomNumber;
+    bool isOccupied = room.occupant1Id != null || room.occupant2Id != null;
+    
+    Color typeColor = TravelTheme.accentBlue;
+    if (room.type == 'single') typeColor = TravelTheme.accentOrange;
+    if (room.type == 'suite') typeColor = Colors.purpleAccent;
+
     return GestureDetector(
-      onTap: () => setState(() => _selectedRoom = room),
+      onTap: () {
+        setState(() => _selectedRoom = room);
+        if (MediaQuery.of(context).size.width <= 600) {
+           _showEditBottomSheet(room);
+        }
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? TravelTheme.accentBlue.withOpacity(0.1) : TravelTheme.cardBg,
+          color: isSelected ? typeColor.withOpacity(0.05) : TravelTheme.cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? TravelTheme.accentBlue : Colors.white.withOpacity(0.05)),
+          border: Border.all(color: isSelected ? typeColor : Colors.white.withOpacity(0.05), width: isSelected ? 1.5 : 1),
         ),
         child: Row(
           children: [
-            Icon(Icons.hotel_outlined, color: room.type == 'double' ? TravelTheme.accentGreen : TravelTheme.accentOrange, size: 20),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: typeColor.withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(Icons.hotel_outlined, color: typeColor, size: 18),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Chambre ${room.roomNumber} — ${room.type}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text('${room.occupant1Name ?? "Libre"} · ${room.occupant2Name ?? "Libre"}', style: const TextStyle(color: TravelTheme.textMuted, fontSize: 11)),
+                  Row(
+                    children: [
+                      Text('Chambre ${room.roomNumber}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(width: 8),
+                      Text(room.type.toUpperCase(), style: TextStyle(color: typeColor, fontSize: 9, fontWeight: FontWeight.w900)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text('${room.occupant1Name ?? "Libre"} · ${room.occupant2Name ?? "Libre"}', 
+                    style: TextStyle(color: isOccupied ? TravelTheme.textMuted : Colors.white24, fontSize: 11)),
                 ],
               ),
             ),
-            Container(width: 8, height: 8, decoration: const BoxDecoration(color: TravelTheme.accentGreen, shape: BoxShape.circle)),
+            if (MediaQuery.of(context).size.width <= 600)
+               const Icon(Icons.edit_outlined, color: Colors.white24, size: 16),
+            const SizedBox(width: 12),
+            Container(
+              width: 8, height: 8, 
+              decoration: BoxDecoration(
+                color: isOccupied ? TravelTheme.accentGreen : Colors.white10, 
+                shape: BoxShape.circle,
+                boxShadow: isOccupied ? [BoxShadow(color: TravelTheme.accentGreen.withOpacity(0.5), blurRadius: 4)] : null,
+              )
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditBottomSheet(HotelRoom room) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: TravelTheme.cardBg,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(2))),
+             const SizedBox(height: 24),
+             _buildEditPanel(),
           ],
         ),
       ),

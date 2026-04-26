@@ -197,13 +197,18 @@ class _PlaceSearchWidgetState extends State<PlaceSearchWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Aucun établissement trouvé ici via IA.', 
+                const Text('Aucun résultat trouvé via l\'IA.', 
                   style: TextStyle(color: Colors.redAccent, fontSize: 10)),
-                if (_api.lastError != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text('Détail: ${_api.lastError}', 
-                      style: TextStyle(color: Colors.orangeAccent.withOpacity(0.7), fontSize: 9, fontStyle: FontStyle.italic)),
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Text('Vous pouvez simplement saisir votre texte et continuer.',
+                    style: TextStyle(color: Colors.white38, fontSize: 10, fontStyle: FontStyle.italic)),
+                ),
+                if (_api.lastError != null && _api.lastError!.contains('Timeout'))
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text('Détail: Service momentanément indisponible.', 
+                      style: TextStyle(color: Colors.orangeAccent, fontSize: 9, fontStyle: FontStyle.italic)),
                   ),
               ],
             ),
