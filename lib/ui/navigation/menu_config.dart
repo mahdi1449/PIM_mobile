@@ -298,6 +298,11 @@ class MenuConfig {
             route: AppRoutes.calendar,
           ),
           MenuItemConfig(
+            title: 'English Learning',
+            icon: Icons.school_outlined,
+            route: AppRoutes.learning,
+          ),
+          MenuItemConfig(
             title: 'Communication',
             icon: Icons.forum_outlined,
             route: AppRoutes.communication,
