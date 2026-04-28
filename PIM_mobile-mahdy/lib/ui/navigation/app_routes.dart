@@ -25,6 +25,7 @@ import '../../sports_performance/cognitive_lab/screens/cognitive_dashboard_scree
 import '../../sports_performance/cognitive_lab/screens/squad_cognitive_overview_screen.dart';
 import '../../screens/ai/ai_campaign_screen.dart';
 import '../../user_management/models/user_management_models.dart';
+import '../../utils/role_mapper.dart';
 import '../screens/admin_users_screen.dart';
 import '../screens/audit_log_screen.dart';
 import '../screens/communication_shell_screen.dart';
@@ -33,6 +34,8 @@ import '../../season_planning/screens/season_list_screen.dart';
 import '../../tactics/screens/tactics_board_screen.dart';
 import '../../screens/chemistry/team_chemistry_screen.dart';
 import '../../sports_performance/gamification/screens/gamification_dashboard_screen.dart';
+import '../../sports_performance/travel/screens/travel_list_screen.dart';
+import '../../sports_performance/travel/screens/travel_player_screen.dart';
 
 class AppRouteData {
   const AppRouteData({
@@ -97,9 +100,24 @@ class AppRoutes {
   static const String notifications = '/notifications';
   static const String profile = '/profile';
   static const String gamification = '/gamification';
+  static const String travel = '/travel';
 
   static AppRouteData resolve(String route, SessionModel session) {
+    final role = RoleMapper.normalize(session.role);
+
     switch (route) {
+      case travel:
+        return AppRouteData(
+          title: 'Logistique & Voyages',
+          builder: (_) => role == RoleMapper.player
+              ? TravelPlayerScreen(
+                  playerId: session.userId,
+                  clubId: session.clubId ?? '',
+                )
+              : TravelListScreen(clubId: session.clubId ?? ''),
+          showAppBar: false,
+          usePadding: false,
+        );
       case adminDashboard:
         return AppRouteData(
           title: 'Admin Dashboard',

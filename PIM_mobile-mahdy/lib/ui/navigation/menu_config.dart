@@ -70,6 +70,11 @@ class MenuConfig {
             icon: Icons.hub_outlined,
             route: AppRoutes.chemistry,
           ),
+          MenuItemConfig(
+            title: 'Logistique & Voyages',
+            icon: Icons.flight_takeoff_outlined,
+            route: AppRoutes.travel,
+          ),
         ];
       case RoleMapper.clubResponsable:
         return const [
@@ -141,6 +146,11 @@ class MenuConfig {
             icon: Icons.emoji_events_outlined,
             route: AppRoutes.gamification,
           ),
+          MenuItemConfig(
+            title: 'Logistique & Voyages',
+            icon: Icons.flight_takeoff_outlined,
+            route: AppRoutes.travel,
+          ),
         ];
       case RoleMapper.staffTechnique:
         return const [
@@ -188,6 +198,11 @@ class MenuConfig {
             title: 'Gamification & Rewards',
             icon: Icons.emoji_events_outlined,
             route: AppRoutes.gamification,
+          ),
+          MenuItemConfig(
+            title: 'Logistique & Voyages',
+            icon: Icons.flight_takeoff_outlined,
+            route: AppRoutes.travel,
           ),
         ];
       case RoleMapper.staffMedical:
@@ -316,6 +331,11 @@ class MenuConfig {
             title: 'Gamification & Rewards',
             icon: Icons.emoji_events_outlined,
             route: AppRoutes.gamification,
+          ),
+          MenuItemConfig(
+            title: 'Logistique & Voyages',
+            icon: Icons.flight_takeoff_outlined,
+            route: AppRoutes.travel,
           ),
         ];
     }

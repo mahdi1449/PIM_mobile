@@ -14,8 +14,11 @@ import 'sports_performance/cognitive_lab/providers/cognitive_lab_provider.dart';
 import 'sports_performance/gamification/providers/gamification_provider.dart';
 import 'utils/role_router.dart';
 import 'user_management/models/user_management_models.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('fr_FR', null);
   if (kIsWeb) {
     runApp(const AdminWebApp());
     return;
