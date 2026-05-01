@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../learning/esp/screens/player_learning_mobile_screen.dart';
 import '../../user_management/models/user_management_models.dart';
 import '../../ui/components/app_card.dart';
 import '../../ui/components/app_section_header.dart';
@@ -7,16 +8,14 @@ import '../../ui/shell/app_shell.dart';
 import '../../ui/theme/app_spacing.dart';
 
 class JoueurDashboardScreen extends StatelessWidget {
-  const JoueurDashboardScreen({
-    super.key,
-    required this.session,
-  });
+  const JoueurDashboardScreen({super.key, required this.session});
 
   final SessionModel session;
 
   @override
   Widget build(BuildContext context) {
-    final displayName = '${session.firstName ?? ''} ${session.lastName ?? ''}'.trim();
+    final displayName = '${session.firstName ?? ''} ${session.lastName ?? ''}'
+        .trim();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -35,6 +34,21 @@ class JoueurDashboardScreen extends StatelessWidget {
           title: 'Etat physique',
           subtitle: 'Suivez votre forme et votre recuperation.',
           icon: Icons.health_and_safety,
+        ),
+        const SizedBox(height: AppSpacing.s12),
+        _InfoCard(
+          title: 'E-learning ESP',
+          subtitle: 'Accedez aux lessons, tasks et quiz d’anglais sportif.',
+          icon: Icons.school_outlined,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => PlayerLearningMobileScreen(
+                  playerName: displayName.isEmpty ? 'Player' : displayName,
+                ),
+              ),
+            );
+          },
         ),
         const SizedBox(height: AppSpacing.s12),
         _InfoCard(
@@ -76,7 +90,9 @@ class _InfoCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.12),
             child: Icon(icon, color: Theme.of(context).colorScheme.primary),
           ),
           const SizedBox(width: AppSpacing.s16),

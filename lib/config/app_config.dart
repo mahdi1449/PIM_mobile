@@ -2,7 +2,7 @@ class AppConfig {
   // Backend base URL
   // For Android emulator: http://10.0.2.2:3000
   // For iOS simulator: http://localhost:3000
-  static const String baseUrl = 'http://10.0.2.2:3000';
+  static const String baseUrl = 'http://10.0.2.2:3';
   // Player Value AI service
   // For Android emulator: http://10.0.2.2:8002
   // For iOS simulator: http://localhost:8002
