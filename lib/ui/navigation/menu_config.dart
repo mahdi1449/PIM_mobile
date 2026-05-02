@@ -208,6 +208,16 @@ class MenuConfig {
             route: AppRoutes.medicalPlayers,
           ),
           MenuItemConfig(
+            title: 'Injury Camera AI',
+            icon: Icons.camera_alt_outlined,
+            route: AppRoutes.medicalVision,
+          ),
+          MenuItemConfig(
+            title: 'Gym Equipment AI',
+            icon: Icons.fitness_center_outlined,
+            route: AppRoutes.medicalGymVision,
+          ),
+          MenuItemConfig(
             title: 'Medical Analysis Detail',
             icon: Icons.monitor_heart_outlined,
             route: AppRoutes.medicalAnalysisDetail,

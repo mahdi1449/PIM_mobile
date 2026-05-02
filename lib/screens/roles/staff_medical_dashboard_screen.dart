@@ -46,12 +46,11 @@ class _StaffMedicalDashboardScreenState
       await _playerService.clearMedical(player.id);
       await _refreshPlayers();
     } finally {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        setState(() {
+          _clearing.remove(player.id);
+        });
       }
-      setState(() {
-        _clearing.remove(player.id);
-      });
     }
   }
 
@@ -65,15 +64,49 @@ class _StaffMedicalDashboardScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppSectionHeader(
-              title: name.isEmpty ? 'Staff Medical' : name,
-              subtitle: 'Suivi medical et prevention des blessures.',
+              title: name.isEmpty ? 'Med Staff' : name,
+              subtitle: 'Suivi medical, tracking vital et prevention.',
             ),
-            const SizedBox(height: AppSpacing.s24),
+            const SizedBox(height: AppSpacing.s16),
+            const _TrackingOverviewCard(),
+            const SizedBox(height: AppSpacing.s16),
+            const _DashboardStatsRow(),
+            const SizedBox(height: AppSpacing.s16),
+            Text(
+              'Outils medicaux',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.s12),
+            const _ActionCard(
+              title: 'Bracelet medical',
+              subtitle: 'Battements de coeur, metabolisme et depense.',
+              icon: Icons.watch_rounded,
+              route: AppRoutes.medicalWearable,
+              accent: MedicalTheme.danger,
+            ),
+            const SizedBox(height: AppSpacing.s12),
             const _ActionCard(
               title: 'Analyse medicale',
               subtitle: 'Selectionner un joueur pour analyser.',
               icon: Icons.monitor_heart,
               route: AppRoutes.medicalPlayers,
+              accent: MedicalTheme.primaryBlue,
+            ),
+            const SizedBox(height: AppSpacing.s12),
+            const _ActionCard(
+              title: 'Injury Camera AI',
+              subtitle: 'Scan injury photos for quick insights.',
+              icon: Icons.camera_alt_rounded,
+              route: AppRoutes.medicalVision,
+              accent: MedicalTheme.accentTeal,
+            ),
+            const SizedBox(height: AppSpacing.s12),
+            const _ActionCard(
+              title: 'Gym Equipment AI',
+              subtitle: 'Identify equipment and target muscles.',
+              icon: Icons.fitness_center_rounded,
+              route: AppRoutes.medicalGymVision,
+              accent: MedicalTheme.warning,
             ),
             const SizedBox(height: AppSpacing.s12),
             const _ActionCard(
@@ -81,6 +114,7 @@ class _StaffMedicalDashboardScreenState
               subtitle: 'Simuler blessures et charge.',
               icon: Icons.sports_soccer,
               route: AppRoutes.medicalSimulation,
+              accent: MedicalTheme.primaryBlue,
             ),
             const SizedBox(height: AppSpacing.s12),
             const _ActionCard(
@@ -88,6 +122,7 @@ class _StaffMedicalDashboardScreenState
               subtitle: 'Suivre les dates de retour estimees.',
               icon: Icons.calendar_month,
               route: AppRoutes.medicalRecoveryCalendar,
+              accent: MedicalTheme.success,
             ),
             const SizedBox(height: AppSpacing.s12),
             const _ActionCard(
@@ -95,6 +130,7 @@ class _StaffMedicalDashboardScreenState
               subtitle: 'Consulter les simulations deja jouees.',
               icon: Icons.history_rounded,
               route: AppRoutes.medicalMatchHistory,
+              accent: MedicalTheme.textSecondary,
             ),
             const SizedBox(height: AppSpacing.s16),
             Row(
@@ -150,10 +186,14 @@ class _StaffMedicalDashboardScreenState
                         return Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: MedicalTheme.surfaceAlt.withOpacity(0.6),
+                            color: MedicalTheme.surfaceAlt.withValues(
+                              alpha: 0.6,
+                            ),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: MedicalTheme.cardBorder.withOpacity(0.9),
+                              color: MedicalTheme.cardBorder.withValues(
+                                alpha: 0.9,
+                              ),
                             ),
                           ),
                           child: Row(
@@ -191,7 +231,7 @@ class _StaffMedicalDashboardScreenState
                                     : () => _clearMedical(player),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: MedicalTheme.danger
-                                      .withOpacity(0.12),
+                                      .withValues(alpha: 0.12),
                                   foregroundColor: MedicalTheme.danger,
                                   elevation: 0,
                                   padding: const EdgeInsets.symmetric(
@@ -201,8 +241,8 @@ class _StaffMedicalDashboardScreenState
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     side: BorderSide(
-                                      color: MedicalTheme.danger.withOpacity(
-                                        0.35,
+                                      color: MedicalTheme.danger.withValues(
+                                        alpha: 0.35,
                                       ),
                                     ),
                                   ),
@@ -243,12 +283,14 @@ class _ActionCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.route,
+    required this.accent,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
   final String route;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -263,12 +305,15 @@ class _ActionCard extends StatelessWidget {
       },
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.12),
-            child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: accent.withValues(alpha: 0.22)),
+            ),
+            child: Icon(icon, color: accent, size: 26),
           ),
           const SizedBox(width: AppSpacing.s16),
           Expanded(
@@ -281,6 +326,201 @@ class _ActionCard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: AppSpacing.s8),
+          Icon(Icons.chevron_right_rounded, color: MedicalTheme.textMuted),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrackingOverviewCard extends StatelessWidget {
+  const _TrackingOverviewCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: MedicalTheme.primaryBlue,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: MedicalTheme.softShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.watch_rounded, color: Colors.white),
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tracking bracelet live',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.s4),
+                    Text(
+                      'Frequence cardiaque et metabolisme des joueurs.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.78),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s16),
+          Row(
+            children: const [
+              Expanded(
+                child: _HeroMetric(
+                  icon: Icons.favorite_rounded,
+                  label: 'Moy. coeur',
+                  value: '86 bpm',
+                ),
+              ),
+              SizedBox(width: AppSpacing.s12),
+              Expanded(
+                child: _HeroMetric(
+                  icon: Icons.local_fire_department_rounded,
+                  label: 'Metabolisme',
+                  value: '78/100',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroMetric extends StatelessWidget {
+  const _HeroMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.72),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardStatsRow extends StatelessWidget {
+  const _DashboardStatsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: const [
+        Expanded(
+          child: _MiniStatCard(
+            value: '12',
+            label: 'Joueurs suivis',
+            icon: Icons.groups_rounded,
+            color: MedicalTheme.primaryBlue,
+          ),
+        ),
+        SizedBox(width: AppSpacing.s12),
+        Expanded(
+          child: _MiniStatCard(
+            value: '3',
+            label: 'Alertes actives',
+            icon: Icons.notifications_active_rounded,
+            color: MedicalTheme.warning,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MiniStatCard extends StatelessWidget {
+  const _MiniStatCard({
+    required this.value,
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  final String value;
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: MedicalTheme.cardDecoration(radius: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: AppSpacing.s8),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
