@@ -52,6 +52,8 @@ dependencies:
   provider: ^6.1.2              # State management for AI module
   file_picker: ^8.0.0           # Import scouting reports
   image_picker: ^1.1.2          # Auth module (profile photo)
+  path_provider: ^2.1.4         # Temporary audio recordings
+  record: 6.2.0                 # Media training voice answers
   audioplayers: ^5.2.1          # Audio commentary
 
 dev_dependencies:

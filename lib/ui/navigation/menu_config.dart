@@ -112,6 +112,21 @@ class MenuConfig {
             route: AppRoutes.calendar,
           ),
           MenuItemConfig(
+            title: 'Media Training',
+            icon: Icons.mic_external_on_outlined,
+            route: AppRoutes.mediaTraining,
+          ),
+          MenuItemConfig(
+            title: 'Tactical Animator',
+            icon: Icons.animation_outlined,
+            route: AppRoutes.tacticalAnimator,
+          ),
+          MenuItemConfig(
+            title: 'Match Scenarios',
+            icon: Icons.flag_outlined,
+            route: AppRoutes.tacticalScenarios,
+          ),
+          MenuItemConfig(
             title: 'Players',
             icon: Icons.people_outline,
             route: AppRoutes.players,
@@ -125,6 +140,21 @@ class MenuConfig {
             title: 'Team Chemistry',
             icon: Icons.hub_outlined,
             route: AppRoutes.chemistry,
+          ),
+          MenuItemConfig(
+            title: 'Simulation tactique',
+            icon: Icons.animation_outlined,
+            route: AppRoutes.tacticalAnimator,
+          ),
+          MenuItemConfig(
+            title: 'Scenarios tactiques',
+            icon: Icons.flag_outlined,
+            route: AppRoutes.tacticalScenarios,
+          ),
+          MenuItemConfig(
+            title: 'Media Training',
+            icon: Icons.mic_external_on_outlined,
+            route: AppRoutes.mediaTraining,
           ),
           MenuItemConfig(
             title: 'Tests & Test Types',

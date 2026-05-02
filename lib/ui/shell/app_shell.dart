@@ -66,6 +66,9 @@ class _AppShellState extends State<AppShell> {
       AppRoutes.squadCognitiveOverview,
       AppRoutes.seasonPlanning,
       AppRoutes.tactics,
+      AppRoutes.tacticalAnimator,
+      AppRoutes.tacticalScenarios,
+      AppRoutes.mediaTraining,
       if (menuRoutes.contains(AppRoutes.analysis)) AppRoutes.uploadVideo,
     };
 
@@ -352,9 +355,7 @@ class _UserMenu extends StatelessWidget {
           enabled: false,
           child: Text(
             club.isEmpty ? 'No club assigned' : club,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: scheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
@@ -373,9 +374,7 @@ class _UserMenu extends StatelessWidget {
               Text(isDark ? 'Light mode' : 'Dark mode'),
               const Spacer(),
               Icon(
-                isDark
-                    ? Icons.toggle_on_rounded
-                    : Icons.toggle_off_rounded,
+                isDark ? Icons.toggle_on_rounded : Icons.toggle_off_rounded,
                 color: scheme.primary,
               ),
             ],

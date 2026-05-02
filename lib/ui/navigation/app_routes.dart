@@ -31,8 +31,10 @@ import '../screens/communication_shell_screen.dart';
 import '../screens/communication_notifications_shell_screen.dart';
 import '../../season_planning/screens/season_list_screen.dart';
 import '../../tactics/screens/tactics_board_screen.dart';
+import '../../tactics/screens/tactical_animation_screen.dart';
 import '../../screens/chemistry/team_chemistry_screen.dart';
 import '../../learning/screens/learning_home_screen.dart';
+import '../../media_training/screens/media_training_home_screen.dart';
 
 class AppRouteData {
   const AppRouteData({
@@ -64,6 +66,8 @@ class AppRoutes {
 
   static const String seasonPlanning = '/season-planning';
   static const String tactics = '/tactics';
+  static const String tacticalAnimator = '/tactics/animation';
+  static const String tacticalScenarios = '/tactics/scenarios';
   static const String chemistry = '/chemistry';
 
   static const String approvals = '/club/approvals';
@@ -93,6 +97,7 @@ class AppRoutes {
   static const String squadCognitiveOverview = '/cognitive/squad-overview';
   static const String communication = '/communication';
   static const String learning = '/learning';
+  static const String mediaTraining = '/coach/media-training';
 
   static const String messages = '/messages';
   static const String notifications = '/notifications';
@@ -334,6 +339,13 @@ class AppRoutes {
           showAppBar: false,
           usePadding: false,
         );
+      case mediaTraining:
+        return AppRouteData(
+          title: 'Media Training',
+          builder: (_) => MediaTrainingHomeScreen(authToken: session.token),
+          showAppBar: true,
+          usePadding: true,
+        );
       case messages:
         return AppRouteData(
           title: 'Messages',
@@ -365,6 +377,20 @@ class AppRoutes {
         return AppRouteData(
           title: 'IA Tactique',
           builder: (_) => const TacticsBoardScreen(),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case tacticalAnimator:
+        return AppRouteData(
+          title: 'AI Tactical Animator',
+          builder: (_) => const TacticalAnimationScreen(),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case tacticalScenarios:
+        return AppRouteData(
+          title: 'Match Scenarios',
+          builder: (_) => const TacticalMatchScenariosScreen(),
           showAppBar: false,
           usePadding: false,
         );
