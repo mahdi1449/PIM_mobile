@@ -39,14 +39,8 @@ class AiScoutingBridge {
 
   /// Converts a PlayerReport + SP Player into AI Scouting metric map.
   ///
-  /// Test scores (0–100 normalized) are mapped to the AI model's expected ranges:
-  /// - speed: 10–40 km/h
-  /// - endurance: 20–100
-  /// - distance_covered: 2–15 km
-  /// - dribbles: 0–20
-  /// - shots_on_target: 0–15
-  /// - injuries: 0–10
-  /// - heart_rate: 50–200 bpm
+  /// Test scores (0–100 normalized) are mapped to the ranges used by
+  /// the currently trained AI dataset (dataset.json).
   static Map<String, dynamic> mapToAiMetrics({
     required sp.Player player,
     required PlayerReport report,
@@ -86,21 +80,34 @@ class AiScoutingBridge {
       }
     }
 
-    // Convert normalized scores (0–100) to AI model ranges
+    // Convert normalized scores (0–100) to model-trained ranges.
     double avg(List<double> list, double fallback) =>
         list.isEmpty ? fallback : list.reduce((a, b) => a + b) / list.length;
 
-    final speed = _scaleScore(avg(grouped['speed']!, 50), 10, 40);
-    final endurance = _scaleScore(avg(grouped['endurance']!, 50), 20, 100);
-    final distance = _scaleScore(avg(grouped['distance']!, 50), 2, 15);
-    final dribbles = _scaleScore(avg(grouped['dribbles']!, 50), 0, 20).round();
-    final shots = _scaleScore(avg(grouped['shots']!, 50), 0, 15).round();
-    final injuries = _scaleScoreInverse(avg(grouped['injuries']!, 80), 0, 10).round();
-    final heartRate = _scaleScore(avg(grouped['heart_rate']!, 70), 50, 200).round();
+    final speedScore = avg(grouped['speed']!, 55);
+    final enduranceScore = avg(grouped['endurance']!, 60);
+    final distanceScore = grouped['distance']!.isEmpty
+      ? enduranceScore
+      : avg(grouped['distance']!, 60);
+    final dribblesScore = avg(grouped['dribbles']!, 55);
+    final shotsScore = avg(grouped['shots']!, 50);
+    final healthScore = avg(grouped['injuries']!, 80);
+    final cardioScore = grouped['heart_rate']!.isEmpty
+      ? enduranceScore
+      : avg(grouped['heart_rate']!, 70);
+
+    final speed = _scaleScore(speedScore, 25, 97);
+    final endurance = _scaleScore(enduranceScore, 25, 97);
+    final distance = _scaleScore(distanceScore, 4.3, 14.6);
+    final dribbles = _scaleScore(dribblesScore, 0, 96).round();
+    final shots = _scaleScore(shotsScore, 0, 49).round();
+    final injuries = _scaleScoreInverse(healthScore, 0, 12).round();
+    final heartRate = _scaleScoreInverse(cardioScore, 58, 155).round();
 
     return {
       'name': '${player.firstName} ${player.lastName}',
       'age': player.age,
+      'dateOfBirth': player.dateOfBirth.toIso8601String().split('T').first,
       'position': player.position,
       'club': 'ODIN Club',
       'speed': speed,
@@ -168,19 +175,20 @@ class AiScoutingBridge {
 
     // Real stats from backend TestResults — never use hardcoded defaults
     final m = ai?.metrics;
-    final double speed      = (m?['speed']     as num?)?.toDouble() ?? 20.0;
-    final double endurance  = (m?['endurance'] as num?)?.toDouble() ?? 50.0;
-    final double distance   = (m?['distance']  as num?)?.toDouble() ?? 7.0;
-    final double dribbles   = (m?['dribbles']  as num?)?.toDouble() ?? 5.0;
-    final double shots      = (m?['shots']     as num?)?.toDouble() ?? 3.0;
-    final int    injuries   = (m?['injuries']  as num?)?.toInt()    ?? 5;
-    final double heartRate  = (m?['heart_rate']as num?)?.toDouble() ?? 120.0;
+    final double speed      = (m?['speed']     as num?)?.toDouble() ?? 60.0;
+    final double endurance  = (m?['endurance'] as num?)?.toDouble() ?? 70.0;
+    final double distance   = (m?['distance']  as num?)?.toDouble() ?? 9.5;
+    final double dribbles   = (m?['dribbles']  as num?)?.toDouble() ?? 40.0;
+    final double shots      = (m?['shots']     as num?)?.toDouble() ?? 20.0;
+    final int    injuries   = (m?['injuries']  as num?)?.toInt()    ?? 2;
+    final double heartRate  = (m?['heart_rate']as num?)?.toDouble() ?? 78.0;
 
     return AiPlayer(
       id: p.id,
       name: p.fullName,
       position: p.position,
       age: p.age,
+      dateOfBirth: p.dateOfBirth.toIso8601String().split('T').first,
       imageUrl: p.photo,
       // Real stats from backend TestResults
       speed:      speed,

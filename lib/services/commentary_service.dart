@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
@@ -10,7 +11,10 @@ class CommentaryService {
   final math.Random _random;
   final AudioPlayer stadiumPlayer = AudioPlayer();
   final AudioPlayer commentaryPlayer = AudioPlayer();
+  final AudioPlayer introPlayer = AudioPlayer();
   bool _isInitialized = false;
+  bool _shouldLoopStadium = false;
+  StreamSubscription<void>? _introCompleteSub;
 
   Future<void> initialize() async {
     if (_isInitialized) {
@@ -19,6 +23,7 @@ class CommentaryService {
 
     await stadiumPlayer.setPlayerMode(PlayerMode.mediaPlayer);
     await commentaryPlayer.setPlayerMode(PlayerMode.mediaPlayer);
+    await introPlayer.setPlayerMode(PlayerMode.mediaPlayer);
 
     final context = AudioContext(
       android: AudioContextAndroid(
@@ -36,9 +41,11 @@ class CommentaryService {
 
     await stadiumPlayer.setAudioContext(context);
     await commentaryPlayer.setAudioContext(context);
+    await introPlayer.setAudioContext(context);
 
     await stadiumPlayer.setReleaseMode(ReleaseMode.loop);
     await commentaryPlayer.setReleaseMode(ReleaseMode.stop);
+    await introPlayer.setReleaseMode(ReleaseMode.stop);
     _isInitialized = true;
   }
 
@@ -48,11 +55,37 @@ class CommentaryService {
 
   Future<void> startStadiumLoop() async {
     await ensureInitialized();
-    await _safePlay(
-      stadiumPlayer,
-      AssetSource('audio/vishiv-crowd-cheering-in-stadium-435357.mp3'),
-      volume: 0.8,
+    _shouldLoopStadium = true;
+    await stadiumPlayer.stop();
+    await introPlayer.stop();
+    _introCompleteSub?.cancel();
+
+    final introPlayed = await _safePlayWithResult(
+      introPlayer,
+      AssetSource('audio/intro_hafid_derraji.mp3'),
+      volume: 1.0,
     );
+
+    if (!introPlayed) {
+      await _safePlay(
+        stadiumPlayer,
+        AssetSource('audio/simulation_bg.mp3'),
+        volume: 0.8,
+      );
+      return;
+    }
+
+    _introCompleteSub = introPlayer.onPlayerComplete.listen((_) async {
+      _introCompleteSub?.cancel();
+      if (!_shouldLoopStadium) {
+        return;
+      }
+      await _safePlay(
+        stadiumPlayer,
+        AssetSource('audio/simulation_bg.mp3'),
+        volume: 0.8,
+      );
+    });
   }
 
   Future<void> playWhistle() async {
@@ -68,6 +101,9 @@ class CommentaryService {
   }
 
   Future<void> stopStadiumLoop() async {
+    _shouldLoopStadium = false;
+    _introCompleteSub?.cancel();
+    await introPlayer.stop();
     await stadiumPlayer.stop();
   }
 
@@ -90,8 +126,10 @@ class CommentaryService {
   }
 
   void dispose() {
+    _introCompleteSub?.cancel();
     stadiumPlayer.dispose();
     commentaryPlayer.dispose();
+    introPlayer.dispose();
   }
 
   String? _pickClip(CommentaryEvent event) {
@@ -122,6 +160,21 @@ class CommentaryService {
       await player.resume();
     } catch (_) {
       // Ignore audio errors so simulation keeps running.
+    }
+  }
+
+  Future<bool> _safePlayWithResult(
+    AudioPlayer player,
+    Source source, {
+    required double volume,
+  }) async {
+    try {
+      await player.setSource(source);
+      await player.setVolume(volume);
+      await player.resume();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 }

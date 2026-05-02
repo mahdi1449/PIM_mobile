@@ -65,6 +65,11 @@ class MenuConfig {
             icon: Icons.analytics_outlined,
             route: AppRoutes.reports,
           ),
+          MenuItemConfig(
+            title: 'Team Chemistry',
+            icon: Icons.hub_outlined,
+            route: AppRoutes.chemistry,
+          ),
         ];
       case RoleMapper.clubResponsable:
         return const [
@@ -117,6 +122,11 @@ class MenuConfig {
             route: AppRoutes.reports,
           ),
           MenuItemConfig(
+            title: 'Team Chemistry',
+            icon: Icons.hub_outlined,
+            route: AppRoutes.chemistry,
+          ),
+          MenuItemConfig(
             title: 'Tests & Test Types',
             icon: Icons.monitor_heart_outlined,
             route: AppRoutes.tests,
@@ -155,6 +165,11 @@ class MenuConfig {
             route: AppRoutes.reports,
           ),
           MenuItemConfig(
+            title: 'Team Chemistry',
+            icon: Icons.hub_outlined,
+            route: AppRoutes.chemistry,
+          ),
+          MenuItemConfig(
             title: 'Tests & Test Types',
             icon: Icons.monitor_heart_outlined,
             route: AppRoutes.tests,
@@ -186,6 +201,16 @@ class MenuConfig {
             title: 'Injury Simulation',
             icon: Icons.sports_soccer_outlined,
             route: AppRoutes.medicalSimulation,
+          ),
+          MenuItemConfig(
+            title: 'Recovery Calendar',
+            icon: Icons.calendar_month_outlined,
+            route: AppRoutes.medicalRecoveryCalendar,
+          ),
+          MenuItemConfig(
+            title: 'Match History',
+            icon: Icons.history_rounded,
+            route: AppRoutes.medicalMatchHistory,
           ),
         ];
       case RoleMapper.finance:
@@ -271,6 +296,11 @@ class MenuConfig {
             title: 'Calendar',
             icon: Icons.calendar_month_outlined,
             route: AppRoutes.calendar,
+          ),
+          MenuItemConfig(
+            title: 'English Learning',
+            icon: Icons.school_outlined,
+            route: AppRoutes.learning,
           ),
           MenuItemConfig(
             title: 'Communication',

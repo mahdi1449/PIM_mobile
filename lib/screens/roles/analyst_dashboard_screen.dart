@@ -82,6 +82,13 @@ class AnalystDashboardScreen extends StatelessWidget {
           icon: Icons.people_alt_outlined,
           route: AppRoutes.players,
         ),
+        const SizedBox(height: AppSpacing.s12),
+        const _ActionCard(
+          title: 'Team Chemistry',
+          subtitle: 'Affinity matrix, best pairs, and lineup chemistry score.',
+          icon: Icons.hub_outlined,
+          route: AppRoutes.chemistry,
+        ),
       ],
     );
   }

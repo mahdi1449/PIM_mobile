@@ -56,9 +56,16 @@ class SimulationService {
     throw Exception('Simulation start returned invalid payload');
   }
 
-  Future<List<SimulationResultModel>> endMatch(String matchId) async {
+  Future<List<SimulationResultModel>> endMatch(
+    String matchId, {
+    Map<String, dynamic>? stats,
+  }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/simulation/end/$matchId');
-    final response = await http.post(url);
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: stats == null ? null : jsonEncode({'stats': stats}),
+    );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(

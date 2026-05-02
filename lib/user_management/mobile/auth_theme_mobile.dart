@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
 class AuthPalette {
-  static const bg = Color(0xFFF7FBFD);
-  static const bg2 = Color(0xFFEEF6F9);
-  static const bg3 = Color(0xFFE4F2F7);
-  static const panel = Color(0xCCFFFFFF);
-  static const panelSoft = Color(0xF2FFFFFF);
-  static const input = Color(0xFFFFFFFF);
-  static const border = Color(0x33D6E6EE);
-  static const borderStrong = Color(0x6690CCDD);
-  static const text = Color(0xFF0F2F3A);
-  static const muted = Color(0xFF7FA1AF);
-  static const label = Color(0xFF486A78);
-  static const neonBlue = Color(0xFF23AED1);
-  static const electric = Color(0xFF05708D);
-  static const violet = Color(0xFF90CCDD);
+  static const bg = Color(0xFF030A18);
+  static const bg2 = Color(0xFF06142A);
+  static const bg3 = Color(0xFF0A2347);
+  static const panel = Color(0xAA0A162A);
+  static const panelSoft = Color(0x990B1A31);
+  static const input = Color(0xCC0A1527);
+  static const border = Color(0x334D7DCC);
+  static const borderStrong = Color(0x556AA0F6);
+  static const text = Color(0xFFEAF2FF);
+  static const muted = Color(0xFF8A9AB8);
+  static const label = Color(0xFF7588AA);
+  static const neonBlue = Color(0xFF1EA2FF);
+  static const electric = Color(0xFF3A5BFF);
+  static const violet = Color(0xFF7C5CFF);
   static const success = Color(0xFF37D89A);
   static const danger = Color(0xFFFF6E8B);
 }
@@ -40,33 +40,33 @@ class AuthBackground extends StatelessWidget {
           Positioned(
             top: -120,
             left: -80,
-            child: _GlowOrb(size: 280, color: Color(0x4423AED1), blur: 90),
+            child: _GlowOrb(size: 280, color: Color(0x44298CFF), blur: 90),
           ),
           Positioned(
             top: 180,
             right: -60,
-            child: _GlowOrb(size: 220, color: Color(0x2290CCDD), blur: 80),
+            child: _GlowOrb(size: 220, color: Color(0x223B5EFF), blur: 80),
           ),
           Positioned(
             bottom: -120,
             left: 40,
-            child: _GlowOrb(size: 260, color: Color(0x2205708D), blur: 90),
+            child: _GlowOrb(size: 260, color: Color(0x2222AFFF), blur: 90),
           ),
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  const Color(0x11000000),
-                  const Color(0x22000000),
-                ],
-                stops: const [0.0, 0.55, 1.0],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    const Color(0x22000000),
+                    const Color(0x44000000),
+                  ],
+                  stops: const [0.0, 0.55, 1.0],
+                ),
               ),
             ),
-          ),
           ),
           child,
         ],
@@ -138,11 +138,11 @@ class AuthBrandHero extends StatelessWidget {
           height: iconSize,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(compact ? 18 : 24),
-            color: const Color(0xFFE9F6FA),
+            color: const Color(0xCC13234A),
             border: Border.all(color: AuthPalette.borderStrong),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x3323AED1),
+                color: Color(0x331EA2FF),
                 blurRadius: 26,
                 spreadRadius: 2,
               ),
@@ -164,7 +164,7 @@ class AuthBrandHero extends StatelessWidget {
             letterSpacing: 0.6,
             shadows: const [
               Shadow(
-                color: Color(0x22000000),
+                color: Color(0x44000000),
                 blurRadius: 6,
                 offset: Offset(0, 2),
               ),

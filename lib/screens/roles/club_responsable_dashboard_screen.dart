@@ -89,6 +89,13 @@ class ClubResponsableDashboardScreen extends StatelessWidget {
             icon: Icons.forum_outlined,
             route: AppRoutes.communication,
           ),
+          const SizedBox(height: AppSpacing.s12),
+          _ActionTile(
+            title: 'Labo Cognitif IA',
+            subtitle: 'Surveiller la charge mentale de l\'equipe.',
+            icon: Icons.psychology_outlined,
+            route: AppRoutes.squadCognitiveOverview,
+          ),
         ],
       ),
     );

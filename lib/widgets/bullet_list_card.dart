@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme.dart';
+import '../ui/theme/medical_theme.dart';
 
 class BulletListCard extends StatelessWidget {
   const BulletListCard({
@@ -19,22 +19,33 @@ class BulletListCard extends StatelessWidget {
     final safeItems = items.isEmpty
         ? const ['No recommendations available.']
         : items;
+    final textTheme = Theme.of(context).textTheme;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.card,
+        color: MedicalTheme.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.cardBorder),
+        border: Border.all(color: MedicalTheme.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: AppTheme.accentBlue, size: 18),
+              Icon(icon, color: MedicalTheme.accentBlue, size: 18),
               const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Expanded(
+                child: Text(
+                  title,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  softWrap: true,
+                  overflow: TextOverflow.visible,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -46,15 +57,17 @@ class BulletListCard extends StatelessWidget {
                 children: [
                   Text(
                     '-',
-                    style: TextStyle(color: AppTheme.accentBlue, fontSize: 16),
+                    style: TextStyle(
+                      color: MedicalTheme.accentBlue,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       item,
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 12,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: MedicalTheme.textSecondary,
                       ),
                     ),
                   ),

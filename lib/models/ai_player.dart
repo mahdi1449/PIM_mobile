@@ -16,6 +16,7 @@ class AiPlayer {
   // UI-specific fields
   final String? imageUrl;
   final int? age;
+  final String? dateOfBirth;
   final String? club;
   final String? estimatedValue;
   final double? matchPercentage;
@@ -40,6 +41,7 @@ class AiPlayer {
     this.position,
     this.imageUrl,
     this.age,
+    this.dateOfBirth,
     this.club,
     this.estimatedValue,
     this.matchPercentage,
@@ -75,6 +77,7 @@ class AiPlayer {
       position: json['position'] as String?,
       imageUrl: json['imageUrl'] as String?,
       age: json['age'] as int?,
+      dateOfBirth: json['dateOfBirth'] as String?,
       club: json['club'] as String?,
       estimatedValue: json['estimatedValue'] as String?,
       matchPercentage: (json['matchPercentage'] as num?)?.toDouble(),
@@ -113,6 +116,7 @@ class AiPlayer {
       'heart_rate': heartRate,
       if (label != null) 'label': label,
       if (position != null) 'position': position,
+      if (dateOfBirth != null) 'dateOfBirth': dateOfBirth,
       'status': status,
     };
   }
@@ -154,6 +158,7 @@ class AiPlayer {
     String? position,
     String? imageUrl,
     int? age,
+    String? dateOfBirth,
     String? club,
     String? estimatedValue,
     double? matchPercentage,
@@ -178,6 +183,7 @@ class AiPlayer {
       position: position ?? this.position,
       imageUrl: imageUrl ?? this.imageUrl,
       age: age ?? this.age,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       club: club ?? this.club,
       estimatedValue: estimatedValue ?? this.estimatedValue,
       matchPercentage: matchPercentage ?? this.matchPercentage,

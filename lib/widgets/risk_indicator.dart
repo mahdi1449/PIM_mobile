@@ -39,8 +39,8 @@ class RiskIndicator extends StatelessWidget {
                     children: [
                       Text(
                         '${display.toStringAsFixed(0)}%',
-                        style: const TextStyle(
-                          fontSize: 28,
+                            style: const TextStyle(
+                              fontSize: 20,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -59,9 +59,15 @@ class RiskIndicator extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            _riskLabel(display),
-            style: TextStyle(color: color, fontWeight: FontWeight.w600),
+          FittedBox(
+            child: Text(
+              _riskLabel(display),
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),

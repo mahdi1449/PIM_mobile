@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
+import '../../sports_performance/cognitive_lab/screens/cognitive_dashboard_screen.dart';
+import '../../ui/shell/app_shell.dart';
+import '../../finance/theme/finance_theme.dart';
+import '../../finance/services/finance_ai_service.dart';
 
 class PlayerDetailsScreen extends StatefulWidget {
   final String playerId;
@@ -15,6 +19,8 @@ class _PlayerDetailsScreenState extends State<PlayerDetailsScreen> {
   Map<String, dynamic>? _player;
   List<dynamic> _analyses = [];
   bool _isLoading = false;
+  Map<String, dynamic>? _aiValuation;
+  bool _loadingAi = false;
 
   @override
   void initState() {
@@ -35,6 +41,7 @@ class _PlayerDetailsScreenState extends State<PlayerDetailsScreen> {
         _analyses = analysesRes['success'] ? analysesRes['data']['data'] ?? [] : [];
         _isLoading = false;
       });
+      _loadAiValuation();
     } else if (mounted) {
       setState(() {
         _isLoading = false;
@@ -42,6 +49,21 @@ class _PlayerDetailsScreenState extends State<PlayerDetailsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(playerRes['message'] ?? 'Failed to load player')),
       );
+    }
+  }
+
+  Future<void> _loadAiValuation() async {
+    setState(() => _loadingAi = true);
+    try {
+      final res = await _apiService.getAiPlayerValuePrediction(widget.playerId);
+      if (res['success'] && mounted) {
+        setState(() {
+          _aiValuation = res['data']['prediction'];
+          _loadingAi = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingAi = false);
     }
   }
 
@@ -82,7 +104,163 @@ class _PlayerDetailsScreenState extends State<PlayerDetailsScreen> {
                     _detailRow('Injured', _player!['isInjured'] == true ? 'Yes' : 'No'),
                     if ((_player!['injuryDetails'] ?? '').toString().isNotEmpty)
                       _detailRow('Injury details', _player!['injuryDetails']),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
+                    
+                    // Labo Cognitif Section
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppTheme.odinDarkBlue, const Color(0xFF0F172A)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: Colors.cyanAccent.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.psychology, color: Colors.cyanAccent, size: 28),
+                              const SizedBox(width: 12),
+                              Text(
+                                'LABO COGNITIF IA',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.2,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Évaluer la fatigue mentale et la préparation cognitive du joueur.',
+                            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final shell = AppShellScope.of(context);
+                                if (shell != null) {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => CognitiveDashboardScreen(
+                                        session: shell.session,
+                                        targetPlayerId: widget.playerId,
+                                        targetPlayerName: '${_player!['firstName']} ${_player!['lastName']}',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.cyanAccent,
+                                foregroundColor: const Color(0xFF0F172A),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text('OUVRIR LE LABO', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // --- PROFILE FINANCIER IA ---
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: FinancePalette.blue.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.auto_graph_rounded, color: FinancePalette.blue, size: 28),
+                              const SizedBox(width: 12),
+                              Text(
+                                'PROFIL FINANCIER IA',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.2,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          if (_loadingAi)
+                            const LinearProgressIndicator(color: Colors.blue)
+                          else if (_aiValuation != null) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('VALEUR ACTUELLE', style: TextStyle(color: Colors.white60, fontSize: 10)),
+                                    Text(
+                                      '${(_aiValuation!['predicted_value'] ?? 0).toString()} DT',
+                                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: FinancePalette.success.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '+${_aiValuation!['growth_percent']}%',
+                                    style: TextStyle(color: FinancePalette.success, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _aiValuation!['explanation'] ?? 'Analyse financière en cours...',
+                              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13, height: 1.4),
+                            ),
+                          ] else
+                            const Text('No financial data available.', style: TextStyle(color: Colors.white60)),
+                          
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                // Navigator could go to Finance shell here if needed
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: FinancePalette.blue),
+                                foregroundColor: FinancePalette.blue,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text('VOIR DÉTAILS FINANCIERS', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
                     Text(
                       'Analyses',
                       style: TextStyle(

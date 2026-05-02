@@ -155,6 +155,7 @@ class AiApiService {
       'heart_rate': player.heartRate,
       if (player.label != null) 'label': player.label,
       if (player.age != null) 'age': player.age,
+      if (player.dateOfBirth != null) 'dateOfBirth': player.dateOfBirth,
       if (player.position != null) 'position': player.position,
     };
   }

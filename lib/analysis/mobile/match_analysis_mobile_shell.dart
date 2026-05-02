@@ -64,8 +64,6 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
   bool _isSubmitting = false;
   bool _isUploadingVideo = false;
   bool _pollInFlight = false;
-  bool _isLoadingHistory = false;
-  bool _historyShowAll = false;
 
   _AnalysisStage _stage = _AnalysisStage.setup;
   int _bottomIndex = 0;
@@ -74,7 +72,6 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
   MatchAnalysisResult? _result;
   List<AnalysisJobSummary> _historyJobs = const [];
   final Map<String, MatchAnalysisResult> _historyResultCache = {};
-  final Set<String> _historyDeletingJobIds = <String>{};
   XFile? _selectedVideoFile;
   UploadedBackendFileRef? _uploadedVideo;
   String? _uploadedVideoSourcePath;
@@ -138,11 +135,9 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
   Future<void> _loadHistory() async {
     if (mounted) {
       setState(() {
-        _isLoadingHistory = true;
         _historyErrorText = null;
       });
     } else {
-      _isLoadingHistory = true;
       _historyErrorText = null;
     }
 
@@ -163,12 +158,6 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
         setState(() => _historyErrorText = error.toString());
       } else {
         _historyErrorText = error.toString();
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingHistory = false);
-      } else {
-        _isLoadingHistory = false;
       }
     }
   }
@@ -253,78 +242,6 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
       }
       setState(() => _errorText = 'Failed to open analysis details: $error');
       _showSnack('Failed to open analysis details.');
-    }
-  }
-
-  Future<void> _confirmDeleteHistoryJob(AnalysisJobSummary job) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AnalysisPalette.panel2,
-        title: Text(
-          'Delete analysis',
-          style: TextStyle(color: AnalysisPalette.text),
-        ),
-        content: Text(
-          'Delete this analysis from history and remove its saved result?',
-          style: TextStyle(color: AnalysisPalette.muted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(
-              'Delete',
-              style: TextStyle(color: AnalysisPalette.danger),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      await _deleteHistoryJob(job);
-    }
-  }
-
-  Future<void> _deleteHistoryJob(AnalysisJobSummary job) async {
-    if (_historyDeletingJobIds.contains(job.jobId)) {
-      return;
-    }
-    setState(() {
-      _historyDeletingJobIds.add(job.jobId);
-      _historyErrorText = null;
-    });
-    try {
-      await _api.deleteJob(job.jobId, token: widget.authToken);
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _historyJobs = _historyJobs
-            .where((e) => e.jobId != job.jobId)
-            .toList(growable: false);
-        _historyResultCache.remove(job.jobId);
-        if (_job?.jobId == job.jobId) {
-          _job = null;
-          _result = null;
-          _stage = _AnalysisStage.setup;
-        }
-      });
-      _showSnack('Analysis deleted.');
-    } catch (error) {
-      if (mounted) {
-        setState(() => _historyErrorText = error.toString());
-      }
-      _showSnack('Delete failed: $error');
-    } finally {
-      if (mounted) {
-        setState(() => _historyDeletingJobIds.remove(job.jobId));
-      } else {
-        _historyDeletingJobIds.remove(job.jobId);
-      }
     }
   }
 
@@ -651,7 +568,7 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
                   child: _stage == _AnalysisStage.processing
                       ? _buildProcessingScreen()
                       : switch (_bottomIndex) {
-                          0 => _buildHistoryDashboardScreen(),
+                          0 => _buildStyledCommandDashboard(),
                           1 =>
                             _stage == _AnalysisStage.overview
                                 ? _buildOverviewScreen()
@@ -673,26 +590,6 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
                         },
                 ),
               ),
-              if (_stage != _AnalysisStage.processing)
-                _AnalysisBottomBar(
-                  index: _bottomIndex,
-                  onChanged: (index) {
-                    if (index == 0) {
-                      _pollTimer?.cancel();
-                      setState(() {
-                        _bottomIndex = 0;
-                        _errorText = null;
-                      });
-                      _loadHistory();
-                      return;
-                    }
-                    if (index == 1) {
-                      setState(() => _bottomIndex = 1);
-                      return;
-                    }
-                    setState(() => _bottomIndex = index);
-                  },
-                ),
             ],
           ),
         ),
@@ -700,248 +597,284 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
     );
   }
 
-  Widget _buildHistoryDashboardScreen() {
-    final visibleJobs = _historyShowAll
-        ? _historyJobs
-        : _historyJobs.take(3).toList(growable: false);
+  Widget _buildStyledCommandDashboard() {
     final totalAnalyses = _historyJobs.length;
-    var wins = 0;
-    var winDenominator = 0;
-    for (final job in _historyJobs) {
-      final result = _historyResultCache[job.jobId];
-      if (result == null) {
-        continue;
-      }
-      final a = result.team1Stats;
-      final b = result.team2Stats;
-      if (a == null || b == null) {
-        continue;
-      }
-      winDenominator++;
-      final goalsA = (a.shots / 4).floor();
-      final goalsB = (b.shots / 4).floor();
-      if (goalsA > goalsB) {
-        wins++;
-      }
-    }
-    final winRatioPct = winDenominator == 0
-        ? null
-        : ((wins / winDenominator) * 100).round();
+    final completedAnalyses = _historyJobs
+        .where((job) => job.status == AnalysisJobStatus.completed)
+        .length;
+    final lastUpdate = _historyJobs.isEmpty
+        ? 'Aucune analyse'
+        : (() {
+            final dt = _historyJobs.first.createdAt.toLocal();
+            final now = DateTime.now();
+            final diff = now.difference(dt);
+            if (diff.inHours < 24) return "Aujourd'hui";
+            if (diff.inHours < 48) return 'Hier';
+            return '${diff.inDays} jours';
+          })();
 
-    return SingleChildScrollView(
-      key: const ValueKey('analysis-history'),
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    final score = (72 + (completedAnalyses * 3)).clamp(72, 98).toInt();
+    final gain = (completedAnalyses * 0.7).clamp(0.0, 6.8);
+    final progress = (score / 100).clamp(0.0, 1.0);
+
+    Widget quickCard({
+      required IconData icon,
+      required String title,
+      required String subtitle,
+      required VoidCallback onTap,
+      Color? iconColor,
+    }) {
+      return InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          decoration: glowPanelDecoration(radius: 18),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(width: widget.embedded ? 0 : 50),
               Container(
-                width: 54,
-                height: 54,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AnalysisPalette.neonBlue, width: 2),
-                  color: AnalysisPalette.panel2,
+                  borderRadius: BorderRadius.circular(12),
+                  color: AnalysisPalette.overlayCard,
                 ),
                 child: Icon(
-                  Icons.psychology_alt_rounded,
-                  color: AnalysisPalette.neonBlue,
+                  icon,
+                  color: iconColor ?? AnalysisPalette.neonBlue,
+                  size: 22,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: TextStyle(
+                  color: AnalysisPalette.text,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: AnalysisPalette.muted,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget resourceTile({
+      required IconData icon,
+      required String title,
+      required String subtitle,
+      required VoidCallback onTap,
+      Color? iconColor,
+    }) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          decoration: glowPanelDecoration(radius: 18),
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: AnalysisPalette.overlayCard,
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor ?? AnalysisPalette.neonBlue,
                   size: 28,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Match Analysis',
-                      style: TextStyle(
-                        color: AnalysisPalette.neonBlue,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Hello, ${widget.connectedClubName?.trim().isNotEmpty == true ? 'Analyst' : 'Analyst'}',
+                      title,
                       style: TextStyle(
                         color: AnalysisPalette.text,
                         fontWeight: FontWeight.w800,
-                        fontSize: 20,
+                        fontSize: 17,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle.toUpperCase(),
+                      style: TextStyle(
+                        color: AnalysisPalette.muted,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
-              if (_showHeaderActions) ...[
-                const SizedBox(width: 6),
-                _CircleIconButton(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  onTap: _openMessages,
-                ),
-                const SizedBox(width: 6),
-                _CircleIconButton(
-                  icon: Icons.notifications_none_rounded,
-                  onTap: () =>
-                      _showSnack('Notifications panel can be connected next.'),
-                ),
-              ],
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AnalysisPalette.muted,
+                size: 28,
+              ),
             ],
           ),
-          const SizedBox(height: 24),
-          Row(
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      key: const ValueKey('analysis-command-dashboard'),
+      padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 6),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.02,
             children: [
-              Expanded(
-                child: Text(
-                  'Recent Analyses',
-                  style: TextStyle(
-                    color: AnalysisPalette.text,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
+              quickCard(
+                icon: Icons.analytics_rounded,
+                title: 'ANALYSE MATCH',
+                subtitle: 'Préparation match',
+                onTap: _openAnalysisSetup,
+              ),
+              quickCard(
+                icon: Icons.history_rounded,
+                title: "HISTORIQUE",
+                subtitle: '$totalAnalyses analyses',
+                onTap: () => _showSnack('Historique chargé ci-dessous.'),
+                iconColor: AnalysisPalette.cyan,
+              ),
+              quickCard(
+                icon: Icons.groups_rounded,
+                title: 'EQUIPES',
+                subtitle: 'Roster et suivi',
+                onTap: () => setState(() => _bottomIndex = 2),
+                iconColor: AnalysisPalette.violet,
+              ),
+              quickCard(
+                icon: Icons.settings_suggest_rounded,
+                title: 'SETTINGS',
+                subtitle: 'Réglages moteur',
+                onTap: () => setState(() => _bottomIndex = 3),
+                iconColor: AnalysisPalette.mint,
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text('RESSOURCES & DONNÉES', style: neonSectionStyle()),
+          const SizedBox(height: 12),
+          resourceTile(
+            icon: Icons.summarize_rounded,
+            title: 'Tests & Rapports',
+            subtitle: 'Dernière mise à jour: $lastUpdate',
+            onTap: _openAnalysisSetup,
+          ),
+          const SizedBox(height: 12),
+          resourceTile(
+            icon: Icons.auto_awesome_motion_rounded,
+            title: "Bibliothèque d'analyses",
+            subtitle: '$completedAnalyses résultats disponibles',
+            onTap: () {
+              if (_historyJobs.isNotEmpty) {
+                _openHistoryJob(_historyJobs.first);
+                return;
+              }
+              _openAnalysisSetup();
+            },
+            iconColor: AnalysisPalette.mint,
+          ),
+          const SizedBox(height: 18),
+          Container(
+            decoration: glowPanelDecoration(radius: 18),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'SCORE PERFORMANCE',
+                        style: TextStyle(
+                          color: AnalysisPalette.mint,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '+${gain.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        color: AnalysisPalette.mint,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '$score',
+                        style: TextStyle(
+                          color: AnalysisPalette.text,
+                          fontSize: 56,
+                          fontWeight: FontWeight.w800,
+                          height: 0.95,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' /100',
+                        style: TextStyle(
+                          color: AnalysisPalette.muted,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              TextButton.icon(
-                onPressed: _historyJobs.isEmpty
-                    ? null
-                    : () => setState(() => _historyShowAll = !_historyShowAll),
-                icon: Icon(
-                  _historyShowAll
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.chevron_right_rounded,
-                  size: 18,
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    minHeight: 12,
+                    value: progress,
+                    color: AnalysisPalette.mint,
+                    backgroundColor: AnalysisPalette.softTrack,
+                  ),
                 ),
-                label: Text(_historyShowAll ? 'Show Less' : 'View All'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AnalysisPalette.neonBlue,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           if (_historyErrorText != null) ...[
+            const SizedBox(height: 12),
             _ErrorBanner(
               text: _historyErrorText!,
               icon: Icons.warning_amber_rounded,
               accent: AnalysisPalette.danger,
             ),
-            const SizedBox(height: 12),
           ],
-          if (_isLoadingHistory && _historyJobs.isEmpty)
-            Container(
-              decoration: glowPanelDecoration(radius: 18),
-              padding: const EdgeInsets.all(18),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AnalysisPalette.neonBlue,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Text(
-                    'Loading analysis history...',
-                    style: TextStyle(color: AnalysisPalette.text),
-                  ),
-                ],
-              ),
-            )
-          else if (_historyJobs.isEmpty)
-            Container(
-              decoration: glowPanelDecoration(radius: 22),
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'No analyses yet',
-                    style: TextStyle(
-                      color: AnalysisPalette.text,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start your first AI video analysis to populate this dashboard.',
-                    style: TextStyle(color: AnalysisPalette.muted, height: 1.4),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: _openAnalysisSetup,
-                    icon: Icon(Icons.add_rounded),
-                    label: Text('New Analysis'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AnalysisPalette.electric,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else ...[
-            ...visibleJobs.map(
-              (job) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _HistoryAnalysisCard(
-                  job: job,
-                  result: _historyResultCache[job.jobId],
-                  deleting: _historyDeletingJobIds.contains(job.jobId),
-                  onTap: () => _openHistoryJob(job),
-                  onDelete: () => _confirmDeleteHistoryJob(job),
-                ),
-              ),
-            ),
-            if (_isLoadingHistory) ...[
-              const SizedBox(height: 4),
-              LinearProgressIndicator(
-                minHeight: 2,
-                color: AnalysisPalette.neonBlue,
-                backgroundColor: AnalysisPalette.softTrack,
-              ),
-            ],
-          ],
-          const SizedBox(height: 22),
-          Text('QUICK STATS', style: neonSectionStyle()),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _HistoryQuickStatCard(
-                  label: 'Total Analyses',
-                  value: '$totalAnalyses',
-                  valueColor: AnalysisPalette.text,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _HistoryQuickStatCard(
-                  label: 'Win Ratio',
-                  value: winRatioPct == null ? '--' : '$winRatioPct%',
-                  valueColor: winRatioPct == null
-                      ? AnalysisPalette.text
-                      : AnalysisPalette.mint,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FloatingActionButton(
-              heroTag: 'analysis-history-new',
-              onPressed: _openAnalysisSetup,
-              backgroundColor: AnalysisPalette.electric,
-              foregroundColor: Colors.white,
-              child: Icon(Icons.add_rounded, size: 34),
-            ),
-          ),
         ],
       ),
     );
@@ -1798,12 +1731,22 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
             ),
           ),
           const SizedBox(height: 10),
-          ...timeline.map(
-            (entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _TimelineCard(entry: entry),
+          if (timeline.isEmpty)
+            Container(
+              decoration: glowPanelDecoration(radius: 16),
+              padding: const EdgeInsets.all(14),
+              child: Text(
+                'No pass/shot/contact events detected for this clip yet.',
+                style: TextStyle(color: AnalysisPalette.muted, height: 1.45),
+              ),
+            )
+          else
+            ...timeline.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _TimelineCard(entry: entry),
+              ),
             ),
-          ),
           const SizedBox(height: 8),
           Text(
             'Top Players',
@@ -1814,20 +1757,30 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
             ),
           ),
           const SizedBox(height: 10),
-          SizedBox(
-            height: 214,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: topTracks.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (context, index) => _TopTrackCard(
-                track: topTracks[index],
-                accent: index.isEven
-                    ? AnalysisPalette.neonBlue
-                    : AnalysisPalette.violet,
+          if (topTracks.isEmpty)
+            Container(
+              decoration: glowPanelDecoration(radius: 16),
+              padding: const EdgeInsets.all(14),
+              child: Text(
+                'No tracked player events yet.',
+                style: TextStyle(color: AnalysisPalette.muted),
+              ),
+            )
+          else
+            SizedBox(
+              height: 214,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: topTracks.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                itemBuilder: (context, index) => _TopTrackCard(
+                  track: topTracks[index],
+                  accent: index.isEven
+                      ? AnalysisPalette.neonBlue
+                      : AnalysisPalette.violet,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -2001,24 +1954,7 @@ class _MatchAnalysisMobileShellState extends State<MatchAnalysisMobileShell> {
     final list = scores.values.toList()
       ..sort((a, b) => b.events.compareTo(a.events));
     if (list.isEmpty) {
-      return const [
-        _TopTrackSummary(
-          trackId: 17,
-          teamName: 'MCI',
-          events: 6,
-          passes: 4,
-          shots: 1,
-          rating: 8.9,
-        ),
-        _TopTrackSummary(
-          trackId: 8,
-          teamName: 'ARS',
-          events: 5,
-          passes: 3,
-          shots: 1,
-          rating: 8.4,
-        ),
-      ];
+      return const [];
     }
     return list
         .take(6)
@@ -2910,405 +2846,6 @@ class _SmallStat extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _HistoryAnalysisCard extends StatelessWidget {
-  const _HistoryAnalysisCard({
-    required this.job,
-    required this.result,
-    required this.deleting,
-    required this.onTap,
-    required this.onDelete,
-  });
-
-  final AnalysisJobSummary job;
-  final MatchAnalysisResult? result;
-  final bool deleting;
-  final VoidCallback onTap;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final title = '${job.request.team1Name} vs ${job.request.team2Name}';
-    final subtitle = '${_statusLabel(job)} • ${_formatDate(job.createdAt)}';
-
-    String scoreLabel = '--';
-    String possessionLabel = '-- / --';
-    if (result != null) {
-      final a = result!.team1Stats;
-      final b = result!.team2Stats;
-      if (a != null && b != null) {
-        scoreLabel = '${(a.shots / 4).floor()} - ${(b.shots / 4).floor()}';
-        possessionLabel =
-            '${a.possessionPct.toStringAsFixed(0)}% / ${b.possessionPct.toStringAsFixed(0)}%';
-      }
-    } else if (job.status == AnalysisJobStatus.running ||
-        job.status == AnalysisJobStatus.queued) {
-      scoreLabel = '${job.progress.progressPercent.toStringAsFixed(0)}%';
-      possessionLabel =
-          (job.progress.phase.isNotEmpty ? job.progress.phase : 'processing')
-              .replaceAll('_', ' ');
-    } else if (job.status == AnalysisJobStatus.failed) {
-      scoreLabel = 'FAILED';
-      possessionLabel = 'Tap to inspect logs';
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: Container(
-          decoration: glowPanelDecoration(radius: 22, withGlow: false),
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  color: AnalysisPalette.overlayCard,
-                  border: Border.all(color: AnalysisPalette.elevatedStroke),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: CustomPaint(painter: _PitchPreviewPainter()),
-                      ),
-                    ),
-                    Center(
-                      child: Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AnalysisPalette.text.withValues(alpha: 0.92),
-                        ),
-                        child: Icon(
-                          job.status == AnalysisJobStatus.completed
-                              ? Icons.play_arrow_rounded
-                              : job.status == AnalysisJobStatus.running
-                              ? Icons.hourglass_top_rounded
-                              : Icons.analytics_rounded,
-                          color: AnalysisPalette.panel,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: AnalysisPalette.text,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        deleting
-                            ? SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AnalysisPalette.neonBlue,
-                                ),
-                              )
-                            : IconButton(
-                                onPressed: onDelete,
-                                icon: Icon(
-                                  Icons.delete_outline_rounded,
-                                  color: AnalysisPalette.muted,
-                                  size: 22,
-                                ),
-                                splashRadius: 20,
-                                constraints: const BoxConstraints(
-                                  minWidth: 30,
-                                  minHeight: 30,
-                                ),
-                                padding: EdgeInsets.zero,
-                                tooltip: 'Delete analysis',
-                              ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: AnalysisPalette.muted,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _HistoryMiniStat(
-                            label: 'SCORE',
-                            value: scoreLabel,
-                            valueColor: job.status == AnalysisJobStatus.failed
-                                ? AnalysisPalette.danger
-                                : AnalysisPalette.neonBlue,
-                          ),
-                        ),
-                        Expanded(
-                          child: _HistoryMiniStat(
-                            label: 'POSSESSION',
-                            value: possessionLabel,
-                            valueColor: AnalysisPalette.text,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (result == null &&
-                        job.resultAvailable &&
-                        job.status == AnalysisJobStatus.completed) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'Tap to load full match details',
-                        style: TextStyle(
-                          color: AnalysisPalette.muted,
-                          fontSize: 11.5,
-                        ),
-                      ),
-                    ] else if (job.status == AnalysisJobStatus.completed)
-                      const SizedBox(height: 2),
-                    if (job.status == AnalysisJobStatus.running ||
-                        job.status == AnalysisJobStatus.queued) ...[
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(999),
-                        child: LinearProgressIndicator(
-                          minHeight: 4,
-                          value: (job.progress.progress).clamp(0.0, 1.0),
-                          color: AnalysisPalette.neonBlue,
-                          backgroundColor: AnalysisPalette.softTrack,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  static String _statusLabel(AnalysisJobSummary job) {
-    switch (job.status) {
-      case AnalysisJobStatus.completed:
-        return job.request.analysisPreset.toUpperCase();
-      case AnalysisJobStatus.running:
-        return 'RUNNING';
-      case AnalysisJobStatus.queued:
-        return 'QUEUED';
-      case AnalysisJobStatus.failed:
-        return 'FAILED';
-      case AnalysisJobStatus.canceled:
-        return 'CANCELED';
-    }
-  }
-
-  static String _formatDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final month = (date.month >= 1 && date.month <= 12)
-        ? months[date.month - 1]
-        : '---';
-    final day = date.day.toString().padLeft(2, '0');
-    return '$month $day, ${date.year}';
-  }
-}
-
-class _HistoryMiniStat extends StatelessWidget {
-  const _HistoryMiniStat({
-    required this.label,
-    required this.value,
-    required this.valueColor,
-  });
-
-  final String label;
-  final String value;
-  final Color valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: AnalysisPalette.muted,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: valueColor,
-            fontWeight: FontWeight.w800,
-            fontSize: 14,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HistoryQuickStatCard extends StatelessWidget {
-  const _HistoryQuickStatCard({
-    required this.label,
-    required this.value,
-    required this.valueColor,
-  });
-
-  final String label;
-  final String value;
-  final Color valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: glowPanelDecoration(radius: 18),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(color: AnalysisPalette.muted, fontSize: 13),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: valueColor,
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AnalysisBottomBar extends StatelessWidget {
-  const _AnalysisBottomBar({required this.index, required this.onChanged});
-
-  final int index;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    const items = [
-      ('HISTORY', Icons.grid_view_rounded),
-      ('ANALYSIS', Icons.analytics_rounded),
-      ('TEAMS', Icons.groups_rounded),
-      ('SETTINGS', Icons.settings_rounded),
-    ];
-    return Container(
-      decoration: BoxDecoration(
-        color: AnalysisPalette.panel,
-        border: Border(top: BorderSide(color: AnalysisPalette.softLine)),
-      ),
-      padding: const EdgeInsets.only(top: 8, bottom: 12),
-      child: Row(
-        children: List.generate(items.length, (i) {
-          final selected = i == index;
-          final item = items[i];
-          return Expanded(
-            child: InkWell(
-              onTap: () => onChanged(i),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Icon(
-                          item.$2,
-                          color: selected
-                              ? AnalysisPalette.neonBlue
-                              : AnalysisPalette.muted,
-                        ),
-                        if (selected)
-                          Positioned(
-                            right: -2,
-                            top: -2,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: AnalysisPalette.neonBlue,
-                                shape: BoxShape.circle,
-                              ),
-                              child: SizedBox(width: 8, height: 8),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.$1,
-                      style: TextStyle(
-                        color: selected
-                            ? AnalysisPalette.neonBlue
-                            : AnalysisPalette.muted,
-                        fontWeight: selected
-                            ? FontWeight.w800
-                            : FontWeight.w600,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
     );
   }
 }

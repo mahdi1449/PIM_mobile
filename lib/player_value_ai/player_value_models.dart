@@ -1,61 +1,87 @@
 class PlayerValueRequest {
   PlayerValueRequest({
+    required this.speed,
+    required this.endurance,
+    required this.distance,
+    required this.dribbles,
+    required this.shots,
+    required this.injuries,
+    required this.heartRate,
     required this.age,
+    required this.recoveryTime,
+    required this.fitnessLevel,
+    required this.medicalRiskScore,
     required this.minutesPlayed,
     required this.goals,
     required this.assists,
-    required this.injuriesLastSeason,
-    required this.currentMarketValue,
+    required this.ratingPerMatch,
+    required this.consistencyScore,
   });
 
+  final double speed;
+  final double endurance;
+  final double distance;
+  final double dribbles;
+  final double shots;
+  final int injuries;
+  final double heartRate;
   final int age;
+  final double recoveryTime;
+  final double fitnessLevel;
+  final double medicalRiskScore;
   final int minutesPlayed;
   final int goals;
   final int assists;
-  final int injuriesLastSeason;
-  final double currentMarketValue;
+  final double ratingPerMatch;
+  final double consistencyScore;
 
   Map<String, dynamic> toJson() => {
-        'age': age,
-        'minutes_played': minutesPlayed,
-        'goals': goals,
-        'assists': assists,
-        'injuries_last_season': injuriesLastSeason,
-        'current_market_value': currentMarketValue,
-      };
+    'speed': speed,
+    'endurance': endurance,
+    'distance': distance,
+    'dribbles': dribbles,
+    'shots': shots,
+    'injuries': injuries,
+    'heart_rate': heartRate,
+    'age': age,
+    'recoveryTime': recoveryTime,
+    'fitnessLevel': fitnessLevel,
+    'medicalRiskScore': medicalRiskScore,
+    'minutesPlayed': minutesPlayed,
+    'goals': goals,
+    'assists': assists,
+    'ratingPerMatch': ratingPerMatch,
+    'consistencyScore': consistencyScore,
+  };
 }
 
 class PlayerValueResponse {
   PlayerValueResponse({
     required this.predictedValue,
-    required this.growthPercent,
-    required this.trend,
-    required this.confidence,
+    required this.nextSeasonValue,
+    required this.confidenceScore,
+    required this.keyFactors,
     required this.explanation,
-    required this.chart,
-    required this.nextSeasonProjection,
+    required this.currency,
   });
 
   final double predictedValue;
-  final double growthPercent;
-  final String trend;
-  final double confidence;
+  final double nextSeasonValue;
+  final double confidenceScore;
+  final List<String> keyFactors;
   final String explanation;
-  final List<Map<String, dynamic>> chart;
-  final Map<String, dynamic> nextSeasonProjection;
+  final String currency;
 
   factory PlayerValueResponse.fromJson(Map<String, dynamic> json) {
     return PlayerValueResponse(
       predictedValue: (json['predicted_value'] as num).toDouble(),
-      growthPercent: (json['growth_percent'] as num).toDouble(),
-      trend: (json['trend'] as String),
-      confidence: (json['confidence'] as num).toDouble(),
-      explanation: (json['explanation'] as String),
-      chart: (json['chart'] as List)
-          .map((e) => Map<String, dynamic>.from(e as Map))
+      nextSeasonValue: (json['next_season_value'] as num).toDouble(),
+      confidenceScore: (json['confidence_score'] as num).toDouble(),
+      keyFactors: (json['key_factors'] as List? ?? const [])
+          .map((e) => e.toString())
           .toList(),
-      nextSeasonProjection:
-          Map<String, dynamic>.from(json['next_season_projection'] as Map),
+      explanation: (json['explanation'] as String),
+      currency: (json['currency'] as String?) ?? 'EUR',
     );
   }
 }

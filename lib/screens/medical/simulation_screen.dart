@@ -7,11 +7,14 @@ import '../../models/player_model.dart';
 import '../../models/simulation_player_model.dart';
 import '../../models/simulation_result_model.dart';
 import '../../models/simulation_start_model.dart';
+import '../../models/alert_model.dart';
 import '../../services/commentary_service.dart';
+import '../../services/match_simulation_service.dart';
 import '../../services/simulation_service.dart';
-import '../../theme/app_theme.dart';
-import '../../ui/theme/app_colors.dart';
+import '../../services/alert_service.dart';
+import '../../ui/theme/medical_theme.dart';
 import '../../ui/theme/app_spacing.dart';
+import '../../widgets/alert_overlay.dart';
 
 class SimulationScreen extends StatefulWidget {
   const SimulationScreen({super.key});
@@ -26,6 +29,9 @@ class _SimulationScreenState extends State<SimulationScreen>
 
   final SimulationService _simulationService = SimulationService();
   final CommentaryService _commentaryService = CommentaryService();
+  final MatchSimulationService _matchSimulationService =
+      MatchSimulationService();
+  final AlertService _alertService = AlertService.instance;
   final math.Random _random = math.Random();
 
   SimulationStartModel? _match;
@@ -37,6 +43,9 @@ class _SimulationScreenState extends State<SimulationScreen>
   bool _isStarting = false;
   bool _isRunning = false;
   bool _hasEnded = false;
+
+  StreamSubscription<AlertModel>? _alertSubscription;
+  AlertModel? _latestAlert;
 
   Timer? _commentaryTimer;
   Timer? _commentaryHideTimer;
@@ -54,6 +63,8 @@ class _SimulationScreenState extends State<SimulationScreen>
   String _eventText = 'Kickoff';
   int _eventCooldown = 0;
   int _statTick = 0;
+  int _renderTick = 0;
+  final ValueNotifier<int> _fieldRepaint = ValueNotifier(0);
   int _possessionHomeTicks = 0;
   int _possessionAwayTicks = 0;
   final List<String> _eventFeed = [];
@@ -66,6 +77,9 @@ class _SimulationScreenState extends State<SimulationScreen>
   Offset? _ballOrigin;
   Offset? _ballDestination;
   double _ballTravelProgress = 0;
+  int _ballTravelFrames = 0;
+  int _ballTravelTick = 0;
+  Offset _ballCurveOffset = Offset.zero;
   int _ballHoldFrames = 0;
   bool _ballWithTeamA = true;
 
@@ -76,6 +90,14 @@ class _SimulationScreenState extends State<SimulationScreen>
     super.initState();
     _playersFuture = _simulationService.fetchAvailablePlayers();
     _commentaryService.initialize();
+    _alertSubscription = _alertService.stream.listen((alert) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _latestAlert = _matchSimulationService.mostSevereAlert ?? alert;
+      });
+    });
   }
 
   @override
@@ -83,8 +105,11 @@ class _SimulationScreenState extends State<SimulationScreen>
     _commentaryTimer?.cancel();
     _commentaryHideTimer?.cancel();
     _whistleTimer?.cancel();
+    _alertSubscription?.cancel();
     _commentaryService.dispose();
+    _matchSimulationService.dispose();
     _motionController?.dispose();
+    _fieldRepaint.dispose();
     super.dispose();
   }
 
@@ -97,8 +122,9 @@ class _SimulationScreenState extends State<SimulationScreen>
       _hasEnded = false;
     });
 
+    List<PlayerModel> availablePlayers = const [];
     try {
-      final availablePlayers = await _simulationService.fetchAvailablePlayers();
+      availablePlayers = await _simulationService.fetchAvailablePlayers();
       if (!mounted) {
         return;
       }
@@ -137,6 +163,31 @@ class _SimulationScreenState extends State<SimulationScreen>
         _errorMessage = 'Select exactly 11 players to start the match.';
       });
       return;
+    }
+
+    final selectedPlayers = availablePlayers
+        .where((player) => _selectedPlayerIds.contains(player.id))
+        .toList();
+
+    final warmupStartedAt = DateTime.now();
+    try {
+      await _matchSimulationService
+          .warmup(selectedPlayers)
+          .timeout(const Duration(seconds: 4));
+    } catch (_) {
+      // Ignore warmup failures/timeouts so the simulation can still start.
+    }
+
+    final elapsed = DateTime.now().difference(warmupStartedAt);
+    const minWarmup = Duration(seconds: 5);
+    if (elapsed < minWarmup) {
+      await Future.delayed(minWarmup - elapsed);
+    }
+
+    if (mounted) {
+      setState(() {
+        _latestAlert = _matchSimulationService.mostSevereAlert;
+      });
     }
 
     try {
@@ -215,6 +266,9 @@ class _SimulationScreenState extends State<SimulationScreen>
     _ballOrigin = _ballPosition;
     _ballDestination = _ballTarget?.position;
     _ballTravelProgress = 0;
+    _ballTravelFrames = 0;
+    _ballTravelTick = 0;
+    _ballCurveOffset = Offset.zero;
     _ballHoldFrames = 10;
     _ballWithTeamA = _teamADots.contains(_ballTarget);
   }
@@ -251,6 +305,9 @@ class _SimulationScreenState extends State<SimulationScreen>
 
     await _commentaryService.ensureInitialized();
     _startCommentary();
+    if (_match != null) {
+      _matchSimulationService.start(_match!.teamA);
+    }
     _motionController?.forward();
   }
 
@@ -263,8 +320,10 @@ class _SimulationScreenState extends State<SimulationScreen>
     _moveDots(_teamBDots, speed: 4.6);
     _moveBall();
     _updateCoachStats();
+    _fieldRepaint.value = _fieldRepaint.value + 1;
 
-    if (mounted) {
+    _renderTick = (_renderTick + 1) % 3;
+    if (mounted && _renderTick == 0) {
       setState(() {});
     }
   }
@@ -344,7 +403,6 @@ class _SimulationScreenState extends State<SimulationScreen>
     if (_ballPosition == Offset.zero) {
       return;
     }
-    const speed = 6.0;
 
     if (_ballTarget == null) {
       _ballTarget = _pickBallTarget(preferTeamA: _ballWithTeamA);
@@ -377,6 +435,11 @@ class _SimulationScreenState extends State<SimulationScreen>
         _ballOrigin = _ballPosition;
         _ballDestination = _ballTarget?.position ?? _ballOrigin;
         _ballTravelProgress = 0;
+        _ballTravelTick = 0;
+        final delta = _ballDestination! - _ballOrigin!;
+        final distance = delta.distance;
+        _ballTravelFrames = (distance / 4).clamp(14, 40).round();
+        _ballCurveOffset = _buildCurveOffset(delta, distance);
       }
       return;
     }
@@ -402,17 +465,23 @@ class _SimulationScreenState extends State<SimulationScreen>
       return;
     }
 
-    final step = speed / distance;
-    _ballTravelProgress = (_ballTravelProgress + step)
-        .clamp(0.0, 1.0)
-        .toDouble();
-    final eased =
-        _ballTravelProgress *
-        _ballTravelProgress *
-        (3 - 2 * _ballTravelProgress);
-    _ballPosition = _ballOrigin! + Offset(delta.dx * eased, delta.dy * eased);
+    if (_ballTravelFrames == 0) {
+      _ballTravelFrames = (distance / 4).clamp(14, 40).round();
+      _ballTravelTick = 0;
+      _ballCurveOffset = _buildCurveOffset(delta, distance);
+    }
 
-    if (_ballTravelProgress >= 1.0) {
+    _ballTravelTick = (_ballTravelTick + 1).clamp(0, _ballTravelFrames);
+    _ballTravelProgress = _ballTravelTick / _ballTravelFrames;
+    final eased = Curves.easeInOut.transform(_ballTravelProgress);
+    _ballPosition = _quadraticBezier(
+      _ballOrigin!,
+      _ballDestination!,
+      _ballCurveOffset,
+      eased,
+    );
+
+    if (_ballTravelTick >= _ballTravelFrames) {
       _ballHoldFrames = 6;
       final switchTeam = _random.nextDouble() < 0.25;
       _ballWithTeamA = switchTeam ? !_ballWithTeamA : _ballWithTeamA;
@@ -423,8 +492,36 @@ class _SimulationScreenState extends State<SimulationScreen>
       _ballOrigin = _ballPosition;
       _ballDestination = _ballTarget?.position ?? _ballOrigin;
       _ballTravelProgress = 0;
+      _ballTravelTick = 0;
+      _ballTravelFrames = 0;
+      _ballCurveOffset = Offset.zero;
     }
     _trackPossession();
+  }
+
+  Offset _buildCurveOffset(Offset delta, double distance) {
+    if (distance <= 0.1) {
+      return Offset.zero;
+    }
+
+    final perp = Offset(-delta.dy, delta.dx);
+    final perpNorm = perp / perp.distance;
+    final magnitude = (distance * 0.12).clamp(6, 28).toDouble();
+    final direction = _random.nextBool() ? 1.0 : -1.0;
+    return perpNorm * magnitude * direction;
+  }
+
+  Offset _quadraticBezier(
+    Offset start,
+    Offset end,
+    Offset curveOffset,
+    double t,
+  ) {
+    final control = (start + end) / 2 + curveOffset;
+    final oneMinus = 1 - t;
+    return (start * oneMinus * oneMinus) +
+        (control * 2 * oneMinus * t) +
+        (end * t * t);
   }
 
   void _moveDots(List<PlayerDot> dots, {required double speed}) {
@@ -459,10 +556,22 @@ class _SimulationScreenState extends State<SimulationScreen>
     _motionController?.stop();
     _hasEnded = true;
     _stopCommentary();
+    _matchSimulationService.stop();
     setState(() {
       _isRunning = false;
       _resultsFuture = _simulationService
-          .endMatch(_match!.matchId)
+          .endMatch(
+            _match!.matchId,
+            stats: {
+              'homeScore': _homeScore,
+              'awayScore': _awayScore,
+              'possessionHome': _possessionHome,
+              'shotsHome': _shotsHome,
+              'shotsAway': _shotsAway,
+              'shotsOnTargetHome': _shotsOnTargetHome,
+              'shotsOnTargetAway': _shotsOnTargetAway,
+            },
+          )
           .timeout(const Duration(seconds: 120));
     });
   }
@@ -500,6 +609,7 @@ class _SimulationScreenState extends State<SimulationScreen>
       _playersFuture = _simulationService.fetchAvailablePlayers();
     });
     _stopCommentary();
+    _matchSimulationService.stop();
   }
 
   void _startCommentary() {
@@ -646,48 +756,57 @@ class _SimulationScreenState extends State<SimulationScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(gradient: AppTheme.appGradient),
-      child: SafeArea(
-        top: false,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 450),
-          child: _resultsFuture != null
-              ? _ResultsView(
-                  resultsFuture: _resultsFuture!,
-                  onReset: _resetSimulation,
-                  summary: MatchSummary(
-                    homeScore: _homeScore,
-                    awayScore: _awayScore,
-                    possessionHome: _possessionHome,
-                    shotsHome: _shotsHome,
-                    shotsAway: _shotsAway,
-                    shotsOnTargetHome: _shotsOnTargetHome,
-                    shotsOnTargetAway: _shotsOnTargetAway,
-                  ),
-                )
-              : _SimulationView(
-                  isStarting: _isStarting,
-                  isRunning: _isRunning,
-                  errorMessage: _errorMessage,
-                  fieldBuilder: _buildField,
-                  onStart: _startSimulation,
-                  countdown: _remainingTimeLabel(),
-                  playersFuture: _playersFuture,
-                  selectedIds: _selectedPlayerIds,
-                  onTogglePlayer: _togglePlayer,
-                  homeScore: _homeScore,
-                  awayScore: _awayScore,
-                  possessionHome: _possessionHome,
-                  shotsHome: _shotsHome,
-                  shotsAway: _shotsAway,
-                  shotsOnTargetHome: _shotsOnTargetHome,
-                  shotsOnTargetAway: _shotsOnTargetAway,
-                  eventText: _eventText,
-                  eventFeed: _eventFeed,
-                  commentaryText: _commentaryText,
-                  showCommentary: _showCommentary,
-                ),
+    return MedicalThemeScope(
+      applyBackground: false,
+      child: Container(
+        decoration: BoxDecoration(gradient: AppTheme.appGradient),
+        child: SafeArea(
+          top: false,
+          child: Stack(
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 450),
+                child: _resultsFuture != null
+                    ? _ResultsView(
+                        resultsFuture: _resultsFuture!,
+                        onReset: _resetSimulation,
+                        summary: MatchSummary(
+                          homeScore: _homeScore,
+                          awayScore: _awayScore,
+                          possessionHome: _possessionHome,
+                          shotsHome: _shotsHome,
+                          shotsAway: _shotsAway,
+                          shotsOnTargetHome: _shotsOnTargetHome,
+                          shotsOnTargetAway: _shotsOnTargetAway,
+                        ),
+                      )
+                    : _SimulationView(
+                        isStarting: _isStarting,
+                        isRunning: _isRunning,
+                        errorMessage: _errorMessage,
+                        fieldBuilder: _buildField,
+                        onStart: _startSimulation,
+                        countdown: _remainingTimeLabel(),
+                        playersFuture: _playersFuture,
+                        selectedIds: _selectedPlayerIds,
+                        onTogglePlayer: _togglePlayer,
+                        homeScore: _homeScore,
+                        awayScore: _awayScore,
+                        possessionHome: _possessionHome,
+                        shotsHome: _shotsHome,
+                        shotsAway: _shotsAway,
+                        shotsOnTargetHome: _shotsOnTargetHome,
+                        shotsOnTargetAway: _shotsOnTargetAway,
+                        eventText: _eventText,
+                        eventFeed: _eventFeed,
+                        commentaryText: _commentaryText,
+                        showCommentary: _showCommentary,
+                        latestAlert: _latestAlert,
+                      ),
+              ),
+              AlertOverlay(),
+            ],
+          ),
         ),
       ),
     );
@@ -704,14 +823,17 @@ class _SimulationScreenState extends State<SimulationScreen>
           }
         }
 
-        return CustomPaint(
-          painter: _FieldPainter(
-            teamADots: _teamADots,
-            teamBDots: _teamBDots,
-            ballPosition: _ballPosition,
-            ballTarget: _ballTarget?.position,
+        return RepaintBoundary(
+          child: CustomPaint(
+            painter: _FieldPainter(
+              teamADots: _teamADots,
+              teamBDots: _teamBDots,
+              ballPosition: _ballPosition,
+              ballTarget: _ballTarget?.position,
+              repaint: _fieldRepaint,
+            ),
+            child: const SizedBox.expand(),
           ),
-          child: const SizedBox.expand(),
         );
       },
     );
@@ -740,6 +862,7 @@ class _SimulationView extends StatelessWidget {
     required this.eventFeed,
     required this.commentaryText,
     required this.showCommentary,
+    required this.latestAlert,
   });
 
   final bool isStarting;
@@ -762,6 +885,7 @@ class _SimulationView extends StatelessWidget {
   final List<String> eventFeed;
   final String commentaryText;
   final bool showCommentary;
+  final AlertModel? latestAlert;
 
   @override
   Widget build(BuildContext context) {
@@ -790,7 +914,7 @@ class _SimulationView extends StatelessWidget {
                       : onStart,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryBlue,
-                    foregroundColor: AppColors.white,
+                    foregroundColor: MedicalTheme.surface,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
                       vertical: 12,
@@ -805,7 +929,7 @@ class _SimulationView extends StatelessWidget {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppColors.white,
+                            color: MedicalTheme.surface,
                           ),
                         )
                       : Text('Start Match Simulation'),
@@ -827,56 +951,279 @@ class _SimulationView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _InlineError(message: errorMessage!),
           ),
+        if (isRunning)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _LiveAlertPanel(alert: latestAlert),
+          ),
         const SizedBox(height: 12),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  border: Border.all(color: AppTheme.cardBorder),
-                  borderRadius: BorderRadius.circular(24),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 720;
+              final field = ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    border: Border.all(color: AppTheme.cardBorder),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: fieldBuilder(context)),
+                      Positioned(
+                        top: 12,
+                        left: 12,
+                        right: 12,
+                        child: _ScoreboardBar(
+                          isRunning: isRunning,
+                          countdown: countdown,
+                          homeScore: homeScore,
+                          awayScore: awayScore,
+                          homeLabel: 'Odin',
+                          awayLabel: 'Opponents',
+                        ),
+                      ),
+                      Positioned(
+                        top: 70,
+                        left: 16,
+                        right: 16,
+                        child: _LiveCommentaryBanner(
+                          text: commentaryText,
+                          isVisible: showCommentary && isRunning,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Stack(
+              );
+
+              if (isWide) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Row(
+                    children: [
+                      _SideStatsColumn(
+                        title: 'Odin',
+                        possession: possessionHome,
+                        shots: shotsHome,
+                        chances: shotsOnTargetHome,
+                        alignRight: false,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: field),
+                      const SizedBox(width: 12),
+                      _SideStatsColumn(
+                        title: 'Opponents',
+                        possession: 100 - possessionHome,
+                        shots: shotsAway,
+                        chances: shotsOnTargetAway,
+                        alignRight: true,
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
                   children: [
-                    Positioned.fill(child: fieldBuilder(context)),
-                    Positioned(
-                      top: 4,
-                      left: 10,
-                      right: 10,
-                      child: _OverlayCard(
-                        isRunning: isRunning,
-                        countdown: countdown,
-                        homeScore: homeScore,
-                        awayScore: awayScore,
-                        possessionHome: possessionHome,
-                        shotsHome: shotsHome,
-                        shotsAway: shotsAway,
-                        shotsOnTargetHome: shotsOnTargetHome,
-                        shotsOnTargetAway: shotsOnTargetAway,
-                        eventText: eventText,
-                        eventFeed: eventFeed,
-                      ),
-                    ),
-                    Positioned(
-                      top: 56,
-                      left: 10,
-                      right: 10,
-                      child: _LiveCommentaryBanner(
-                        text: commentaryText,
-                        isVisible: showCommentary && isRunning,
-                      ),
+                    Expanded(child: field),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SideStatsColumn(
+                            title: 'Odin',
+                            possession: possessionHome,
+                            shots: shotsHome,
+                            chances: shotsOnTargetHome,
+                            alignRight: false,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _SideStatsColumn(
+                            title: 'Opponents',
+                            possession: 100 - possessionHome,
+                            shots: shotsAway,
+                            chances: shotsOnTargetAway,
+                            alignRight: true,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ],
     );
+  }
+}
+
+class _LiveAlertPanel extends StatelessWidget {
+  const _LiveAlertPanel({required this.alert});
+
+  final AlertModel? alert;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final statusColor = alert == null
+        ? AppTheme.textMuted
+        : _accentColor(alert!.status);
+    final surface = AppTheme.surface;
+    final subtitle = alert == null
+        ? 'Monitoring player load and fatigue...'
+        : alert!.message;
+    final reasons = _reasonText(alert);
+    final statLine = alert == null ? null : _statLine(alert!);
+    final detailLine = alert == null ? null : _detailLine(alert!);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: statusColor.withOpacity(0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withOpacity(0.2),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: statusColor.withOpacity(0.4)),
+            ),
+            child: Text(
+              alert?.title ?? 'Live alerts',
+              style: textTheme.labelMedium?.copyWith(
+                color: statusColor,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  alert?.playerName ?? 'No critical alerts yet',
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (statLine != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    statLine,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+                if (detailLine != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    detailLine,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+                if (reasons != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    reasons,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            alert == null ? '--' : '${(alert!.risk * 100).round()}%',
+            style: textTheme.labelLarge?.copyWith(
+              color: statusColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _accentColor(AlertStatus status) {
+    switch (status) {
+      case AlertStatus.injured:
+        return AppTheme.danger;
+      case AlertStatus.warning:
+        return AppTheme.warning;
+      case AlertStatus.safe:
+        return AppTheme.success;
+    }
+  }
+
+  String? _reasonText(AlertModel? alert) {
+    if (alert == null || alert.reasons.isEmpty) {
+      return null;
+    }
+    final trimmed = alert.reasons.where((reason) => reason.trim().isNotEmpty);
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed.take(2).join(' • ');
+  }
+
+  String _statLine(AlertModel alert) {
+    return 'Injury probability ${(alert.risk * 100).round()}% • '
+        'Load ${alert.load.round()} • Fatigue ${alert.fatigue.round()}';
+  }
+
+  String _detailLine(AlertModel alert) {
+    final parts = <String>[];
+    if (alert.severity != null && alert.severity!.trim().isNotEmpty) {
+      parts.add('Severity ${alert.severity}');
+    }
+    if (alert.recoveryDays != null && alert.recoveryDays! > 0) {
+      parts.add('Recovery ${alert.recoveryDays}d');
+    }
+    if (alert.injuryType != null && alert.injuryType!.trim().isNotEmpty) {
+      parts.add('Type ${alert.injuryType}');
+    }
+    if (parts.isEmpty) {
+      return 'Minutes ${alert.minutes}';
+    }
+    return parts.join(' • ');
   }
 }
 
@@ -1020,12 +1367,12 @@ class _SelectionCard extends StatelessWidget {
                             _PlayedBadge(label: playedLabel),
                         ],
                       ),
-                      subtitle: Text(
-                        isInjured
-                            ? 'Unavailable for selection'
-                            : player.position,
-                        style: TextStyle(color: AppTheme.textSecondary),
-                      ),
+                      subtitle: isInjured
+                          ? Text(
+                              'Unavailable for selection',
+                              style: TextStyle(color: AppTheme.textSecondary),
+                            )
+                          : null,
                     );
                   },
                 ),
@@ -1225,6 +1572,178 @@ class _OverlayCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _ScoreboardBar extends StatelessWidget {
+  const _ScoreboardBar({
+    required this.isRunning,
+    required this.countdown,
+    required this.homeScore,
+    required this.awayScore,
+    required this.homeLabel,
+    required this.awayLabel,
+  });
+
+  final bool isRunning;
+  final String countdown;
+  final int homeScore;
+  final int awayScore;
+  final String homeLabel;
+  final String awayLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primaryBlue.withOpacity(0.55),
+            AppTheme.accentBlue.withOpacity(0.55),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.cardBorder),
+      ),
+      child: Row(
+        children: [
+          _TeamDot(label: homeLabel, color: AppTheme.danger),
+          const SizedBox(width: 8),
+          Text(
+            homeLabel.toUpperCase(),
+            style: TextStyle(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            '$homeScore - $awayScore',
+            style: TextStyle(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            awayLabel.toUpperCase(),
+            style: TextStyle(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(width: 8),
+          _TeamDot(label: awayLabel, color: AppTheme.accentBlue),
+          const SizedBox(width: 10),
+          _LivePill(isLive: isRunning),
+          const SizedBox(width: 8),
+          _CountdownBadge(label: countdown),
+        ],
+      ),
+    );
+  }
+}
+
+class _TeamDot extends StatelessWidget {
+  const _TeamDot({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _SideStatsColumn extends StatelessWidget {
+  const _SideStatsColumn({
+    required this.title,
+    required this.possession,
+    required this.shots,
+    required this.chances,
+    required this.alignRight,
+  });
+
+  final String title;
+  final int possession;
+  final int shots;
+  final int chances;
+  final bool alignRight;
+
+  @override
+  Widget build(BuildContext context) {
+    final align = alignRight
+        ? CrossAxisAlignment.end
+        : CrossAxisAlignment.start;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.surface.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: align,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SideStat(label: 'Possession %', value: possession.toString()),
+          const SizedBox(height: 12),
+          _SideStat(label: 'Shots', value: shots.toString()),
+          const SizedBox(height: 12),
+          _SideStat(label: 'Chances', value: chances.toString()),
+        ],
+      ),
+    );
+  }
+}
+
+class _SideStat extends StatelessWidget {
+  const _SideStat({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            color: AppTheme.textPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1456,7 +1975,8 @@ class _FieldPainter extends CustomPainter {
     required this.teamBDots,
     required this.ballPosition,
     required this.ballTarget,
-  });
+    required Listenable repaint,
+  }) : super(repaint: repaint);
 
   final List<PlayerDot> teamADots;
   final List<PlayerDot> teamBDots;
@@ -1466,20 +1986,20 @@ class _FieldPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final fieldPaint = Paint()
-      ..color = const Color(0xFF0E5B2A)
+      ..color = const Color(0xFF0A2A6B)
       ..style = PaintingStyle.fill;
 
     final stripePaint = Paint()
-      ..color = const Color(0xFF0F6A30)
+      ..color = const Color(0xFF0C327B)
       ..style = PaintingStyle.fill;
 
     final linePaint = Paint()
-      ..color = const Color(0xFFD4F2D6)
+      ..color = const Color(0xFF82B5FF)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
     final standPaint = Paint()
-      ..color = const Color(0xFF0A1220)
+      ..color = const Color(0xFF08122F)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(Offset.zero & size, fieldPaint);
@@ -1554,13 +2074,13 @@ class _FieldPainter extends CustomPainter {
     }
 
     final ballPaint = Paint()
-      ..color = AppColors.white
+      ..color = MedicalTheme.surface
       ..style = PaintingStyle.fill;
     canvas.drawCircle(ballPosition, 6, ballPaint);
     canvas.drawCircle(
       ballPosition,
       10,
-      ballPaint..color = AppColors.white.withOpacity(0.18),
+      ballPaint..color = MedicalTheme.surface.withOpacity(0.18),
     );
   }
 
@@ -1570,7 +2090,7 @@ class _FieldPainter extends CustomPainter {
     }
 
     final lanePaint = Paint()
-      ..color = AppColors.white.withOpacity(0.12)
+      ..color = MedicalTheme.surface.withOpacity(0.12)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 

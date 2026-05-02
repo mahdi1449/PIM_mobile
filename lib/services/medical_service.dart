@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:http/http.dart' as http;
 
 import '../models/medical_history_record_model.dart';
@@ -20,8 +22,10 @@ class MedicalService {
       body: jsonEncode({'fatigue': fatigue, 'minutes': minutes, 'load': load}),
     );
 
-    print('Medical analyze status: ${response.statusCode}');
-    print('Medical analyze response: ${response.body}');
+    if (kDebugMode) {
+      debugPrint('Medical analyze status: ${response.statusCode}');
+      debugPrint('Medical analyze response: ${response.body}');
+    }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(

@@ -21,21 +21,25 @@ class FinanceAiBundle {
   final FinanceAiInsight forecast;
   final FinanceAiInsight cashflowRisk;
   final FinanceAiInsight sponsorTransferImpact;
+  final FinanceAiInsight? playerValuation;
   final String source;
   final int? generationTimeMs;
   final Map<String, dynamic>? forecastData;
   final Map<String, dynamic>? cashflowData;
   final Map<String, dynamic>? impactData;
+  final Map<String, dynamic>? valuationData;
 
   const FinanceAiBundle({
     required this.forecast,
     required this.cashflowRisk,
     required this.sponsorTransferImpact,
+    this.playerValuation,
     this.source = 'local',
     this.generationTimeMs,
     this.forecastData,
     this.cashflowData,
     this.impactData,
+    this.valuationData,
   });
 }
 
@@ -43,6 +47,59 @@ class FinanceAiService {
   FinanceAiService._();
   static final FinanceAiService instance = FinanceAiService._();
   final ApiService _apiService = ApiService();
+
+  Future<FinanceAiBundle> fetchPlayerValuation(String playerId) async {
+    final response = await _apiService.getAiPlayerValuePrediction(playerId);
+
+    if (response['success'] != true) {
+      throw Exception(response['message'] ?? 'Valuation AI error');
+    }
+
+    final data = response['data'] as Map<String, dynamic>? ?? {};
+    final prediction = data['prediction'] as Map<String, dynamic>? ?? {};
+    final finances = data['finances'] as Map<String, dynamic>? ?? {};
+    final playerName = data['playerName']?.toString() ?? 'Player';
+
+    // Python model returns 'predicted_value' and 'confidence'
+    final value = (prediction['predicted_value'] ?? 0).toDouble();
+    final confidence =
+        (prediction['confidence'] ?? prediction['confidence_score'] ?? 0)
+            .toDouble();
+    final roi = (finances['roi_percentage'] ?? 0).toDouble();
+    final trend = prediction['trend']?.toString() ?? 'STABLE';
+
+    final insight = FinanceAiInsight(
+      title: 'Évaluation Marché: $playerName',
+      summary:
+          'Valeur predite: ${_fmtMoney(value)} DT (Confiance ${(confidence * 100).toStringAsFixed(0)}%)',
+      details: [
+        'Analyse basée sur stats performance, médical et historique transferts.',
+        'Valeur marchande estimée: ${_fmtMoney(value)} DT',
+        'Tendance: $trend',
+        'ROI estimé sur 2 saisons: ${roi.toStringAsFixed(1)}%',
+        if (prediction['explanation'] != null) ...[
+          '',
+          'Explication AI:',
+          prediction['explanation'].toString(),
+        ],
+        if (finances['recommendation'] != null) ...[
+          '',
+          'Conseil Financier:',
+          finances['recommendation'].toString(),
+        ],
+      ].join('\n'),
+      source: 'player-valuation-ai',
+    );
+
+    return FinanceAiBundle(
+      forecast: insight,
+      cashflowRisk: insight,
+      sponsorTransferImpact: insight,
+      playerValuation: insight,
+      valuationData: data,
+      source: 'player-valuation-ai',
+    );
+  }
 
   FinanceAiInsight buildBudgetForecast(FinanceStore store) {
     final revenueForecast = store.totalRevenueForecast;
@@ -135,9 +192,12 @@ class FinanceAiService {
     final hasHeavyConcentration = topShare >= 0.45;
 
     final salaryLike = sorted.where((e) => e.key.contains('SALAIRES')).toList();
-    final travelLike = sorted.where((e) => e.key.contains('TRANSPORT')).toList();
-    final marketingLike =
-        sorted.where((e) => e.key.contains('MARKETING')).toList();
+    final travelLike = sorted
+        .where((e) => e.key.contains('TRANSPORT'))
+        .toList();
+    final marketingLike = sorted
+        .where((e) => e.key.contains('MARKETING'))
+        .toList();
 
     final summary = hasHeavyConcentration
         ? 'Dépenses très concentrées sur ${top.first.key}.'
@@ -168,36 +228,82 @@ class FinanceAiService {
   }
 
   Future<FinanceAiBundle> loadRemoteInsights(FinanceStore store) async {
-    final response = await _apiService.getFinanceAiInsights(
-      focusCategories: store.expenses.map((e) => e.category).toSet().toList(),
-    );
+    final response = await _apiService.getFinanceAiInsights();
 
     if (response['success'] != true) {
       throw Exception(response['message'] ?? 'Finance AI endpoint error');
     }
 
     final data = response['data'] as Map<String, dynamic>? ?? {};
-    final forecastData = data['forecast'] as Map<String, dynamic>? ?? {};
-    final cashflowData = data['cashflowRisk'] as Map<String, dynamic>? ?? {};
-    final impactData = data['sponsorTransferImpact'] as Map<String, dynamic>? ?? {};
-    final source = (data['source']?.toString() ?? 'remote').toLowerCase();
-    final generationTimeMs = data['generationTimeMs'] is int
-        ? data['generationTimeMs'] as int
-        : int.tryParse(data['generationTimeMs']?.toString() ?? '');
+    // Backend implementations may return:
+    // - forecast as List<Record> (raw /forecast response), or
+    // - forecast as Map { forecast: [...], chart: {...} }
+    final rawForecast = data['forecast'];
+    final Map<String, dynamic> forecastData = rawForecast is List
+        ? <String, dynamic>{'forecast': rawForecast}
+        : rawForecast is Map
+        ? Map<String, dynamic>.from(rawForecast)
+        : <String, dynamic>{};
+
+    // Likewise, /risk may be either the "risk_alerts" contract or a simple
+    // { risk_score, risk_level, factors } contract.
+    final rawRisk = data['risk'];
+    Map<String, dynamic> riskData = rawRisk is Map
+        ? Map<String, dynamic>.from(rawRisk)
+        : <String, dynamic>{};
+
+    if (!riskData.containsKey('risk_alerts') &&
+        (riskData['risk_score'] != null || riskData['risk_level'] != null)) {
+      final score = (riskData['risk_score'] as num?)?.toDouble() ?? 0.0;
+      final level = (riskData['risk_level'] ?? riskData['riskLevel'] ?? '')
+          .toString()
+          .toUpperCase();
+      final factors = (riskData['factors'] as List? ?? [])
+          .map((e) => e.toString())
+          .toList();
+
+      final alerts = <String>[
+        if (score >= 70 || level.contains('HIGH') || level.contains('ELEV'))
+          'RISK_HIGH',
+        if ((score >= 40 && score < 70) || level.contains('MED')) 'RISK_MEDIUM',
+        if (score < 40 && (level.isNotEmpty)) 'RISK_LOW',
+        ...factors,
+      ];
+
+      // Build a minimal chart based on forecast gaps so the UI can render a meaningful delta.
+      final forecastList = (forecastData['forecast'] as List? ?? []);
+      final dates = <dynamic>[];
+      final gap = <double>[];
+      for (final p in forecastList) {
+        if (p is Map) {
+          dates.add(p['date']);
+          final rev = (p['revenue'] as num?)?.toDouble() ?? 0.0;
+          final exp = (p['expenses'] as num?)?.toDouble() ?? 0.0;
+          gap.add(exp - rev);
+        }
+      }
+
+      riskData = {
+        'risk_alerts': alerts.where((e) => e.isNotEmpty).toList(),
+        'chart': {'dates': dates, 'gap': gap},
+      };
+    }
+    final source = (data['source']?.toString() ?? 'finance-ai-ml')
+        .toLowerCase();
 
     final forecastInsight = _buildForecastInsight(forecastData, source);
-    final cashflowInsight = _buildCashflowInsight(cashflowData, source);
-    final impactInsight = _buildImpactInsight(impactData, source);
+    final cashflowInsight = _buildCashflowInsight(riskData, source);
+
+    // Impact analysis from forecast scenarios
+    final impactInsight = _buildImpactInsight(forecastData, source);
 
     return FinanceAiBundle(
       source: source,
-      generationTimeMs: generationTimeMs,
       forecast: forecastInsight,
       cashflowRisk: cashflowInsight,
       sponsorTransferImpact: impactInsight,
       forecastData: forecastData,
-      cashflowData: cashflowData,
-      impactData: impactData,
+      cashflowData: riskData,
     );
   }
 
@@ -205,31 +311,31 @@ class FinanceAiService {
     Map<String, dynamic> data,
     String source,
   ) {
-    final nextSeason = data['nextSeason'] as Map<String, dynamic>? ?? {};
-    final confidence = data['confidence'];
-    final season = nextSeason['season']?.toString() ?? 'N/A';
-    final revenue = _fmtMoney((nextSeason['revenue'] ?? 0).toDouble());
-    final expense = _fmtMoney((nextSeason['expense'] ?? 0).toDouble());
-    final net = _fmtMoney((nextSeason['net'] ?? 0).toDouble());
-    final confidenceLabel = confidence != null ? ' • Confiance ${confidence}%' : '';
+    // Python model returns data['forecast'] as List<Record>
+    final list = (data['forecast'] as List? ?? []);
+    if (list.isEmpty) {
+      return const FinanceAiInsight(
+        title: 'Prévision saisonnière',
+        summary: 'Pas encore de données prévisionnelles.',
+        details: 'Ajoutez des écritures comptables pour générer un forecast.',
+      );
+    }
 
-    final bySeason = (data['bySeason'] as List? ?? [])
-        .map((s) => s as Map<String, dynamic>)
-        .map((seasonData) {
-      final label = seasonData['season']?.toString() ?? '—';
-      final rev = _fmtMoney((seasonData['revenue'] ?? 0).toDouble());
-      final exp = _fmtMoney((seasonData['expense'] ?? 0).toDouble());
-      final netVal = _fmtMoney((seasonData['net'] ?? 0).toDouble());
-      return '- $label: +$rev / -$exp / net $netVal';
-    }).toList();
+    final last = list.last as Map<String, dynamic>;
+    final net = (last['net'] ?? 0).toDouble();
+    final revenue = (last['revenue'] ?? 0).toDouble();
+    final date = last['date']?.toString() ?? 'Prochain mois';
 
     return FinanceAiInsight(
       title: 'Prévision saisonnière',
-      summary: 'Prochaine saison $season: net $net$confidenceLabel',
+      summary: 'Objectif $date: ${_fmtMoney(net)} DT net',
       details: [
-        'Prévision revenus/dépenses basée sur historique comptable.',
-        'Prochaine saison: Revenus $revenue • Dépenses $expense • Net $net',
-        if (bySeason.isNotEmpty) ...['', 'Historique:', ...bySeason]
+        'Analyse de tendance basée sur l\'historique.',
+        'Prochain point de contrôle: $date',
+        'Revenus estimés: ${_fmtMoney(revenue)} DT',
+        'Dépenses estimées: ${_fmtMoney((last['expenses'] ?? 0).toDouble())} DT',
+        '',
+        'Statut: Tendances ${net >= 0 ? 'positives' : 'de vigilance deficit'}',
       ].join('\n'),
       source: source,
     );
@@ -239,26 +345,31 @@ class FinanceAiService {
     Map<String, dynamic> data,
     String source,
   ) {
-    final level = data['level']?.toString() ?? 'N/A';
-    final score = data['score']?.toString() ?? '—';
-    final projected = _fmtMoney((data['projectedCash'] ?? 0).toDouble());
-    final treasury = _fmtMoney((data['treasuryBalance'] ?? 0).toDouble());
-    final outflows = _fmtMoney((data['upcomingOutflows'] ?? 0).toDouble());
-    final inflows = _fmtMoney((data['upcomingInflows'] ?? 0).toDouble());
-    final notes = (data['notes'] as List? ?? [])
-        .map((n) => '- ${n.toString()}')
-        .toList();
+    final alerts = (data['risk_alerts'] as List? ?? []);
+    final chart = data['chart'] as Map<String, dynamic>? ?? {};
+    final gaps = (chart['gap'] as List? ?? []);
+
+    String level = 'FAIBLE';
+    if (alerts.isNotEmpty) {
+      level = alerts.any((a) => a.toString().contains('RISK'))
+          ? 'ÉLEVÉ'
+          : 'MOYEN';
+    }
 
     return FinanceAiInsight(
-      title: 'Risque de trésorerie',
-      summary: 'Niveau $level (score $score) • Solde projeté $projected',
+      title: 'Analyse des Risques',
+      summary: 'Risque global: $level • ${alerts.length} alertes',
       details: [
-        'Analyse cash-flow sur 90 jours.',
-        'Trésorerie actuelle: $treasury',
-        'Flux entrants à venir: $inflows',
-        'Flux sortants à venir: $outflows',
-        'Solde projeté: $projected',
-        if (notes.isNotEmpty) ...['', 'Notes:', ...notes],
+        'Analyse de l\'écart Revenus/Dépenses.',
+        if (alerts.isEmpty)
+          'Aucun risque bloquant détecté.'
+        else
+          'Points de vigilance:',
+        ...alerts.map((a) => '- $a'),
+        if (gaps.isNotEmpty) ...[
+          '',
+          'Écart max détecté: ${_fmtMoney(gaps.fold<double>(0.0, (m, v) => math.max(m, (v as num).toDouble().abs())))} DT',
+        ],
       ].join('\n'),
       source: source,
     );
@@ -268,25 +379,11 @@ class FinanceAiService {
     Map<String, dynamic> data,
     String source,
   ) {
-    final sponsorBase = _fmtMoney((data['sponsorBase'] ?? 0).toDouble());
-    final sponsorPlus = _fmtMoney((data['sponsorPlus10'] ?? 0).toDouble());
-    final sponsorMinus = _fmtMoney((data['sponsorMinus10'] ?? 0).toDouble());
-    final transferNet = _fmtMoney((data['transferNet'] ?? 0).toDouble());
-    final scenario = data['scenario'] as Map<String, dynamic>? ?? {};
-    final plusDelta =
-        _fmtMoney((scenario['sponsorImpactPlus10'] ?? 0).toDouble());
-    final minusDelta =
-        _fmtMoney((scenario['sponsorImpactMinus10'] ?? 0).toDouble());
-
     return FinanceAiInsight(
-      title: 'Impact sponsors & transferts',
-      summary: 'Sponsors +10%: +$plusDelta • Net transferts: $transferNet',
-      details: [
-        'Base sponsors: $sponsorBase',
-        'Scenario +10% sponsors: $sponsorPlus (impact +$plusDelta)',
-        'Scenario -10% sponsors: $sponsorMinus (impact $minusDelta)',
-        'Net transferts: $transferNet',
-      ].join('\n'),
+      title: 'Simulation Stratégique',
+      summary: 'Analyse d\'impact sur la marge opérationnelle',
+      details:
+          'Utilisez les simulations pour calculer l\'impact des nouveaux sponsors ou transferts sur le résultat net.',
       source: source,
     );
   }

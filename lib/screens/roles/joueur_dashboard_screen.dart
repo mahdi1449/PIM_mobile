@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../user_management/models/user_management_models.dart';
 import '../../ui/components/app_card.dart';
 import '../../ui/components/app_section_header.dart';
+import '../../ui/navigation/app_routes.dart';
+import '../../ui/shell/app_shell.dart';
 import '../../ui/theme/app_spacing.dart';
 
 class JoueurDashboardScreen extends StatelessWidget {
@@ -34,6 +36,20 @@ class JoueurDashboardScreen extends StatelessWidget {
           subtitle: 'Suivez votre forme et votre recuperation.',
           icon: Icons.health_and_safety,
         ),
+        const SizedBox(height: AppSpacing.s12),
+        _InfoCard(
+          title: 'Labo Cognitif IA',
+          subtitle: 'Evaluez votre fatigue mentale avant de vous entrainer.',
+          icon: Icons.psychology_outlined,
+          onTap: () {
+            final shell = AppShellScope.of(context);
+            if (shell != null) {
+              shell.navigate(AppRoutes.cognitiveDashboard);
+            } else {
+              Navigator.of(context).pushNamed(AppRoutes.cognitiveDashboard);
+            }
+          },
+        ),
       ],
     );
   }
@@ -44,15 +60,18 @@ class _InfoCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.onTap,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      onTap: onTap,
       child: Row(
         children: [
           CircleAvatar(

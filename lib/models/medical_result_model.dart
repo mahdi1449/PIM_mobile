@@ -2,6 +2,11 @@ class MedicalResultModel {
   const MedicalResultModel({
     required this.injured,
     required this.injuryProbability,
+    required this.confidence,
+    required this.risk,
+    required this.status,
+    required this.decision,
+    required this.reasons,
     required this.severity,
     required this.injuryType,
     required this.recoveryDays,
@@ -12,6 +17,11 @@ class MedicalResultModel {
 
   final bool injured;
   final double injuryProbability;
+  final double confidence;
+  final double risk;
+  final String status;
+  final String decision;
+  final List<String> reasons;
   final String severity;
   final String injuryType;
   final int recoveryDays;
@@ -20,6 +30,10 @@ class MedicalResultModel {
   final String warning;
 
   factory MedicalResultModel.fromJson(Map<String, dynamic> json) {
+    final confidence = _doubleFrom(json, ['confidence', 'aiConfidence']);
+    final hasConfidenceKey =
+        json.containsKey('confidence') || json.containsKey('aiConfidence');
+
     return MedicalResultModel(
       injured: _boolFrom(json, ['injured', 'isInjured', 'injury']),
       injuryProbability: _doubleFrom(json, [
@@ -27,6 +41,14 @@ class MedicalResultModel {
         'probability',
         'risk',
       ]),
+      confidence: hasConfidenceKey
+          ? confidence
+          : (0.85 - (_doubleFrom(json, ['risk', 'injuryProbability']) * 0.2))
+                .clamp(0.6, 0.95),
+      risk: _doubleFrom(json, ['risk', 'injuryProbability', 'probability']),
+      status: _stringFrom(json, ['status']) ?? 'SAFE',
+      decision: _stringFrom(json, ['decision']) ?? 'PLAY',
+      reasons: _listFrom(json, ['reason', 'reasons']),
       severity: _stringFrom(json, ['severity', 'riskLevel']) ?? 'Mild',
       injuryType: _stringFrom(json, ['injuryType', 'type']) ?? 'None',
       recoveryDays: _intFrom(json, ['recoveryDays', 'days', 'recovery']),

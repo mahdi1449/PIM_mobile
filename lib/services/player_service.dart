@@ -45,4 +45,24 @@ class PlayerService {
 
     throw Exception('Unexpected player response format');
   }
+
+  Future<PlayerModel> clearMedical(String playerId) async {
+    final url = Uri.parse(
+      '${ApiConfig.baseUrl}/players/$playerId/clear-medical',
+    );
+    final response = await http.post(url);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Failed to clear medical status: ${response.statusCode} ${response.body}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is Map<String, dynamic>) {
+      return PlayerModel.fromJson(decoded);
+    }
+
+    throw Exception('Unexpected clear medical response format');
+  }
 }

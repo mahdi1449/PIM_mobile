@@ -19,6 +19,8 @@ import 'package:provider/provider.dart' as prov;
 import '../providers/campaign_provider.dart';
 import '../sports_performance/screens/exercises/library_screen.dart';
 import '../utils/role_mapper.dart';
+import '../../season_planning/screens/season_list_screen.dart';
+import '../../tactics/screens/tactics_board_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -430,6 +432,10 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: EdgeInsets.fromLTRB(20 * scale, 24 * scale, 20 * scale, 100 * scale),
       children: [
         _buildExecutiveHeader(scale),
+        const SizedBox(height: 24),
+        _buildSeasonPlanButton(scale),
+        const SizedBox(height: 16),
+        _buildTacticsButton(scale),
         const SizedBox(height: 32),
         _buildStatsGrid(scale),
         const SizedBox(height: 32),
@@ -481,6 +487,126 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSeasonPlanButton(double scale) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SeasonListScreen()),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [SPColors.primaryBlue, SPColors.primaryBlueLight],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: SPColors.primaryBlue.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.date_range, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Planification Saison',
+                    style: SPTypography.h3.copyWith(color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Gérer les macro et micro cycles',
+                    style: SPTypography.bodyMedium.copyWith(color: Colors.white.withOpacity(0.8)),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTacticsButton(double scale) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const TacticsBoardScreen()),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.indigo.shade800, Colors.indigo.shade400],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.indigo.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.sports_soccer, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Analyse Tactique & Adversaire',
+                    style: SPTypography.h3.copyWith(color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Générer un XI de départ sur-mesure (IA)',
+                    style: SPTypography.bodyMedium.copyWith(color: Colors.white.withOpacity(0.8)),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
     );
   }
 

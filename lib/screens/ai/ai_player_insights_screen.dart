@@ -209,7 +209,10 @@ class _AiPlayerInsightsScreenState extends State<AiPlayerInsightsScreen> {
     final score =
         (_potentialData!['potential_score'] as num).toDouble();
     final ageFactor =
-        _potentialData!['age_factor'] as String? ?? '';
+      (_potentialData!['age_factor'] ??
+          _potentialData!['dateOfBirth_factor'])
+        as String? ??
+      '';
     final currentCluster =
         _potentialData!['current_cluster'] as String? ?? 'Unknown';
     final eliteGap = _potentialData!['elite_gap']

@@ -17,7 +17,7 @@ class ApiService {
       'Authorization': 'Bearer $token',
     };
   }
-  
+
   // Get stored token
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -56,7 +56,7 @@ class ApiService {
       if (position != null && position.isNotEmpty) {
         body['position'] = position;
       }
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl/auth/register'),
         headers: {'Content-Type': 'application/json'},
@@ -64,7 +64,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 201) {
         return {'success': true, 'data': data};
       } else {
@@ -87,22 +87,16 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         await saveToken(data['access_token']);
         return {'success': true, 'data': data};
       } else {
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Login failed',
-        };
+        return {'success': false, 'message': data['message'] ?? 'Login failed'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
@@ -119,7 +113,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       } else {
@@ -143,7 +137,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       } else {
@@ -166,14 +160,11 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/reset-password'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'token': token,
-          'newPassword': newPassword,
-        }),
+        body: jsonEncode({'token': token, 'newPassword': newPassword}),
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       } else {
@@ -196,7 +187,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       } else {
@@ -219,7 +210,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       } else {
@@ -242,7 +233,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       } else {
@@ -265,7 +256,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {'success': true, 'data': data};
       } else {
@@ -288,7 +279,7 @@ class ApiService {
       );
 
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {'success': true, 'data': data};
       } else {
@@ -303,7 +294,10 @@ class ApiService {
   }
 
   // Players
-  Future<Map<String, dynamic>> getPlayers({int page = 1, int limit = 20}) async {
+  Future<Map<String, dynamic>> getPlayers({
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/players?page=$page&limit=$limit'),
@@ -313,7 +307,10 @@ class ApiService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get players'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get players',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
@@ -329,7 +326,10 @@ class ApiService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get player'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get player',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
@@ -346,13 +346,19 @@ class ApiService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to create player'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to create player',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
 
-  Future<Map<String, dynamic>> updatePlayer(String id, Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> updatePlayer(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl/players/$id'),
@@ -363,7 +369,10 @@ class ApiService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to update player'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to update player',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
@@ -379,7 +388,10 @@ class ApiService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to delete player'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to delete player',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
@@ -395,14 +407,82 @@ class ApiService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get analyses'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get analyses',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // --- AI Player Valuation Endpoints ---
+
+  Future<Map<String, dynamic>> getAiDashboardPlayers() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/ai/dashboard/players'),
+        headers: await _authHeaders(),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get dashboard players',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getAiPlayerValuePrediction(String playerId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/ai/predict-player-value'),
+        headers: await _authHeaders(),
+        body: jsonEncode({'playerId': playerId}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get player prediction',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // --- End AI Endpoints ---
+
+  Future<Map<String, dynamic>> getSeasonSquad(String season) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/squad/season/$season'),
+        headers: await _authHeaders(),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get season squad',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
 
   // Coaches
-  Future<Map<String, dynamic>> getCoaches({int page = 1, int limit = 20}) async {
+  Future<Map<String, dynamic>> getCoaches({
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/coaches?page=$page&limit=$limit'),
@@ -412,7 +492,10 @@ class ApiService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get coaches'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get coaches',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
@@ -428,11 +511,15 @@ class ApiService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to get coach'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get coach',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
+
 
   Future<Map<String, dynamic>> createCoach(Map<String, dynamic> body) async {
     try {
@@ -445,13 +532,19 @@ class ApiService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to create coach'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to create coach',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
 
-  Future<Map<String, dynamic>> updateCoach(String id, Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> updateCoach(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl/coaches/$id'),
@@ -462,7 +555,10 @@ class ApiService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to update coach'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to update coach',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
@@ -478,25 +574,462 @@ class ApiService {
       if (response.statusCode == 200) {
         return {'success': true, 'data': data};
       }
-      return {'success': false, 'message': data['message'] ?? 'Failed to delete coach'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to delete coach',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
 
-  Future<Map<String, dynamic>> getFinanceAiInsights({
-    List<String> focusCategories = const [],
+  // Chemistry
+  Future<Map<String, dynamic>> rateChemistryPair({
+    required String season,
+    required String playerAId,
+    required String playerBId,
+    required double rating,
+    String? observedBy,
+    String? tacticalZone,
+    String? notes,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/finance/ai/insights'),
-        headers: await _authHeaders(),
-        body: jsonEncode({'focusCategories': focusCategories}),
-      );
+      final body = {
+        'season': season,
+        'playerAId': playerAId,
+        'playerBId': playerBId,
+        'rating': rating,
+        if (observedBy != null && observedBy.isNotEmpty)
+          'observedBy': observedBy,
+        if (tacticalZone != null && tacticalZone.isNotEmpty)
+          'tacticalZone': tacticalZone,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+      };
 
+      final response = await http.post(
+        Uri.parse('$baseUrl/chemistry/rate-pair'),
+        headers: await _authHeaders(),
+        body: jsonEncode(body),
+      );
       final data = jsonDecode(response.body);
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to rate pair',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getChemistryMatrix(String season) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/chemistry/matrix/$season'),
+        headers: await _authHeaders(),
+      );
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get chemistry matrix',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getChemistryGraph(String season) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/chemistry/graph/$season'),
+        headers: await _authHeaders(),
+      );
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get chemistry graph',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getChemistryBestPairs({
+    String? season,
+    int limit = 10,
+    double threshold = 8,
+    bool includeAiInsights = false,
+  }) async {
+    try {
+      final query = <String, String>{
+        'limit': '$limit',
+        'threshold': '$threshold',
+        'includeAiInsights': '$includeAiInsights',
+      };
+      if (season != null && season.isNotEmpty) {
+        query['season'] = season;
+      }
+
+      final uri = Uri.parse(
+        '$baseUrl/chemistry/best-pairs',
+      ).replace(queryParameters: query);
+      final response = await http.get(uri, headers: await _authHeaders());
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get best pairs',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getChemistryConflicts({
+    String? season,
+    int limit = 10,
+    double threshold = 4.5,
+    bool includeAiInsights = false,
+  }) async {
+    try {
+      final query = <String, String>{
+        'limit': '$limit',
+        'threshold': '$threshold',
+        'includeAiInsights': '$includeAiInsights',
+      };
+      if (season != null && season.isNotEmpty) {
+        query['season'] = season;
+      }
+
+      final uri = Uri.parse(
+        '$baseUrl/chemistry/conflicts',
+      ).replace(queryParameters: query);
+      final response = await http.get(uri, headers: await _authHeaders());
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get chemistry conflicts',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> scoreChemistryLineup({
+    required List<String> playerIds,
+    String? season,
+    bool includeAiInsights = false,
+  }) async {
+    try {
+      final body = {
+        'playerIds': playerIds,
+        'includeAiInsights': includeAiInsights,
+        if (season != null && season.isNotEmpty) 'season': season,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/chemistry/score-lineup'),
+        headers: await _authHeaders(),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to score lineup chemistry',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> generateChemistryStartingXi({
+    String? season,
+    String formation = '4-3-3',
+    bool includeAiInsights = true,
+    List<String>? candidatePlayerIds,
+    int? poolLimit,
+  }) async {
+    try {
+      final body = {
+        'formation': formation,
+        'includeAiInsights': includeAiInsights,
+        if (season != null && season.isNotEmpty) 'season': season,
+        if (candidatePlayerIds != null && candidatePlayerIds.isNotEmpty)
+          'candidatePlayerIds': candidatePlayerIds,
+        if (poolLimit != null) 'poolLimit': poolLimit,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/chemistry/generate-starting-xi'),
+        headers: await _authHeaders(),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to generate chemistry starting XI',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getChemistryPlayerNetwork(
+    String playerId, {
+    String? season,
+    bool includeAiInsights = false,
+  }) async {
+    try {
+      final query = <String, String>{'includeAiInsights': '$includeAiInsights'};
+      if (season != null && season.isNotEmpty) {
+        query['season'] = season;
+      }
+
+      final uri = Uri.parse(
+        '$baseUrl/chemistry/player/$playerId/network',
+      ).replace(queryParameters: query);
+      final response = await http.get(uri, headers: await _authHeaders());
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get player chemistry network',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> listPlayerStyleProfiles({
+    String? season,
+    int limit = 120,
+  }) async {
+    try {
+      final query = <String, String>{'limit': '$limit'};
+      if (season != null && season.isNotEmpty) {
+        query['season'] = season;
+      }
+
+      final uri = Uri.parse(
+        '$baseUrl/player-profiles',
+      ).replace(queryParameters: query);
+      final response = await http.get(uri, headers: await _authHeaders());
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to list player style profiles',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> upsertPlayerStyleProfile({
+    required String playerId,
+    required String season,
+    required Map<String, dynamic> style,
+    List<String>? preferredStyles,
+    String? notes,
+    String? updatedBy,
+  }) async {
+    try {
+      final body = {
+        'season': season,
+        ...style,
+        if (preferredStyles != null) 'preferredStyles': preferredStyles,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+        if (updatedBy != null && updatedBy.isNotEmpty) 'updatedBy': updatedBy,
+      };
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/player-profiles/$playerId'),
+        headers: await _authHeaders(),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to save player style profile',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> analyzeChemistryPairProfile({
+    required String season,
+    required String playerAId,
+    required String playerBId,
+    bool includeAiInsights = true,
+  }) async {
+    try {
+      final body = {
+        'season': season,
+        'playerAId': playerAId,
+        'playerBId': playerBId,
+        'includeAiInsights': includeAiInsights,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/chemistry/analyze-pair-profile'),
+        headers: await _authHeaders(),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data};
+      }
+
+      return {
+        'success': false,
+        'message':
+            data['message'] ?? 'Failed to analyze pair profile chemistry',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> analyzeSquadChemistryProfile({
+    required String season,
+    List<String>? formations,
+    bool includeAiInsights = true,
+  }) async {
+    try {
+      final body = {
+        'season': season,
+        'includeAiInsights': includeAiInsights,
+        if (formations != null && formations.isNotEmpty) 'formations': formations,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/chemistry/analyze-squad-profile'),
+        headers: await _authHeaders(),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data};
+      }
+
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to analyze squad chemistry',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> setChemistryManualScore({
+    required String season,
+    required String playerAId,
+    required String playerBId,
+    required double manualScore,
+    String? manualScoreBy,
+    String? manualScoreReason,
+  }) async {
+    try {
+      final body = {
+        'season': season,
+        'playerAId': playerAId,
+        'playerBId': playerBId,
+        'manualScore': manualScore,
+        if (manualScoreBy != null && manualScoreBy.isNotEmpty)
+          'manualScoreBy': manualScoreBy,
+        if (manualScoreReason != null && manualScoreReason.isNotEmpty)
+          'manualScoreReason': manualScoreReason,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/chemistry/set-manual-score'),
+        headers: await _authHeaders(),
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to set manual chemistry score',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // --- AI Valuation & ROI ---
+
+  Future<Map<String, dynamic>> getAiPlayerAnalysis(String playerId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/ai/player-analysis/$playerId'),
+        headers: await _authHeaders(),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': data};
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to get comprehensive player analysis',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getFinanceAiInsights({List<String>? focusCategories}) async {
+    try {
+      // Note: Backend might not use focusCategories yet, but we pass them for future use.
+      final response = await http.get(
+        Uri.parse('$baseUrl/ai/finance-insights'),
+        headers: await _authHeaders(),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': data['data']};
       }
       return {
         'success': false,

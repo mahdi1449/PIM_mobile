@@ -48,6 +48,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _navigate(String route) {
+    final roleCode = RoleMapper.normalize(widget.session.role);
     final menuRoutes = MenuConfig.itemsForRole(
       widget.session.role,
     ).map((i) => i.route).toSet();
@@ -57,6 +58,14 @@ class _AppShellState extends State<AppShell> {
       AppRoutes.messages,
       AppRoutes.notifications,
       AppRoutes.profile,
+      if (roleCode == RoleMapper.admin) ...{
+        AppRoutes.adminUsers,
+        AppRoutes.auditLog,
+      },
+      AppRoutes.cognitiveDashboard,
+      AppRoutes.squadCognitiveOverview,
+      AppRoutes.seasonPlanning,
+      AppRoutes.tactics,
       if (menuRoutes.contains(AppRoutes.analysis)) AppRoutes.uploadVideo,
     };
 
@@ -182,6 +191,7 @@ class _AppShellState extends State<AppShell> {
       body: AppShellScope(
         session: widget.session,
         navigate: _navigate,
+        goBack: _handleBack,
         child: Row(
           children: [
             if (isWide) _buildRail(items),
@@ -571,11 +581,13 @@ class AppShellScope extends InheritedWidget {
     super.key,
     required this.session,
     required this.navigate,
+    required this.goBack,
     required super.child,
   });
 
   final SessionModel session;
   final void Function(String route) navigate;
+  final VoidCallback goBack;
 
   static AppShellScope? of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<AppShellScope>();

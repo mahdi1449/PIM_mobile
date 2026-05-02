@@ -41,6 +41,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>ODIN ERP CLUB uses your camera for video calls.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ODIN ERP CLUB uses your microphone for audio and video calls.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

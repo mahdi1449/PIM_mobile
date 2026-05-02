@@ -310,7 +310,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               ),
             ),
             Text(
-              'Odin Intelligence',
+              'Odin Intelligent ERP',
               style: SPTypography.caption.copyWith(
                 color: SPColors.textTertiary,
                 fontSize: 10,
