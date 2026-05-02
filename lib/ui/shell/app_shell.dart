@@ -4,6 +4,7 @@ import '../../services/api_service.dart';
 import '../../user_management/api/user_management_api.dart';
 import '../../utils/role_mapper.dart';
 import '../../screens/login_screen.dart';
+import '../components/app_button.dart';
 import '../navigation/menu_config.dart';
 import '../navigation/app_routes.dart';
 import '../theme/app_spacing.dart';
@@ -72,6 +73,9 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _handleLogout() async {
+    final confirmed = await _confirmLogout();
+    if (!confirmed) return;
+
     if (widget.onLogout != null) {
       widget.onLogout!();
       return;
@@ -83,6 +87,49 @@ class _AppShellState extends State<AppShell> {
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
+  }
+
+  Future<bool> _confirmLogout() async {
+    final result = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Confirm Logout',
+      barrierColor: Colors.black.withValues(alpha: 0.54),
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return const SizedBox.shrink();
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
+            child: AlertDialog(
+              title: const Text('Confirm Logout'),
+              content: const Text('Are you sure you want to log out?'),
+              actions: [
+                AppButton(
+                  label: 'Cancel',
+                  variant: AppButtonVariant.outlined,
+                  onPressed: () => Navigator.of(context).pop(false),
+                ),
+                AppButton(
+                  label: 'Logout',
+                  variant: AppButtonVariant.danger,
+                  onPressed: () => Navigator.of(context).pop(true),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   void _startNotificationPolling() {
@@ -196,6 +243,10 @@ class _AppShellState extends State<AppShell> {
                     ),
                 ],
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
+              child: _ThemeModeSwitch(),
             ),
             ListTile(
               leading: Icon(Icons.logout, color: scheme.onSurface),
@@ -318,9 +369,7 @@ class _UserMenu extends StatelessWidget {
           enabled: false,
           child: Text(
             club.isEmpty ? 'No club assigned' : club,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: scheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
@@ -339,9 +388,7 @@ class _UserMenu extends StatelessWidget {
               Text(isDark ? 'Light mode' : 'Dark mode'),
               const Spacer(),
               Icon(
-                isDark
-                    ? Icons.toggle_on_rounded
-                    : Icons.toggle_off_rounded,
+                isDark ? Icons.toggle_on_rounded : Icons.toggle_off_rounded,
                 color: scheme.primary,
               ),
             ],
@@ -375,6 +422,28 @@ class _UserMenu extends StatelessWidget {
 }
 
 enum _UserMenuAction { profile, toggleTheme, logout }
+
+class _ThemeModeSwitch extends StatelessWidget {
+  const _ThemeModeSwitch();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = ThemeController.isDark(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    return ListTile(
+      leading: Icon(
+        isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+        color: scheme.primary,
+      ),
+      title: const Text('Dark mode'),
+      trailing: Switch(
+        value: isDark,
+        onChanged: (_) => ThemeController.toggle(),
+      ),
+    );
+  }
+}
 
 class _NotificationButton extends StatelessWidget {
   const _NotificationButton({required this.count, required this.onPressed});

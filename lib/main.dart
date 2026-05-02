@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'services/api_service.dart';
-import 'user_management/api/user_management_api.dart';
 import 'user_management/models/user_management_models.dart';
 import 'utils/role_router.dart';
 import 'screens/login_screen.dart';
+import 'theme/dark_theme.dart';
+import 'theme/light_theme.dart';
 import 'theme/theme_controller.dart';
-import 'ui/theme/app_theme.dart';
 
 // Providers
 import 'providers/campaign_provider.dart';
@@ -24,7 +25,8 @@ import 'erp/providers/auth_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('fr_FR', null);
-  runApp(const RootApp());
+  await ThemeController.load();
+  runApp(const ProviderScope(child: RootApp()));
 }
 
 class RootApp extends StatelessWidget {
@@ -50,9 +52,11 @@ class RootApp extends StatelessWidget {
           return MaterialApp(
             title: 'ODINCLUB PIM',
             debugShowCheckedModeBanner: false,
+            themeAnimationDuration: const Duration(milliseconds: 280),
+            themeAnimationCurve: Curves.easeOutCubic,
             themeMode: themeMode,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
+            theme: LightTheme.data,
+            darkTheme: DarkTheme.data,
             home: const AuthCheck(),
           );
         },
@@ -70,7 +74,6 @@ class AuthCheck extends StatefulWidget {
 
 class _AuthCheckState extends State<AuthCheck> {
   final ApiService _apiService = ApiService();
-  final UserManagementApi _userApi = UserManagementApi();
   bool _checking = true;
   SessionModel? _session;
 
@@ -92,7 +95,7 @@ class _AuthCheckState extends State<AuthCheck> {
       final profileResponse = await _apiService.getUserProfile();
       if (profileResponse['success'] == true) {
         final userData = profileResponse['data'];
-        
+
         // Construct SessionModel from profile and token
         _session = SessionModel(
           token: token,
@@ -100,7 +103,12 @@ class _AuthCheckState extends State<AuthCheck> {
           role: (userData['role'] ?? '').toString(),
           email: (userData['email'] ?? '').toString(),
           status: (userData['status'] ?? '').toString(),
-          clubId: (userData['clubId'] ?? (userData['club'] is Map ? userData['club']['_id'] : null))?.toString(),
+          clubId:
+              (userData['clubId'] ??
+                      (userData['club'] is Map
+                          ? userData['club']['_id']
+                          : null))
+                  ?.toString(),
           firstName: userData['firstName']?.toString(),
           lastName: userData['lastName']?.toString(),
           photoUrl: userData['photoUrl']?.toString(),
@@ -118,9 +126,7 @@ class _AuthCheckState extends State<AuthCheck> {
   @override
   Widget build(BuildContext context) {
     if (_checking) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_session != null) {

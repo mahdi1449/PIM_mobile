@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import '../../communication/models/communication_models.dart';
 import '../../config/app_config.dart';
@@ -142,6 +143,7 @@ class UserManagementApi {
       email: (user['email'] ?? '').toString(),
       status: (user['status'] ?? '').toString(),
       clubId: user['clubId']?.toString(),
+      teamId: user['teamId']?.toString(),
       clubName: user['clubName']?.toString(),
       firstName: user['firstName']?.toString(),
       lastName: user['lastName']?.toString(),
@@ -239,7 +241,7 @@ class UserManagementApi {
     String? search,
   }) async {
     final response = await _client.get(
-      _buildUri('/chat/users', {
+      _buildUri('/conversations/users', {
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
       }),
       headers: {
@@ -262,15 +264,17 @@ class UserManagementApi {
   Future<List<ConversationModel>> getConversations(
     String token, {
     String? search,
+    String? type,
     int page = 1,
     int limit = 30,
   }) async {
     final data = await _getObject(
-      '/chat/conversations',
+      '/conversations',
       token: token,
       query: {
         'page': '$page',
         'limit': '$limit',
+        if (type != null && type.trim().isNotEmpty) 'type': type.trim(),
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
       },
     );
@@ -286,8 +290,23 @@ class UserManagementApi {
     String token,
     String targetUserId,
   ) async {
-    final data = await _post('/chat/conversations/direct', {
+    final data = await _post('/conversations/private', {
       'targetUserId': targetUserId,
+    }, token: token);
+    return ConversationModel.fromJson(data);
+  }
+
+  Future<ConversationModel> createGroupConversation({
+    required String token,
+    required List<String> participantIds,
+    String? title,
+    String? teamId,
+  }) async {
+    final uniqueParticipantIds = participantIds.toSet().toList();
+    final data = await _post('/conversations/group', {
+      'participantIds': uniqueParticipantIds,
+      if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+      if (teamId != null && teamId.trim().isNotEmpty) 'teamId': teamId.trim(),
     }, token: token);
     return ConversationModel.fromJson(data);
   }
@@ -299,7 +318,7 @@ class UserManagementApi {
     DateTime? before,
   }) async {
     final data = await _getObject(
-      '/chat/conversations/$conversationId/messages',
+      '/messages/$conversationId',
       token: token,
       query: {
         'limit': '$limit',
@@ -321,17 +340,58 @@ class UserManagementApi {
     UploadedDocumentModel? file,
     Map<String, dynamic>? metadata,
   }) async {
-    final payload = <String, dynamic>{
-      if (text != null && text.trim().isNotEmpty) 'text': text.trim(),
-      if (file != null) 'file': file.toJson(),
-      if (metadata != null) 'metadata': metadata,
-    };
+    final normalizedText = text?.trim() ?? '';
+    if (normalizedText.isEmpty && file == null) {
+      throw Exception('Message content cannot be empty');
+    }
+
+    final payload = <String, dynamic>{};
+    if (file != null) {
+      payload['content'] = file.url;
+      payload['type'] = 'file';
+      payload['metadata'] = <String, dynamic>{...?metadata, ...file.toJson()};
+    } else {
+      payload['content'] = normalizedText;
+      payload['type'] = 'text';
+      if (metadata != null) {
+        payload['metadata'] = metadata;
+      }
+    }
     final data = await _post(
-      '/chat/conversations/$conversationId/messages',
+      '/messages/$conversationId',
       payload,
       token: token,
     );
     return ChatMessageModel.fromJson(data);
+  }
+
+  Future<void> registerCallPushToken({
+    required String token,
+    required String pushToken,
+    String? platform,
+    String? deviceId,
+  }) async {
+    await _post('/calls/push-token', {
+      'token': pushToken,
+      if (platform != null && platform.trim().isNotEmpty)
+        'platform': platform.trim(),
+      if (deviceId != null && deviceId.trim().isNotEmpty)
+        'deviceId': deviceId.trim(),
+    }, token: token);
+  }
+
+  Future<void> removeCallPushToken({
+    required String token,
+    required String pushToken,
+  }) async {
+    await _post('/calls/push-token/remove', {'token': pushToken}, token: token);
+  }
+
+  Future<Map<String, dynamic>> issueCallToken({
+    required String token,
+    required String callId,
+  }) async {
+    return _post('/calls/token', {'callId': callId}, token: token);
   }
 
   Future<void> deleteChatMessage({
@@ -339,14 +399,71 @@ class UserManagementApi {
     required String messageId,
     required String scope,
   }) async {
-    final response = await _client.delete(
-      _buildUri('/chat/messages/$messageId', {'scope': scope}),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+    throw Exception('Delete message is not available on the new messaging API');
+  }
+
+  io.Socket connectMessagingSocket({
+    required String token,
+    void Function()? onConnect,
+    void Function(dynamic error)? onConnectError,
+    void Function(dynamic reason)? onDisconnect,
+  }) {
+    final socket = io.io(
+      '${AppConfig.baseUrl}/messaging',
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .setAuth({'token': token})
+          .enableReconnection()
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(5000)
+          .setReconnectionAttempts(999999)
+          .enableForceNew()
+          .build(),
     );
-    _decode(response);
+
+    if (onConnect != null) {
+      socket.onConnect((_) => onConnect());
+    }
+    if (onConnectError != null) {
+      socket.onConnectError(onConnectError);
+    }
+    if (onDisconnect != null) {
+      socket.onDisconnect(onDisconnect);
+    }
+
+    return socket;
+  }
+
+  io.Socket connectWebrtcSocket({
+    required String token,
+    void Function()? onConnect,
+    void Function(dynamic error)? onConnectError,
+    void Function(dynamic reason)? onDisconnect,
+  }) {
+    final socket = io.io(
+      '${AppConfig.baseUrl}/webrtc',
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .setAuth({'token': token})
+          .enableReconnection()
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(5000)
+          .setReconnectionAttempts(999999)
+          .enableForceNew()
+          .build(),
+    );
+
+    if (onConnect != null) {
+      socket.onConnect((_) => onConnect());
+    }
+    if (onConnectError != null) {
+      socket.onConnectError(onConnectError);
+    }
+    if (onDisconnect != null) {
+      socket.onDisconnect(onDisconnect);
+    }
+
+    return socket;
   }
 
   Future<void> sendAnnouncement({
@@ -356,14 +473,39 @@ class UserManagementApi {
     List<String>? targetUserIds,
     List<String>? targetRoles,
   }) async {
-    await _post('/chat/announcements', {
-      'title': title,
-      'text': text,
-      if (targetUserIds != null && targetUserIds.isNotEmpty)
-        'targetUserIds': targetUserIds,
-      if (targetRoles != null && targetRoles.isNotEmpty)
-        'targetRoles': targetRoles,
-    }, token: token);
+    List<String> participantIds = [];
+
+    if (targetUserIds != null && targetUserIds.isNotEmpty) {
+      participantIds = targetUserIds.toSet().toList();
+    } else {
+      final users = await getChatUsers(token, search: null);
+      final roleSet = targetRoles?.map((role) => role.toUpperCase()).toSet();
+      participantIds = users
+          .where(
+            (user) =>
+                roleSet == null || roleSet.contains(user.role.toUpperCase()),
+          )
+          .map((user) => user.id)
+          .toSet()
+          .toList();
+    }
+
+    if (participantIds.isEmpty) {
+      throw Exception('No recipients found for announcement');
+    }
+
+    final conversation = await createGroupConversation(
+      token: token,
+      participantIds: participantIds,
+      title: title,
+    );
+
+    await sendChatMessage(
+      token: token,
+      conversationId: conversation.id,
+      text: text,
+      metadata: {'announcement': true, 'title': title},
+    );
   }
 
   Future<List<NotificationModel>> getNotifications(
