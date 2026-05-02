@@ -94,7 +94,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF1F2937),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
                     ),
                     child: const Icon(Icons.badge_rounded, color: OdinTheme.primaryBlue, size: 28),
                   ),
@@ -152,7 +152,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F172A),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
                 ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +180,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             elevation: 8,
-                            shadowColor: OdinTheme.primaryBlue.withValues(alpha: 0.5),
+                            shadowColor: OdinTheme.primaryBlue.withOpacity(0.5),
                           ),
                         ),
                     ],
@@ -264,12 +264,12 @@ class _StaffListScreenState extends State<StaffListScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF111827).withValues(alpha: 0.6),
+        color: const Color(0xFF111827).withOpacity(0.6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
+            color: Colors.black.withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -298,7 +298,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
+                        color: color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Center(
@@ -344,7 +344,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.1),
+                              color: color.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -370,7 +370,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
                       const SizedBox(height: 4),
                       Text(
                         staff.email ?? 'Email non renseigné',
-                        style: TextStyle(color: OdinTheme.textTertiary.withValues(alpha: 0.5), fontSize: 11),
+                        style: TextStyle(color: OdinTheme.textTertiary.withOpacity(0.5), fontSize: 11),
                       ),
                     ],
                   ),
@@ -420,7 +420,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: color, size: 20),
@@ -440,7 +440,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
         border: Border.all(color: OdinTheme.cardBorder),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -453,7 +453,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(label, style: const TextStyle(color: OdinTheme.textTertiary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1)),
-              Icon(icon, color: OdinTheme.textTertiary.withValues(alpha: 0.3), size: 24),
+              Icon(icon, color: OdinTheme.textTertiary.withOpacity(0.3), size: 24),
             ],
           ),
           const SizedBox(height: 8),

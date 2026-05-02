@@ -8,6 +8,7 @@ class User {
   final String role;
   final String? userType;
   final String status;
+  final String? playerId;
   final DateTime? createdAt;
 
   User({
@@ -20,6 +21,7 @@ class User {
     required this.role,
     this.userType,
     this.status = 'active',
+    this.playerId,
     this.createdAt,
   });
 
@@ -36,6 +38,7 @@ class User {
       role: json['role'] ?? '',
       userType: json['userType'],
       status: json['status'] ?? 'active',
+      playerId: json['playerId']?.toString(),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,

@@ -200,10 +200,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
                         ),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFF4F46E5).withValues(alpha: 0.4)),
+                        border: Border.all(color: const Color(0xFF4F46E5).withOpacity(0.4)),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4F46E5).withValues(alpha: 0.2),
+                            color: const Color(0xFF4F46E5).withOpacity(0.2),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -215,7 +215,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                              color: const Color(0xFF4F46E5).withOpacity(0.3),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.psychology_rounded,
@@ -452,12 +452,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
-            color: isPrimary ? OdinTheme.primaryBlue.withValues(alpha: 0.1) : OdinTheme.surface,
+            color: isPrimary ? OdinTheme.primaryBlue.withOpacity(0.1) : OdinTheme.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isPrimary
-                  ? OdinTheme.primaryBlue.withValues(alpha: 0.5)
-                  : Colors.white.withValues(alpha: 0.05),
+                  ? OdinTheme.primaryBlue.withOpacity(0.5)
+                  : Colors.white.withOpacity(0.05),
               width: isPrimary ? 1.5 : 1,
             ),
           ),
@@ -498,7 +498,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         gradient: OdinTheme.cardGradient,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,7 +510,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -591,7 +591,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: accentColor.withValues(alpha: 0.1),
+                backgroundColor: accentColor.withOpacity(0.1),
                 child: Text(
                   initials,
                   style: TextStyle(
@@ -671,7 +671,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: color, size: 18),

@@ -48,40 +48,6 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _navigate(String route) {
-    final roleCode = RoleMapper.normalize(widget.session.role);
-    final menuRoutes = MenuConfig.itemsForRole(
-      widget.session.role,
-    ).map((i) => i.route).toSet();
-    final allowed = {
-      ...menuRoutes,
-      MenuConfig.defaultRouteForRole(widget.session.role),
-      AppRoutes.messages,
-      AppRoutes.notifications,
-      AppRoutes.profile,
-      if (roleCode == RoleMapper.admin) ...{
-        AppRoutes.adminUsers,
-        AppRoutes.auditLog,
-      },
-      AppRoutes.cognitiveDashboard,
-      AppRoutes.squadCognitiveOverview,
-      AppRoutes.seasonPlanning,
-      AppRoutes.tactics,
-      if (menuRoutes.contains(AppRoutes.analysis)) AppRoutes.uploadVideo,
-    };
-
-    if (!allowed.contains(route)) {
-      final fallback = MenuConfig.defaultRouteForRole(widget.session.role);
-      if (_currentRoute != fallback) {
-        setState(() {
-          _currentRoute = fallback;
-          _routeHistory
-            ..clear()
-            ..add(fallback);
-        });
-      }
-      return;
-    }
-
     if (_currentRoute == route) return;
     setState(() {
       _currentRoute = route;

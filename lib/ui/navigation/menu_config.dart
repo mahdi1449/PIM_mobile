@@ -93,6 +93,16 @@ class MenuConfig {
             icon: Icons.forum_outlined,
             route: AppRoutes.communication,
           ),
+          MenuItemConfig(
+            title: 'Schedule',
+            icon: Icons.calendar_today_outlined,
+            route: AppRoutes.erpEvents,
+          ),
+          MenuItemConfig(
+            title: 'Club Profile',
+            icon: Icons.business_outlined,
+            route: AppRoutes.erpClubProfile,
+          ),
         ];
       case RoleMapper.analyst:
         return const [
@@ -178,6 +188,11 @@ class MenuConfig {
             title: 'Exercises Library',
             icon: Icons.menu_book_outlined,
             route: AppRoutes.exercises,
+          ),
+          MenuItemConfig(
+            title: 'Events & Matchs',
+            icon: Icons.event_available_outlined,
+            route: AppRoutes.erpEvents,
           ),
         ];
       case RoleMapper.staffMedical:
@@ -306,6 +321,11 @@ class MenuConfig {
             title: 'Communication',
             icon: Icons.forum_outlined,
             route: AppRoutes.communication,
+          ),
+          MenuItemConfig(
+            title: 'Mon Calendrier',
+            icon: Icons.event_available_outlined,
+            route: AppRoutes.erpEvents,
           ),
         ];
     }

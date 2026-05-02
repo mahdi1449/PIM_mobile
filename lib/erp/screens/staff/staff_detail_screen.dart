@@ -90,7 +90,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      color.withValues(alpha: 0.8),
+                      color.withOpacity(0.8),
                       OdinTheme.background,
                     ],
                   ),
@@ -101,7 +101,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
                     children: [
                       CircleAvatar(
                         radius: 45,
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                        backgroundColor: Colors.white.withOpacity(0.2),
                         child: Text(
                           staff.initials,
                           style: const TextStyle(
@@ -124,9 +124,9 @@ class _StaffDetailScreenState extends State<StaffDetailScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.2),
+                          color: color.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: color.withValues(alpha: 0.5)),
+                          border: Border.all(color: color.withOpacity(0.5)),
                         ),
                         child: Text(
                           dept.toUpperCase(),

@@ -180,9 +180,9 @@ class _StaffFormScreenState extends State<StaffFormScreen> {
                         Container(
                           width: 64, height: 64,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.1),
+                            color: Colors.white.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: OdinTheme.accentRed.withValues(alpha: 0.5), width: 2),
+                            border: Border.all(color: OdinTheme.accentRed.withOpacity(0.5), width: 2),
                           ),
                           child: const Icon(Icons.badge_rounded, color: OdinTheme.accentRed, size: 30),
                         ),
@@ -198,7 +198,7 @@ class _StaffFormScreenState extends State<StaffFormScreen> {
                             const SizedBox(height: 4),
                             Text(
                               'Département $dept',
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 13),
+                              style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 13),
                             ),
                           ],
                         ),
@@ -306,7 +306,7 @@ class _StaffFormScreenState extends State<StaffFormScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: OdinTheme.accentRed.withValues(alpha: 0.35),
+                            color: OdinTheme.accentRed.withOpacity(0.35),
                             blurRadius: 20, offset: const Offset(0, 8),
                           ),
                         ],
@@ -343,7 +343,7 @@ class _StaffFormScreenState extends State<StaffFormScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(color: OdinTheme.accentRed.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(color: OdinTheme.accentRed.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
           child: Icon(icon, color: OdinTheme.accentRed, size: 16),
         ),
         const SizedBox(width: 10),

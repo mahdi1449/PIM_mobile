@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     border: Border.all(color: OdinTheme.cardBorder),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.5),
+                        color: Colors.black.withOpacity(0.5),
                         blurRadius: 30,
                         offset: const Offset(0, 10),
                       )
@@ -318,7 +318,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               decoration: BoxDecoration(
-                                color: isSelected ? role.color.withValues(alpha: 0.1) : OdinTheme.surfaceLight,
+                                color: isSelected ? role.color.withOpacity(0.1) : OdinTheme.surfaceLight,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: isSelected ? role.color : OdinTheme.cardBorder,

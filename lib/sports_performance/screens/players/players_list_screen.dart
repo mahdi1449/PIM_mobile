@@ -6,6 +6,7 @@ import '../../theme/sp_colors.dart';
 import '../../theme/sp_typography.dart';
 import 'create_player_screen.dart';
 import '../../cognitive_lab/screens/cognitive_dashboard_screen.dart';
+import '../../gamification/screens/gamification_dashboard_screen.dart';
 import '../../../ui/shell/app_shell.dart';
 
 class PlayersListScreen extends ConsumerStatefulWidget {
@@ -200,6 +201,20 @@ class _PlayersListScreenState extends ConsumerState<PlayersListScreen> {
                     ),
                   );
                 }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.emoji_events_rounded, color: Colors.orangeAccent, size: 22),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GamificationDashboardScreen(
+                      playerId: player.id,
+                      playerName: player.fullName,
+                    ),
+                  ),
+                );
               },
             ),
             IconButton(

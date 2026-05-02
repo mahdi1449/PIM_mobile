@@ -26,6 +26,48 @@ class _EventFormScreenState extends State<EventFormScreen> {
   DateTime _endDate = DateTime.now().add(const Duration(hours: 4));
   bool _saving = false;
 
+  // Structured Location Variables
+  String? _selectedCountry;
+  String? _selectedVenue;
+  bool _isCustomLocation = false;
+  Map<String, dynamic>? _weatherPreview;
+  bool _loadingWeather = false;
+
+  final Map<String, List<String>> _venueData = {
+    'Tunisie': [
+      'Stade Olympique de Radès',
+      'Stade d\'El Menzah',
+      'Stade Mustapha Ben Jannet (Monastir)',
+      'Stade Taïeb Mehiri (Sfax)',
+      'Stade Olympique de Sousse',
+      'Stade du 15-Octobre (Bizerte)',
+      'Stade Chedly-Zouiten',
+    ],
+    'France': [
+      'Parc des Princes (Paris)',
+      'Stade de France (Saint-Denis)',
+      'Orange Vélodrome (Marseille)',
+      'Groupama Stadium (Lyon)',
+      'Stade Pierre-Mauroy (Lille)',
+      'Matmut Atlantique (Bordeaux)',
+    ],
+    'Maroc': [
+      'Stade Mohammed V (Casablanca)',
+      'Stade de Marrakech',
+      'Stade Adrar (Agadir)',
+      'Stade Ibn-Batouta (Tanger)',
+    ],
+    'Algérie': [
+      'Stade du 5-Juillet-1962 (Alger)',
+      'Stade du 19-Mai-1956 (Annaba)',
+      'Stade Miloud Hadefi (Oran)',
+    ],
+  };
+
+  // Recurrency
+  String _recurFreq = 'none'; // 'none', 'weekly', 'biweekly'
+  DateTime _recurUntil = DateTime.now().add(const Duration(days: 30));
+
   final _typeConfig = {
     'match': ('Match', Icons.sports_soccer_rounded, OdinTheme.accentOrange),
     'entrainement': ('Entraînement', Icons.fitness_center_rounded, OdinTheme.primaryBlue),
@@ -46,6 +88,26 @@ class _EventFormScreenState extends State<EventFormScreen> {
     _title.dispose(); _description.dispose();
     _location.dispose(); _opponent.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchWeather(String location) async {
+    if (location.isEmpty) return;
+    setState(() {
+      _loadingWeather = true;
+      _weatherPreview = null;
+    });
+    
+    // Add country to location for better geocoding if available
+    final fullLoc = _isCustomLocation ? location : '$location, $_selectedCountry';
+    
+    final weather = await Provider.of<EventsProvider>(context, listen: false).fetchWeatherPreviewData(fullLoc);
+    
+    if (mounted) {
+      setState(() {
+        _weatherPreview = weather;
+        _loadingWeather = false;
+      });
+    }
   }
 
   Future<void> _pickDateTime(bool isStart) async {
@@ -99,6 +161,10 @@ class _EventFormScreenState extends State<EventFormScreen> {
     setState(() => _saving = true);
     
     try {
+      final String finalLocation = _isCustomLocation 
+          ? _location.text.trim() 
+          : (_selectedVenue != null ? '$_selectedVenue, $_selectedCountry' : '');
+
       final data = <String, dynamic>{
         'eventType': _eventType,
         'title': _title.text.trim(),
@@ -107,9 +173,14 @@ class _EventFormScreenState extends State<EventFormScreen> {
         'allDay': false,
         'visibility': _visibility,
         if (_description.text.trim().isNotEmpty) 'description': _description.text.trim(),
-        if (_location.text.trim().isNotEmpty) 'location': _location.text.trim(),
+        if (finalLocation.isNotEmpty) 'location': finalLocation,
         if (_teamId != null) 'teamId': _teamId,
         if (_opponent.text.trim().isNotEmpty && _eventType == 'match') 'eventDetails': {'opponent': _opponent.text.trim()},
+        if (_recurFreq != 'none') 'recurrenceRule': {
+          'freq': _recurFreq,
+          'endDate': _recurUntil.toIso8601String(),
+          'daysOfWeek': [_startDate.weekday % 7],
+        },
       };
 
       final provider = Provider.of<EventsProvider>(context, listen: false);
@@ -168,7 +239,6 @@ class _EventFormScreenState extends State<EventFormScreen> {
       backgroundColor: OdinTheme.background,
       body: CustomScrollView(
         slivers: [
-          // ─── Hero Header ─────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 160,
             pinned: true,
@@ -199,9 +269,9 @@ class _EventFormScreenState extends State<EventFormScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      const Color(0xFF1E293B), // Deep blue-gray
-                      const Color(0xFF0F172A), // Dark navy
-                      accentColor.withValues(alpha: 0.8), // Accent color at bottom
+                      const Color(0xFF1E293B),
+                      const Color(0xFF0F172A),
+                      accentColor.withOpacity(0.8),
                     ],
                     stops: const [0.0, 0.5, 1.0],
                   ),
@@ -215,9 +285,9 @@ class _EventFormScreenState extends State<EventFormScreen> {
                           duration: const Duration(milliseconds: 300),
                           width: 64, height: 64,
                           decoration: BoxDecoration(
-                            color: accentColor.withValues(alpha: 0.15),
+                            color: accentColor.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: accentColor.withValues(alpha: 0.5), width: 2),
+                            border: Border.all(color: accentColor.withOpacity(0.5), width: 2),
                           ),
                           child: Icon(typeInfo.$2, color: accentColor, size: 30),
                         ),
@@ -238,7 +308,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
                                   key: ValueKey(_eventType),
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: accentColor.withValues(alpha: 0.2),
+                                    color: accentColor.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -258,7 +328,6 @@ class _EventFormScreenState extends State<EventFormScreen> {
             ),
           ),
 
-          // ─── Form Body ───────────────────────────────────────────
           SliverToBoxAdapter(
             child: Form(
               key: _formKey,
@@ -267,14 +336,11 @@ class _EventFormScreenState extends State<EventFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
-                    // ── Type selector (visual cards) ──────────────
                     _sectionHeader(Icons.style_rounded, 'TYPE D\'ÉVÉNEMENT'),
                     const SizedBox(height: 12),
                     _eventTypeGrid(),
                     const SizedBox(height: 28),
 
-                    // ── Title / Info ──────────────────────────────
                     _sectionHeader(Icons.info_outline_rounded, 'INFORMATIONS'),
                     const SizedBox(height: 12),
                     _field(_title, 'Titre de l\'événement', icon: Icons.title_rounded, required: true),
@@ -283,20 +349,23 @@ class _EventFormScreenState extends State<EventFormScreen> {
                       _field(_opponent, 'Équipe adverse', icon: Icons.sports_soccer_rounded),
                       const SizedBox(height: 12),
                     ],
-                    _field(_location, 'Lieu / Stade', icon: Icons.location_on_outlined),
+                    
+                    // --- LOCATION SECTION (NEW STRUCTURE) ---
+                    _locationSelectionWidget(),
                     const SizedBox(height: 12),
+                    _weatherPreviewWidget(),
+                    const SizedBox(height: 12),
+                    
                     _field(_description, 'Description', icon: Icons.notes_rounded, maxLines: 3),
 
                     const SizedBox(height: 28),
 
-                    // ── Date & Time ───────────────────────────────
                     _sectionHeader(Icons.schedule_rounded, 'DATE & HEURE'),
                     const SizedBox(height: 12),
                     _dateRow(),
 
                     const SizedBox(height: 28),
 
-                    // ── Visibility & Team ─────────────────────────
                     _sectionHeader(Icons.settings_rounded, 'PARAMÈTRES'),
                     const SizedBox(height: 12),
                     _visibilitySelector(),
@@ -312,9 +381,21 @@ class _EventFormScreenState extends State<EventFormScreen> {
                       onChanged: (v) => setState(() => _teamId = v),
                     ),
 
+                    const SizedBox(height: 28),
+
+                    _sectionHeader(Icons.repeat_rounded, 'RÉCURRENCE (ENTRAÎNEMENTS)'),
+                    const SizedBox(height: 12),
+                    _recurrenceSelector(),
+                    if (_recurFreq != 'none') ...[
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: _pickRecurUntil,
+                        child: _dateTileWidget('Répéter jusqu\'au', _recurUntil, OdinTheme.accentPurple),
+                      ),
+                    ],
+
                     const SizedBox(height: 40),
 
-                    // ── Submit ────────────────────────────────────
                     Container(
                       width: double.infinity,
                       height: 56,
@@ -323,7 +404,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: accentColor.withValues(alpha: 0.35),
+                            color: accentColor.withOpacity(0.35),
                             blurRadius: 20, offset: const Offset(0, 8),
                           ),
                         ],
@@ -338,9 +419,9 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         icon: _saving
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                             : Icon(typeInfo.$2, color: Colors.white, size: 20),
-                        label: Text(
+                        label: const Text(
                           'CRÉER L\'ÉVÉNEMENT',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, letterSpacing: 1),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, letterSpacing: 1),
                         ),
                       ),
                     ),
@@ -349,6 +430,184 @@ class _EventFormScreenState extends State<EventFormScreen> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _locationSelectionWidget() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: _dropdown<String?>(
+                value: _selectedCountry,
+                label: 'Pays',
+                icon: Icons.public_rounded,
+                items: [
+                  const DropdownMenuItem(value: null, child: Text('Choisir pays')),
+                  ..._venueData.keys.map((c) => DropdownMenuItem(value: c, child: Text(c))),
+                ],
+                onChanged: (v) {
+                  setState(() {
+                    _selectedCountry = v;
+                    _selectedVenue = null;
+                    _weatherPreview = null;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => setState(() {
+                _isCustomLocation = !_isCustomLocation;
+                _selectedVenue = null;
+                _weatherPreview = null;
+              }),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                decoration: BoxDecoration(
+                  color: _isCustomLocation ? OdinTheme.accentCyan.withOpacity(0.1) : OdinTheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _isCustomLocation ? OdinTheme.accentCyan : OdinTheme.cardBorder),
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.edit_location_alt_rounded, 
+                         color: _isCustomLocation ? OdinTheme.accentCyan : OdinTheme.textTertiary, size: 20),
+                    const Text('Autre', style: TextStyle(fontSize: 10, color: OdinTheme.textTertiary)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (!_isCustomLocation)
+          _dropdown<String?>(
+            value: _selectedVenue,
+            label: 'Lieu / Stade',
+            icon: Icons.location_on_rounded,
+            items: [
+              const DropdownMenuItem(value: null, child: Text('Sélectionner un stade')),
+              if (_selectedCountry != null)
+                ..._venueData[_selectedCountry]!.map((s) => DropdownMenuItem(value: s, child: Text(s))),
+            ],
+            onChanged: (v) {
+              setState(() => _selectedVenue = v);
+              if (v != null) _fetchWeather(v);
+            },
+          )
+        else
+          _field(_location, 'Saisir lieu manuellement', 
+                 icon: Icons.location_on_outlined,
+                 onChanged: (v) {
+                   if (v.length > 5) _fetchWeather(v);
+                 }),
+      ],
+    );
+  }
+
+  Widget _weatherPreviewWidget() {
+    if (_loadingWeather) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: OdinTheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: OdinTheme.cardBorder),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+            SizedBox(width: 12),
+            Text('Chargement de la météo...', style: TextStyle(color: OdinTheme.textSecondary, fontSize: 13)),
+          ],
+        ),
+      );
+    }
+
+    if (_weatherPreview == null) {
+      // Show empty state or error if a venue is selected but no weather
+      if (_selectedVenue != null || (_isCustomLocation && _location.text.length > 5)) {
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: OdinTheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: OdinTheme.accentOrange.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: OdinTheme.accentOrange, size: 18),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Météo indisponible pour ce lieu exact. Nous utiliserons la météo régionale.',
+                  style: TextStyle(color: OdinTheme.textSecondary, fontSize: 11),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    }
+
+    final condition = _weatherPreview!['condition'];
+    final temp = _weatherPreview!['tempCelsius'];
+    final icon = _weatherPreview!['icon'];
+    final desc = _weatherPreview!['description'];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            OdinTheme.primaryBlue.withOpacity(0.1),
+            OdinTheme.accentCyan.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: OdinTheme.primaryBlue.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          if (icon.isNotEmpty)
+            Image.network(
+              'https://openweathermap.org/img/wn/$icon@2x.png',
+              width: 48, height: 48,
+              errorBuilder: (_, __, ___) => const Icon(Icons.wb_cloudy_rounded, color: OdinTheme.primaryBlue),
+            )
+          else
+            const Icon(Icons.wb_sunny_rounded, color: Colors.orange, size: 32),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$temp°C - $condition',
+                  style: const TextStyle(color: OdinTheme.textPrimary, fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+                Text(
+                  desc,
+                  style: const TextStyle(color: OdinTheme.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: OdinTheme.accentGreen.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text('Direct', style: TextStyle(color: OdinTheme.accentGreen, fontSize: 10, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -371,7 +630,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
-              color: selected ? color.withValues(alpha: 0.15) : OdinTheme.surface,
+              color: selected ? color.withOpacity(0.15) : OdinTheme.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: selected ? color : OdinTheme.cardBorder,
@@ -424,9 +683,9 @@ class _EventFormScreenState extends State<EventFormScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: OdinTheme.primaryBlue.withValues(alpha: 0.08),
+            color: OdinTheme.primaryBlue.withOpacity(0.08),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: OdinTheme.primaryBlue.withValues(alpha: 0.2)),
+            border: Border.all(color: OdinTheme.primaryBlue.withOpacity(0.2)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -450,7 +709,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
       decoration: BoxDecoration(
         color: OdinTheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,7 +748,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: selected ? OdinTheme.primaryBlue.withValues(alpha: 0.15) : OdinTheme.surface,
+                color: selected ? OdinTheme.primaryBlue.withOpacity(0.15) : OdinTheme.surface,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: selected ? OdinTheme.primaryBlue : OdinTheme.cardBorder,
@@ -524,7 +783,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: OdinTheme.primaryBlue.withValues(alpha: 0.15),
+            color: OdinTheme.primaryBlue.withOpacity(0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: OdinTheme.primaryBlue, size: 16),
@@ -546,11 +805,12 @@ class _EventFormScreenState extends State<EventFormScreen> {
   }
 
   Widget _field(TextEditingController ctrl, String label,
-      {IconData? icon, TextInputType? keyboardType, int maxLines = 1, bool required = false}) {
+      {IconData? icon, TextInputType? keyboardType, int maxLines = 1, bool required = false, ValueChanged<String>? onChanged}) {
     return TextFormField(
       controller: ctrl,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      onChanged: onChanged,
       style: const TextStyle(color: OdinTheme.textPrimary),
       validator: required ? (v) => v == null || v.isEmpty ? '$label requis' : null : null,
       decoration: InputDecoration(
@@ -589,5 +849,69 @@ class _EventFormScreenState extends State<EventFormScreen> {
       items: items,
       onChanged: onChanged,
     );
+  }
+
+  Widget _recurrenceSelector() {
+    final options = {
+      'none': ('Aucune', Icons.close_rounded),
+      'weekly': ('Hebdo', Icons.calendar_view_week_rounded),
+      'biweekly': ('Bi-hebdo', Icons.event_repeat_rounded),
+    };
+    return Row(
+      children: options.entries.map((e) {
+        final selected = _recurFreq == e.key;
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _recurFreq = e.key),
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: selected ? OdinTheme.accentPurple.withOpacity(0.15) : OdinTheme.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: selected ? OdinTheme.accentPurple : OdinTheme.cardBorder,
+                  width: selected ? 1.5 : 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(e.value.$2, color: selected ? OdinTheme.accentPurple : OdinTheme.textTertiary, size: 18),
+                  const SizedBox(height: 4),
+                  Text(
+                    e.value.$1,
+                    style: TextStyle(
+                      color: selected ? OdinTheme.accentPurple : OdinTheme.textTertiary,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Future<void> _pickRecurUntil() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _recurUntil,
+      firstDate: _startDate,
+      lastDate: DateTime(2030),
+      builder: (ctx, child) => Theme(
+        data: OdinTheme.darkTheme.copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: OdinTheme.accentPurple,
+            surface: OdinTheme.surface,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (date != null) setState(() => _recurUntil = date);
   }
 }

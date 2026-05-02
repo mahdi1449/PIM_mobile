@@ -41,7 +41,7 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
             child: Container(
                padding: const EdgeInsets.all(16),
                decoration: BoxDecoration(
-                 color: MedicalTheme.surfaceAlt.withValues(alpha: 0.6),
+                 color: MedicalTheme.surfaceAlt.withOpacity(0.6),
                  borderRadius: BorderRadius.circular(16),
                  border: Border.all(color: MedicalTheme.cardBorder),
                ),
@@ -116,14 +116,14 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isInjured
-                ? MedicalTheme.danger.withValues(alpha: 0.5)
+                ? MedicalTheme.danger.withOpacity(0.5)
                 : MedicalTheme.cardBorder,
             width: isInjured ? 1.5 : 1.0,
           ),
           boxShadow: [
             if (isInjured)
               BoxShadow(
-                color: MedicalTheme.danger.withValues(alpha: 0.1),
+                color: MedicalTheme.danger.withOpacity(0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               )
@@ -139,7 +139,7 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
                   backgroundColor: (isInjured
                           ? MedicalTheme.danger
                           : MedicalTheme.primaryBlue)
-                      .withValues(alpha: 0.2),
+                      .withOpacity(0.2),
                   child: Icon(
                     isInjured ? Icons.local_hospital_rounded : Icons.medical_information_rounded,
                     color: isInjured

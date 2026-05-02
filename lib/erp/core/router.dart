@@ -13,6 +13,11 @@ import '../screens/staff/staff_form_screen.dart';
 import '../screens/events/events_screen.dart';
 import '../screens/events/event_detail_screen.dart';
 import '../screens/events/event_form_screen.dart';
+import '../screens/events/event_convocations_screen.dart';
+import '../screens/events/match_sheet_screen.dart';
+import '../screens/events/event_timeline_live_screen.dart';
+import '../screens/events/event_match_result_screen.dart';
+import '../screens/club/club_profile_screen.dart';
 import '../screens/scouting/scouting_screen.dart';
 import '../screens/medical/medical_vault_screen.dart';
 import '../screens/finance/finance_dashboard_screen.dart';
@@ -234,6 +239,26 @@ class AppRouter {
         GoRoute(
           path: '/readiness',
           builder: (context, state) => const ReadinessScreen(),
+        ),
+        GoRoute(
+          path: '/events/convocations',
+          builder: (context, state) => EventConvocationsScreen(eventId: state.extra as String? ?? ''),
+        ),
+        GoRoute(
+          path: '/events/match-sheet',
+          builder: (context, state) => MatchSheetScreen(eventId: state.extra as String? ?? ''),
+        ),
+        GoRoute(
+          path: '/events/timeline',
+          builder: (context, state) => EventTimelineLiveScreen(eventId: state.extra as String? ?? ''),
+        ),
+        GoRoute(
+          path: '/events/result',
+          builder: (context, state) => EventMatchResultScreen(eventId: state.extra as String? ?? ''),
+        ),
+        GoRoute(
+          path: '/club/profile',
+          builder: (context, state) => const ClubProfileScreen(),
         ),
       ],
     );

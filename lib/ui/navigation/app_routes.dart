@@ -12,6 +12,14 @@ import '../../screens/roles/staff_medical_dashboard_screen.dart';
 import '../../screens/roles/finance_dashboard_screen.dart';
 import '../../screens/roles/scout_dashboard_screen.dart';
 import '../../screens/medical/medical_analysis_detail_screen.dart';
+import '../../erp/screens/events/event_detail_screen.dart';
+import '../../erp/screens/events/event_form_screen.dart';
+import '../../erp/screens/events/event_convocations_screen.dart';
+import '../../erp/screens/events/match_sheet_screen.dart';
+import '../../erp/screens/events/event_timeline_live_screen.dart';
+import '../../erp/screens/events/event_match_result_screen.dart';
+import '../../erp/screens/events/event_player_picker_screen.dart';
+import '../../erp/screens/club/club_profile_screen.dart';
 import '../../screens/medical/medical_players_screen.dart';
 import '../../screens/medical/medical_recovery_calendar_screen.dart';
 import '../../screens/medical/simulation_history_screen.dart';
@@ -33,6 +41,12 @@ import '../../season_planning/screens/season_list_screen.dart';
 import '../../tactics/screens/tactics_board_screen.dart';
 import '../../screens/chemistry/team_chemistry_screen.dart';
 import '../../learning/screens/learning_home_screen.dart';
+import 'package:odinclub/sports_performance/travel/screens/travel_list_screen.dart';
+import 'package:odinclub/sports_performance/gamification/screens/gamification_dashboard_screen.dart';
+import '../../erp/screens/events/events_screen.dart';
+import '../../erp/providers/events_provider.dart';
+import '../../erp/providers/teams_provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 class AppRouteData {
   const AppRouteData({
@@ -97,6 +111,17 @@ class AppRoutes {
   static const String messages = '/messages';
   static const String notifications = '/notifications';
   static const String profile = '/profile';
+  static const String travelList = '/travel/list';
+  static const String gamification = '/gamification';
+  static const String erpEvents = '/erp/events';
+  static const String erpEventDetail = '/erp/events/detail';
+  static const String erpEventForm = '/erp/events/form';
+  static const String erpEventConvocations = '/erp/events/convocations';
+  static const String erpMatchSheet = '/erp/events/match-sheet';
+  static const String erpEventTimeline = '/erp/events/timeline';
+  static const String erpEventResult = '/erp/events/result';
+  static const String erpEventPicker = '/erp/events/picker';
+  static const String erpClubProfile = '/erp/club/profile';
 
   static AppRouteData resolve(String route, SessionModel session) {
     switch (route) {
@@ -374,6 +399,86 @@ class AppRoutes {
           builder: (_) => const TeamChemistryScreen(),
           showAppBar: true,
           usePadding: true,
+        );
+      case travelList:
+        return AppRouteData(
+          title: 'Voyages & Logistique',
+          builder: (_) => TravelListScreen(clubId: session.clubId ?? ''),
+          showAppBar: true,
+          usePadding: false,
+        );
+      case gamification:
+        return AppRouteData(
+          title: 'Gamification & Classement',
+          builder: (_) => GamificationDashboardScreen(
+            playerId: session.userId,
+            playerName: '${session.firstName} ${session.lastName}',
+          ),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case erpEvents:
+        return AppRouteData(
+          title: 'Événements & Matchs',
+          builder: (_) => const EventsScreen(),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case erpEventDetail:
+        return AppRouteData(
+          title: 'Détails de l\'événement',
+          builder: (context) => EventDetailScreen(eventId: ModalRoute.of(context)?.settings.arguments as String?),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case erpEventForm:
+        return AppRouteData(
+          title: 'Formulaire d\'événement',
+          builder: (context) => EventFormScreen(eventId: ModalRoute.of(context)?.settings.arguments as String?),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case erpEventConvocations:
+        return AppRouteData(
+          title: 'Convocations',
+          builder: (context) => EventConvocationsScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case erpMatchSheet:
+        return AppRouteData(
+          title: 'Feuille de Match',
+          builder: (context) => MatchSheetScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case erpEventTimeline:
+        return AppRouteData(
+          title: 'Timeline Live',
+          builder: (context) => EventTimelineLiveScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case erpEventResult:
+        return AppRouteData(
+          title: 'Résultat du Match',
+          builder: (context) => EventMatchResultScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case erpEventPicker:
+        return AppRouteData(
+          title: 'Sélectionner des joueurs',
+          builder: (context) => EventPlayerPickerScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
+          showAppBar: false,
+          usePadding: false,
+        );
+      case erpClubProfile:
+        return AppRouteData(
+          title: 'Profil du Club',
+          builder: (_) => const ClubProfileScreen(),
+          showAppBar: true,
+          usePadding: false,
         );
       default:
         return AppRouteData(

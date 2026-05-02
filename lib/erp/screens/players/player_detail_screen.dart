@@ -111,7 +111,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen>
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    backgroundColor: Colors.white.withOpacity(0.2),
                     child: Text(
                       player.initials,
                       style: const TextStyle(
@@ -141,7 +141,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen>
                       Text(
                         '${player.position} • #${player.jerseyNumber ?? '-'}',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: Colors.white.withOpacity(0.8),
                           fontSize: 14,
                         ),
                       ),
@@ -224,9 +224,9 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: OdinTheme.primaryBlue.withValues(alpha: 0.2),
+                        color: OdinTheme.primaryBlue.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: OdinTheme.primaryBlue.withValues(alpha: 0.5)),
+                        border: Border.all(color: OdinTheme.primaryBlue.withOpacity(0.5)),
                       ),
                       child: Text(
                         '${player.aiScore}',
