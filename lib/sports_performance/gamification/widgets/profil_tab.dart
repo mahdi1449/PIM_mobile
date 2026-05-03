@@ -25,14 +25,15 @@ class ProfilTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+      physics: const BouncingScrollPhysics(),
       children: [
         _buildUserHeader(),
-        const SizedBox(height: 24),
+        const SizedBox(height: 40),
         _buildProgressionCard(),
-        const SizedBox(height: 24),
+        const SizedBox(height: 40),
         _buildQuickStats(),
-        const SizedBox(height: 32),
+        const SizedBox(height: 48),
         _buildActionHistory(),
       ],
     );
@@ -41,101 +42,248 @@ class ProfilTab extends StatelessWidget {
   Widget _buildUserHeader() {
     return Row(
       children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundColor: Colors.blueGrey.shade800,
-          child: Text(initials, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+        Container(
+          padding: const EdgeInsets.all(3),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [Colors.purpleAccent, Colors.cyanAccent],
+            ),
+          ),
+          child: CircleAvatar(
+            radius: 32,
+            backgroundColor: const Color(0xFF161926),
+            child: Text(
+              initials,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
         ),
         const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              playerName ?? 'Joueur',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            Row(
-              children: [
-                Text(
-                  'Niveau ${profile.currentLevel} • ${profile.monthlyPoints} pts ce mois',
-                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                playerName ?? 'JOUEUR ÉLITE',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange.withOpacity(0.5)),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.orange.withOpacity(0.2),
+                          Colors.red.withOpacity(0.2),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.bolt, color: Colors.orange, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          profile.currentLevel.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 10,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.bolt, color: Colors.orange, size: 14),
-                      Text(' Pro', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 12)),
-                    ],
+                  const SizedBox(width: 12),
+                  Text(
+                    '${profile.monthlyPoints} PTS / MOIS',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.4),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProgressionCard() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Progression vers ${profile.nextLevel}', style: const TextStyle(color: Colors.white70)),
-            Text('${profile.totalPoints} / ${profile.targetPoints} pts', style: const TextStyle(color: Colors.white70)),
-          ],
-        ),
-        const SizedBox(height: 12),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: profile.progression,
-            minHeight: 12,
-            backgroundColor: Colors.white10,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.cyanAccent),
+                ],
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
+  Widget _buildProgressionCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E2130).withOpacity(0.6),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'PROCHAINE ÉTAPE : ${profile.nextLevel.toUpperCase()}',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+              Text(
+                '${profile.totalPoints} / ${profile.targetPoints} PTS',
+                style: const TextStyle(
+                  color: Colors.cyanAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Stack(
+            children: [
+              Container(
+                height: 12,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(seconds: 1),
+                height: 12,
+                width:
+                    profile.progression * 300, // Approximate width multiplier
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.purpleAccent, Colors.cyanAccent],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.cyanAccent.withOpacity(0.3),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'ENCORE ${profile.targetPoints - profile.totalPoints} POINTS POUR PASSER AU NIVEAU SUPÉRIEUR',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.3),
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildQuickStats() {
     return Row(
       children: [
-        _statItem('${profile.totalPoints}', 'Points totaux'),
+        _statItem(
+          '${profile.totalPoints}',
+          'TOTAL',
+          Icons.emoji_events_outlined,
+          Colors.amberAccent,
+        ),
         const SizedBox(width: 12),
-        _statItem('12', 'Badges'),
+        _statItem(
+          '12',
+          'BADGES',
+          Icons.workspace_premium_outlined,
+          Colors.purpleAccent,
+        ),
         const SizedBox(width: 12),
-        _statItem('3ème', 'Classement'),
+        _statItem(
+          '3ème',
+          'RANG',
+          Icons.leaderboard_outlined,
+          Colors.orangeAccent,
+        ),
         const SizedBox(width: 12),
-        _statItem('${profile.activeStreak}j', 'Série active'),
+        _statItem(
+          '${profile.activeStreak}j',
+          'SÉRIE',
+          Icons.local_fire_department_outlined,
+          Colors.redAccent,
+        ),
       ],
     );
   }
 
-  Widget _statItem(String value, String label) {
+  Widget _statItem(String value, String label, IconData icon, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1F2E),
+          color: const Color(0xFF1E2130).withOpacity(0.4),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: Column(
           children: [
-            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.5))),
+            Icon(icon, color: color, size: 18),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 8,
+                color: Colors.white.withOpacity(0.4),
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+              ),
+            ),
           ],
         ),
       ),
@@ -146,33 +294,104 @@ class ProfilTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Derniers points gagnés',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+        const Row(
+          children: [
+            Icon(
+              Icons.history_toggle_off,
+              color: Colors.purpleAccent,
+              size: 20,
+            ),
+            SizedBox(width: 10),
+            Text(
+              'HISTORIQUE DE PERFORMANCE',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         ...recentActions.map((action) => _buildActionTile(action)),
       ],
     );
   }
 
   Widget _buildActionTile(ActionLog action) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+    IconData icon = Icons.check_circle_outline;
+    Color color = Colors.cyanAccent;
+
+    if (action.type.contains('NUTRITION')) {
+      icon = Icons.restaurant_outlined;
+      color = Colors.orangeAccent;
+    } else if (action.type.contains('COGNITIVE')) {
+      icon = Icons.psychology_outlined;
+      color = Colors.blueAccent;
+    } else if (action.type.contains('MATCH')) {
+      icon = Icons.sports_soccer_outlined;
+      color = Colors.greenAccent;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Row(
         children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(action.type, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                Text('${action.module} • ${action.timeAgo}', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                Text(
+                  action.type.replaceAll('_', ' '),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  '${action.module.toUpperCase()} • ${action.timeAgo.toUpperCase()}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
               ],
             ),
           ),
           Text(
-            '+${action.points} pts',
-            style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 16),
+            '+${action.points}',
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'PTS',
+            style: TextStyle(
+              color: color.withOpacity(0.5),
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ],
       ),

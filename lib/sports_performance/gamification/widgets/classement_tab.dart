@@ -10,7 +10,9 @@ class ClassementTab extends StatelessWidget {
     return Consumer<GamificationProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading && provider.leaderboard.isEmpty) {
-          return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.purpleAccent),
+          );
         }
 
         final leaderboard = provider.leaderboard;
@@ -43,13 +45,19 @@ class ClassementTab extends StatelessWidget {
 
   Widget _buildFilters() {
     return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Expanded(child: _filterButton('Équipe', true)),
-          const SizedBox(width: 12),
-          Expanded(child: _filterButton('Mon poste', false)),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Expanded(child: _filterButton('ÉQUIPE', true)),
+            Expanded(child: _filterButton('POSTE', false)),
+          ],
+        ),
       ),
     );
   }
@@ -58,16 +66,29 @@ class ClassementTab extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF1C1F2E) : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isActive ? Colors.white24 : Colors.white10),
+        gradient: isActive
+            ? const LinearGradient(
+                colors: [Colors.purpleAccent, Color(0xFF6366F1)],
+              )
+            : null,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: Colors.purpleAccent.withOpacity(0.2),
+                  blurRadius: 8,
+                ),
+              ]
+            : null,
       ),
       child: Center(
         child: Text(
           label,
           style: TextStyle(
-            color: isActive ? Colors.white : Colors.white54,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            color: isActive ? Colors.white : Colors.white38,
+            fontWeight: FontWeight.w900,
+            fontSize: 12,
+            letterSpacing: 1,
           ),
         ),
       ),
@@ -75,123 +96,233 @@ class ClassementTab extends StatelessWidget {
   }
 
   Widget _buildPodium(List<dynamic> leaderboard) {
-    // Get top 3
     final top1 = leaderboard.length > 0 ? leaderboard[0] : null;
     final top2 = leaderboard.length > 1 ? leaderboard[1] : null;
     final top3 = leaderboard.length > 2 ? leaderboard[2] : null;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        if (top2 != null) _podiumItem(top2, 2, 70),
-        const SizedBox(width: 15),
-        if (top1 != null) _podiumItem(top1, 1, 90),
-        const SizedBox(width: 15),
-        if (top3 != null) _podiumItem(top3, 3, 60),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (top2 != null) _podiumItem(top2, 2, 90, Colors.blueGrey),
+          const SizedBox(width: 12),
+          if (top1 != null) _podiumItem(top1, 1, 120, Colors.amber),
+          const SizedBox(width: 12),
+          if (top3 != null) _podiumItem(top3, 3, 75, Colors.brown),
+        ],
+      ),
     );
   }
 
-  Widget _podiumItem(dynamic player, int rank, double height) {
+  Widget _podiumItem(
+    dynamic player,
+    int rank,
+    double height,
+    Color accentColor,
+  ) {
     bool isFirst = rank == 1;
-    String name = player['fullName'] ?? player['firstName'] ?? 'Joueur';
-    String pts = '${player['monthlyPoints']} pts';
-    String initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
+    String name = player['fullName'] ?? player['firstName'] ?? 'JOUEUR';
+    String pts = '${player['monthlyPoints']} PTS';
+    String initials = name.isNotEmpty
+        ? name.substring(0, 1).toUpperCase()
+        : '?';
 
     return Column(
       children: [
         Stack(
           alignment: Alignment.topCenter,
+          clipBehavior: Clip.none,
           children: [
             Container(
-              padding: const EdgeInsets.all(2),
+              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: isFirst ? Colors.amber : Colors.white24, width: 2),
+                gradient: LinearGradient(
+                  colors: [accentColor, accentColor.withOpacity(0.3)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withOpacity(0.3),
+                    blurRadius: 15,
+                    spreadRadius: -2,
+                  ),
+                ],
               ),
               child: CircleAvatar(
-                radius: 24,
-                backgroundColor: Colors.blueGrey.shade900,
-                child: Text(initials, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                radius: isFirst ? 34 : 26,
+                backgroundColor: const Color(0xFF161926),
+                child: Text(
+                  initials,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                  ),
+                ),
               ),
             ),
             if (isFirst)
               const Positioned(
-                top: -15,
-                child: Icon(Icons.workspace_premium, color: Colors.amber, size: 24),
+                top: -22,
+                child: Icon(
+                  Icons.workspace_premium,
+                  color: Colors.amber,
+                  size: 32,
+                ),
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Container(
-          width: 80,
+          width: 90,
           height: height,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: isFirst 
-                ? [const Color(0xFFE6B800), const Color(0xFF997A00)] 
-                : [const Color(0xFF2E3243), const Color(0xFF1C1F2E)],
+              colors: [
+                accentColor.withOpacity(0.2),
+                accentColor.withOpacity(0.05),
+              ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            border: Border.all(color: accentColor.withOpacity(0.3)),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('$rankè', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              Text(
+                '#$rank',
+                style: TextStyle(
+                  color: accentColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 24,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
             ],
           ),
         ),
-        const SizedBox(height: 8),
-        Text(name, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-        Text(pts, style: const TextStyle(color: Colors.white54, fontSize: 10)),
+        const SizedBox(height: 10),
+        Text(
+          name.toUpperCase(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.5,
+          ),
+        ),
+        Text(
+          pts,
+          style: TextStyle(
+            color: accentColor,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildLeaderboardList(List<dynamic> leaderboard, String? currentUserId) {
+  Widget _buildLeaderboardList(
+    List<dynamic> leaderboard,
+    String? currentUserId,
+  ) {
     return Column(
       children: List.generate(leaderboard.length, (index) {
         final player = leaderboard[index];
         final rank = index + 1;
         final isSelf = player['userId'] == currentUserId;
         final isTop3 = rank <= 3;
-
-        // Protection de l'Ego: si pas dans le top 3 et pas soi-même, on masque
         final isHidden = !isTop3 && !isSelf;
 
-        String name = isHidden ? 'Position masquée' : (player['fullName'] ?? player['firstName'] ?? 'Joueur');
-        if (isSelf) name += ' (Vous)';
-        
-        String pts = isHidden ? '--' : '${player['monthlyPoints']}';
-        Color rankColor = isTop3 ? Colors.amber : Colors.white70;
+        String name = isHidden
+            ? 'POSITION MASQUÉE'
+            : (player['fullName'] ?? player['firstName'] ?? 'JOUEUR')
+                  .toString()
+                  .toUpperCase();
+        if (isSelf) name += ' (VOUS)';
 
-        return _leaderboardTile(rank, name, pts, rankColor, isTop3, isSelf: isSelf, isHidden: isHidden);
+        String pts = isHidden ? '--' : '${player['monthlyPoints']}';
+        Color rankColor = rank == 1
+            ? Colors.amber
+            : (rank == 2
+                  ? Colors.blueGrey
+                  : (rank == 3 ? Colors.brown : Colors.white38));
+
+        return _leaderboardTile(
+          rank,
+          name,
+          pts,
+          rankColor,
+          isTop3,
+          isSelf: isSelf,
+          isHidden: isHidden,
+        );
       }),
     );
   }
 
-  Widget _leaderboardTile(int rank, String name, String pts, Color rankColor, bool isTop, {bool isSelf = false, bool isHidden = false}) {
+  Widget _leaderboardTile(
+    int rank,
+    String name,
+    String pts,
+    Color rankColor,
+    bool isTop, {
+    bool isSelf = false,
+    bool isHidden = false,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isSelf ? Colors.deepPurple.withOpacity(0.2) : const Color(0xFF161926),
-        borderRadius: BorderRadius.circular(12),
-        border: isSelf ? Border.all(color: Colors.deepPurple.withOpacity(0.5)) : null,
+        color: isSelf
+            ? Colors.purpleAccent.withOpacity(0.1)
+            : const Color(0xFF1E2130).withOpacity(0.4),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelf
+              ? Colors.purpleAccent.withOpacity(0.3)
+              : Colors.white.withOpacity(0.05),
+        ),
       ),
       child: Row(
         children: [
           SizedBox(
-            width: 30,
-            child: Text('$rank', style: TextStyle(color: rankColor, fontWeight: FontWeight.bold)),
+            width: 32,
+            child: Text(
+              '$rank',
+              style: TextStyle(
+                color: rankColor,
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
           ),
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: isHidden ? Colors.white10 : Colors.blueGrey.shade800,
-            child: Text(isHidden ? '?' : name[0], style: const TextStyle(fontSize: 12, color: Colors.white)),
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: rankColor.withOpacity(0.3)),
+            ),
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: isHidden
+                  ? Colors.white10
+                  : const Color(0xFF161926),
+              child: Text(
+                isHidden ? '?' : name[0],
+                style: TextStyle(
+                  fontSize: 14,
+                  color: rankColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -199,14 +330,32 @@ class ClassementTab extends StatelessWidget {
               name,
               style: TextStyle(
                 color: isHidden ? Colors.white24 : Colors.white,
-                fontStyle: isHidden ? FontStyle.italic : FontStyle.normal,
-                fontWeight: isSelf ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isSelf ? FontWeight.w900 : FontWeight.w700,
+                fontSize: 13,
+                letterSpacing: 0.5,
               ),
             ),
           ),
-          Text(
-            pts,
-            style: TextStyle(color: isHidden ? Colors.white10 : Colors.white, fontWeight: FontWeight.bold),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                pts,
+                style: TextStyle(
+                  color: isHidden ? Colors.white10 : Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
+                ),
+              ),
+              const Text(
+                'PTS',
+                style: TextStyle(
+                  color: Colors.white24,
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -214,12 +363,29 @@ class ClassementTab extends StatelessWidget {
   }
 
   Widget _buildEgoProtectionNote() {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: Text(
-        'Seul le top 3 est visible de tous. Les autres ne voient que leur propre position. Le classement se remet à zéro chaque mois.',
-        textAlign: TextAlign.center,
-        style: TextStyle(color: Colors.white24, fontSize: 11),
+    return Container(
+      margin: const EdgeInsets.only(top: 24, bottom: 40),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.02),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Colors.white24, size: 16),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Seul le top 3 est visible de tous. Les autres ne voient que leur propre position. Le classement se remet à zéro chaque mois.',
+              style: TextStyle(
+                color: Colors.white24,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
