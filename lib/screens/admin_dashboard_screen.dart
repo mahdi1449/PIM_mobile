@@ -1,11 +1,11 @@
+// ignore_for_file: unused_element
+
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_controller.dart';
-import 'login_screen.dart';
 import 'account_settings_screen.dart';
-import 'players/players_list_view.dart';
-import 'coaches/coaches_list_view.dart';
+import 'login_screen.dart';
 import '../utils/role_mapper.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -20,23 +20,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isSidebarExpanded = true;
   int _selectedIndex = 0;
-  
+
   List<dynamic> _pendingUsers = [];
   List<dynamic> _allUsers = [];
   List<dynamic> _filteredUsers = [];
   bool _isLoadingPending = false;
   bool _isLoadingAll = false;
   String? _userRole;
-  
+
   // Filters
   String? _selectedRoleFilter;
   String? _selectedPositionFilter;
-  
-  final List<String> _roles = [
-    'All',
-    ...RoleMapper.labels,
-  ];
-  
+
+  final List<String> _roles = ['All', ...RoleMapper.labels];
+
   final List<String> _positions = [
     'All',
     'Gardien',
@@ -75,7 +72,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   bool get _isAdmin => RoleMapper.isAdmin(_userRole);
   bool get _isManager =>
-      RoleMapper.isAdmin(_userRole) || RoleMapper.normalize(_userRole) == 'CLUB_RESPONSABLE';
+      RoleMapper.isAdmin(_userRole) ||
+      RoleMapper.normalize(_userRole) == 'CLUB_RESPONSABLE';
 
   Future<void> _handleLogout() async {
     await _apiService.removeToken();
@@ -107,7 +105,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
 
     final result = await _apiService.getPendingUsers();
-    
+
     setState(() {
       _isLoadingPending = false;
     });
@@ -133,7 +131,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
 
     final result = await _apiService.getAllUsers();
-    
+
     setState(() {
       _isLoadingAll = false;
     });
@@ -155,18 +153,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   void _applyFilters() {
     List<dynamic> filtered = List.from(_allUsers);
-    
+
     if (_selectedRoleFilter != null && _selectedRoleFilter != 'All') {
       final selectedCode = RoleMapper.toCode(_selectedRoleFilter!);
       filtered = filtered
-          .where((u) => RoleMapper.normalize(u['role']?.toString()) == selectedCode)
+          .where(
+            (u) => RoleMapper.normalize(u['role']?.toString()) == selectedCode,
+          )
           .toList();
     }
-    
+
     if (_selectedPositionFilter != null && _selectedPositionFilter != 'All') {
-      filtered = filtered.where((u) => u['position'] == _selectedPositionFilter).toList();
+      filtered = filtered
+          .where((u) => u['position'] == _selectedPositionFilter)
+          .toList();
     }
-    
+
     setState(() {
       _filteredUsers = filtered;
     });
@@ -264,7 +266,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildSidebar() {
     final sidebarWidth = _isSidebarExpanded ? 250.0 : 70.0;
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       width: sidebarWidth,
@@ -294,11 +296,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.admin_panel_settings,
-                  color: Colors.white,
-                  size: 32,
-                ),
+                Icon(Icons.admin_panel_settings, color: Colors.white, size: 32),
                 if (_isSidebarExpanded) ...[
                   const SizedBox(width: 12),
                   Expanded(
@@ -314,7 +312,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ],
                 IconButton(
                   icon: Icon(
-                    _isSidebarExpanded ? Icons.chevron_left : Icons.chevron_right,
+                    _isSidebarExpanded
+                        ? Icons.chevron_left
+                        : Icons.chevron_right,
                     color: Colors.white,
                   ),
                   onPressed: () {
@@ -327,7 +327,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
           ),
-          
+
           // Notification badge for pending users
           if (_pendingUsers.isNotEmpty && _isSidebarExpanded)
             Container(
@@ -339,7 +339,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.notifications_active, color: Colors.white, size: 20),
+                  Icon(
+                    Icons.notifications_active,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -354,7 +358,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ],
               ),
             ),
-          
+
           // Menu Items
           Expanded(
             child: ListView(
@@ -370,7 +374,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     icon: Icons.pending_actions,
                     title: 'Pending Approval',
                     index: 1,
-                    badge: _pendingUsers.isNotEmpty ? _pendingUsers.length : null,
+                    badge: _pendingUsers.isNotEmpty
+                        ? _pendingUsers.length
+                        : null,
                   ),
                   _buildMenuItem(
                     icon: Icons.people,
@@ -405,7 +411,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 const Divider(color: Colors.white24, height: 32),
                 ListTile(
-                  leading: Icon(Icons.settings, color: AppTheme.blueCiel, size: 24),
+                  leading: Icon(
+                    Icons.settings,
+                    color: AppTheme.blueCiel,
+                    size: 24,
+                  ),
                   title: Text(
                     'Account & Settings',
                     style: TextStyle(
@@ -423,7 +433,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.logout, color: Colors.red.shade300, size: 24),
+                  leading: Icon(
+                    Icons.logout,
+                    color: Colors.red.shade300,
+                    size: 24,
+                  ),
                   title: Text(
                     'Logout',
                     style: TextStyle(
@@ -437,7 +451,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
           ),
-          
+
           // Footer
           Container(
             padding: const EdgeInsets.all(16),
@@ -450,11 +464,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       fontWeight: FontWeight.w500,
                     ),
                   )
-                : Icon(
-                    Icons.sports_soccer,
-                    color: AppTheme.blueCiel,
-                    size: 24,
-                  ),
+                : Icon(Icons.sports_soccer, color: AppTheme.blueCiel, size: 24),
           ),
         ],
       ),
@@ -563,10 +573,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return _isAdmin ? _buildPendingUsersView() : _buildDashboardOverview();
       case 2:
         return _isAdmin ? _buildAllUsersView() : _buildDashboardOverview();
-      case 3:
-        return const PlayersListView();
-      case 4:
-        return const CoachesListView();
       default:
         return _buildDashboardOverview();
     }
@@ -576,8 +582,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final scale = _scale(context);
     final totalUsers = _allUsers.length;
     final pendingCount = _pendingUsers.length;
-    final approvedCount = _allUsers.where((u) => u['isApprovedByAdmin'] == true).length;
-    final healthyPct = totalUsers > 0 ? ((approvedCount / totalUsers) * 100).round() : 0;
+    final approvedCount = _allUsers
+        .where((u) => u['isApprovedByAdmin'] == true)
+        .length;
+    final healthyPct = totalUsers > 0
+        ? ((approvedCount / totalUsers) * 100).round()
+        : 0;
 
     final isMobile = _isMobileLayout(context);
     return Container(
@@ -588,11 +598,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           _buildQuickAccessRow(scale),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(20 * scale, 16 * scale, 20 * scale, 100 * scale),
+              padding: EdgeInsets.fromLTRB(
+                20 * scale,
+                16 * scale,
+                20 * scale,
+                100 * scale,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionHeader('UPCOMING EVENTS', 'View Calendar', () {}),
+                  _buildSectionHeader(
+                    'UPCOMING EVENTS',
+                    'View Calendar',
+                    () {},
+                  ),
                   SizedBox(height: 12 * scale),
                   _buildEventCard(
                     title: 'MATCH DAY • UEFA CL vs Manchester City',
@@ -615,13 +634,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       Expanded(
                         child: _buildNerveCard(
                           icon: Icons.groups,
-                          change: '+${totalUsers > 0 ? ((approvedCount / totalUsers) * 100).round() : 0}%',
+                          change:
+                              '+${totalUsers > 0 ? ((approvedCount / totalUsers) * 100).round() : 0}%',
                           changePositive: true,
                           title: 'Active Squad',
                           value: '$approvedCount Active',
                           percent: healthyPct,
                           accentBlue: true,
-                          onTap: () => setState(() => _selectedIndex = _isAdmin ? 2 : 3),
+                          onTap: () =>
+                              setState(() => _selectedIndex = _isAdmin ? 2 : 3),
                         ),
                       ),
                       SizedBox(width: 12 * scale),
@@ -632,7 +653,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           changePositive: false,
                           title: 'Live Recruiting',
                           value: '$pendingCount Leads',
-                          percent: totalUsers > 0 ? ((pendingCount / totalUsers) * 100).round() : 0,
+                          percent: totalUsers > 0
+                              ? ((pendingCount / totalUsers) * 100).round()
+                              : 0,
                           accentBlue: false,
                           onTap: () => setState(() => _selectedIndex = 1),
                         ),
@@ -671,10 +694,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildUnifiedHubAppBar(double scale) {
     return Container(
-      padding: EdgeInsets.fromLTRB(16 * scale, MediaQuery.of(context).padding.top + 8, 16 * scale, 16 * scale),
+      padding: EdgeInsets.fromLTRB(
+        16 * scale,
+        MediaQuery.of(context).padding.top + 8,
+        16 * scale,
+        16 * scale,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.white,
-        border: Border(bottom: BorderSide(color: AppTheme.strokeDark, width: 1)),
+        border: Border(
+          bottom: BorderSide(color: AppTheme.strokeDark, width: 1),
+        ),
       ),
       child: Row(
         children: [
@@ -773,7 +803,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 padding: EdgeInsets.only(right: 12 * scale),
                 child: InkWell(
                   onTap: () {
-                    if (e.index != null) setState(() => _selectedIndex = e.index!);
+                    if (e.index != null)
+                      setState(() => _selectedIndex = e.index!);
                   },
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
@@ -787,7 +818,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(e.icon, color: AppTheme.blueCiel, size: 28 * scale),
+                        Icon(
+                          e.icon,
+                          color: AppTheme.blueCiel,
+                          size: 28 * scale,
+                        ),
                         SizedBox(height: 6 * scale),
                         Text(
                           e.label,
@@ -808,7 +843,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String? actionLabel, VoidCallback? onAction) {
+  Widget _buildSectionHeader(
+    String title,
+    String? actionLabel,
+    VoidCallback? onAction,
+  ) {
     return Row(
       children: [
         Text(
@@ -872,10 +911,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.darkGrey,
-                      ),
+                      style: TextStyle(fontSize: 12, color: AppTheme.darkGrey),
                     ),
                   ],
                 ),
@@ -909,55 +945,50 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           decoration: BoxDecoration(
             color: AppTheme.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border(
-              left: BorderSide(color: accent, width: 4),
-            ),
+            border: Border(left: BorderSide(color: accent, width: 4)),
           ),
           child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: accent, size: 22),
-              const Spacer(),
+              Row(
+                children: [
+                  Icon(icon, color: accent, size: 22),
+                  const Spacer(),
+                  Text(
+                    change,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: changePositive ? AppTheme.accentGreen : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               Text(
-                change,
+                title,
+                style: TextStyle(fontSize: 12, color: AppTheme.darkGrey),
+              ),
+              Text(
+                value,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: changePositive ? AppTheme.accentGreen : Colors.red,
+                  color: AppTheme.blueFonce,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: percent / 100.0,
+                  minHeight: 6,
+                  backgroundColor: AppTheme.strokeDark,
+                  valueColor: AlwaysStoppedAnimation<Color>(accent),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppTheme.darkGrey,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.blueFonce,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: percent / 100.0,
-              minHeight: 6,
-              backgroundColor: AppTheme.strokeDark,
-              valueColor: AlwaysStoppedAnimation<Color>(accent),
-            ),
-          ),
-        ],
-      ),
         ),
       ),
     );
@@ -991,7 +1022,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                   Container(
                     margin: const EdgeInsets.only(top: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.accentGreen.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -1008,10 +1042,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Remaining Transfer Window Budget',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.darkGrey,
-                    ),
+                    style: TextStyle(fontSize: 12, color: AppTheme.darkGrey),
                   ),
                 ],
               ),
@@ -1072,10 +1103,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     const SizedBox(height: 4),
                     Text(
                       body,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.darkGrey,
-                      ),
+                      style: TextStyle(fontSize: 13, color: AppTheme.darkGrey),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -1122,7 +1150,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               Icon(icon, color: color, size: 32),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -1180,11 +1211,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              color: AppTheme.blueFonce,
-              size: 40,
-            ),
+            Icon(icon, color: AppTheme.blueFonce, size: 40),
             const SizedBox(height: 12),
             Text(
               title,
@@ -1245,7 +1272,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 if (_pendingUsers.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.blueCiel,
                       borderRadius: BorderRadius.circular(20),
@@ -1271,39 +1301,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: _isLoadingPending
                 ? const Center(child: CircularProgressIndicator())
                 : _pendingUsers.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.check_circle_outline,
-                              size: 80,
-                              color: AppTheme.blueCiel.withOpacity(0.5),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No pending users',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: AppTheme.darkGrey.withOpacity(0.7),
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 80,
+                          color: AppTheme.blueCiel.withOpacity(0.5),
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadPendingUsers,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: _pendingUsers.length,
-                          itemBuilder: (context, index) {
-                            return _buildUserCard(
-                              Map<String, dynamic>.from(_pendingUsers[index]),
-                              showActions: true,
-                            );
-                          },
+                        const SizedBox(height: 16),
+                        Text(
+                          'No pending users',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: AppTheme.darkGrey.withOpacity(0.7),
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadPendingUsers,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: _pendingUsers.length,
+                      itemBuilder: (context, index) {
+                        return _buildUserCard(
+                          Map<String, dynamic>.from(_pendingUsers[index]),
+                          showActions: true,
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -1331,11 +1361,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.people,
-                      color: AppTheme.blueFonce,
-                      size: 32,
-                    ),
+                    Icon(Icons.people, color: AppTheme.blueFonce, size: 32),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -1432,39 +1458,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: _isLoadingAll
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredUsers.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.people_outline,
-                              size: 80,
-                              color: AppTheme.blueCiel.withOpacity(0.5),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No users found',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: AppTheme.darkGrey.withOpacity(0.7),
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 80,
+                          color: AppTheme.blueCiel.withOpacity(0.5),
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadAllUsers,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: _filteredUsers.length,
-                          itemBuilder: (context, index) {
-                            return _buildUserCard(
-                              Map<String, dynamic>.from(_filteredUsers[index]),
-                              showActions: false,
-                            );
-                          },
+                        const SizedBox(height: 16),
+                        Text(
+                          'No users found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: AppTheme.darkGrey.withOpacity(0.7),
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadAllUsers,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: _filteredUsers.length,
+                      itemBuilder: (context, index) {
+                        return _buildUserCard(
+                          Map<String, dynamic>.from(_filteredUsers[index]),
+                          showActions: false,
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -1472,7 +1498,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildUserCard(Map<String, dynamic> user, {bool showActions = false}) {
-    final fullName = '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim();
+    final fullName = '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'
+        .trim();
     final email = user['email'] ?? '';
     final role = user['role'] ?? '';
     final roleCode = RoleMapper.normalize(role);
@@ -1485,9 +1512,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -1522,7 +1547,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: _getRoleColor(roleCode).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
@@ -1539,7 +1567,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     if (position.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.blueCiel.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(15),
@@ -1561,7 +1592,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                _buildStatusChip('Email Verified', isEmailVerified, AppTheme.blueCiel),
+                _buildStatusChip(
+                  'Email Verified',
+                  isEmailVerified,
+                  AppTheme.blueCiel,
+                ),
                 const SizedBox(width: 8),
                 _buildStatusChip('Approved', isApproved, AppTheme.blueFonce),
                 const SizedBox(width: 8),
@@ -1736,9 +1771,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppTheme.blueFonce.withOpacity(0.08),
-                border: Border(
-                  bottom: BorderSide(color: AppTheme.strokeDark),
-                ),
+                border: Border(bottom: BorderSide(color: AppTheme.strokeDark)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1754,10 +1787,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   const SizedBox(height: 4),
                   Text(
                     _userRole ?? '',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.darkGrey,
-                    ),
+                    style: TextStyle(fontSize: 13, color: AppTheme.darkGrey),
                   ),
                 ],
               ),
@@ -1849,7 +1879,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(12 * scale, 10 * scale, 12 * scale, 12 * scale),
+          padding: EdgeInsets.fromLTRB(
+            12 * scale,
+            10 * scale,
+            12 * scale,
+            12 * scale,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1862,28 +1897,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               else
                 SizedBox(width: 64 * scale),
               if (showAdminItems)
-                _navItem(
-                  index: 2,
-                  icon: Icons.people_outline,
-                  label: 'Users',
-                )
+                _navItem(index: 2, icon: Icons.people_outline, label: 'Users')
               else
                 SizedBox(width: 64 * scale),
               _centerNavItem(),
               if (showManagerItems)
-                _navItem(
-                  index: 3,
-                  icon: Icons.sports_soccer,
-                  label: 'Players',
-                )
+                _navItem(index: 3, icon: Icons.sports_soccer, label: 'Players')
               else
                 SizedBox(width: 64 * scale),
               if (showManagerItems)
-                _navItem(
-                  index: 4,
-                  icon: Icons.sports,
-                  label: 'Coaches',
-                )
+                _navItem(index: 4, icon: Icons.sports, label: 'Coaches')
               else
                 SizedBox(width: 64 * scale),
             ],
@@ -1901,7 +1924,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }) {
     final scale = _scale(context);
     final isSelected = _selectedIndex == index;
-    final color = isSelected ? AppTheme.blueFonce : AppTheme.darkGrey.withOpacity(0.6);
+    final color = isSelected
+        ? AppTheme.blueFonce
+        : AppTheme.darkGrey.withOpacity(0.6);
     return GestureDetector(
       onTap: enabled
           ? () {
@@ -1915,7 +1940,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: enabled ? color : AppTheme.darkGrey, size: 22 * scale),
+            Icon(
+              icon,
+              color: enabled ? color : AppTheme.darkGrey,
+              size: 22 * scale,
+            ),
             SizedBox(height: 4 * scale),
             Text(
               label,
@@ -1934,7 +1963,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _centerNavItem() {
     final scale = _scale(context);
     final isSelected = _selectedIndex == 0;
-    final color = isSelected ? AppTheme.blueFonce : AppTheme.blueFonce.withOpacity(0.7);
+    final color = isSelected
+        ? AppTheme.blueFonce
+        : AppTheme.blueFonce.withOpacity(0.7);
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -1950,7 +1981,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             decoration: BoxDecoration(
               color: AppTheme.white,
               shape: BoxShape.circle,
-              border: Border.all(color: AppTheme.blueCiel.withOpacity(0.6), width: 1.5 * scale),
+              border: Border.all(
+                color: AppTheme.blueCiel.withOpacity(0.6),
+                width: 1.5 * scale,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -1959,11 +1993,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ],
             ),
-            child: Icon(
-              Icons.dashboard,
-              color: color,
-              size: 26 * scale,
-            ),
+            child: Icon(Icons.dashboard, color: color, size: 26 * scale),
           ),
           SizedBox(height: 4 * scale),
           Text(
@@ -2011,28 +2041,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = _isMobileLayout(context);
-    if (isMobile) {
-      return Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: AppTheme.lightGrey,
-        appBar: _buildMobileAppBar(),
-        drawer: _buildAdminDrawer(),
-        body: _buildDashboardContent(),
-        bottomNavigationBar: _buildBottomNav(),
-      );
-    }
-
-    return Scaffold(
-      body: Row(
-        children: [
-          _buildSidebar(),
-          Expanded(
-            child: _buildDashboardContent(),
-          ),
-        ],
-      ),
-    );
+    // The app shell already provides navigation. Keep this dashboard content-only
+    // so the admin web interface does not render a second nested menu.
+    return _buildDashboardContent();
   }
 }
 

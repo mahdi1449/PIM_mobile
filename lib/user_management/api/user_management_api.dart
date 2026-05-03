@@ -195,6 +195,14 @@ class UserManagementApi {
         .toList();
   }
 
+  Future<List<ClubModel>> getAllClubs(String token) async {
+    final list = await _getList('/clubs', token: token);
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map(ClubModel.fromJson)
+        .toList();
+  }
+
   Future<void> approveClub(String token, String clubId, bool approve) async {
     await _patch('/clubs/$clubId/approval', {
       'status': approve ? 'ACTIVE' : 'REJECTED',
@@ -234,6 +242,45 @@ class UserManagementApi {
         .whereType<Map<String, dynamic>>()
         .map(UserModel.fromJson)
         .toList();
+  }
+
+  Future<AuditLogsPage> getAuditLogs(
+    String token, {
+    String? keyword,
+    String? userId,
+    String? clubId,
+    String? action,
+    String? module,
+    String? entityType,
+    DateTime? startDate,
+    DateTime? endDate,
+    int page = 1,
+    int limit = 25,
+  }) async {
+    final data = await _getObject(
+      '/audit/logs',
+      token: token,
+      query: {
+        'page': '$page',
+        'limit': '$limit',
+        if (keyword != null && keyword.trim().isNotEmpty)
+          'keyword': keyword.trim(),
+        if (userId != null && userId.trim().isNotEmpty) 'userId': userId.trim(),
+        if (clubId != null && clubId.trim().isNotEmpty) 'clubId': clubId.trim(),
+        if (action != null && action.trim().isNotEmpty) 'action': action.trim(),
+        if (module != null && module.trim().isNotEmpty) 'module': module.trim(),
+        if (entityType != null && entityType.trim().isNotEmpty)
+          'entityType': entityType.trim(),
+        if (startDate != null) 'startDate': startDate.toIso8601String(),
+        if (endDate != null) 'endDate': endDate.toIso8601String(),
+      },
+    );
+    return AuditLogsPage.fromJson(data);
+  }
+
+  Future<AuditStatsModel> getAuditStats(String token) async {
+    final data = await _getObject('/audit/stats', token: token);
+    return AuditStatsModel.fromJson(data);
   }
 
   Future<List<ChatUserModel>> getChatUsers(
@@ -461,6 +508,48 @@ class UserManagementApi {
     }
     if (onDisconnect != null) {
       socket.onDisconnect(onDisconnect);
+    }
+
+    return socket;
+  }
+
+  io.Socket connectAuditSocket({
+    required String token,
+    void Function()? onConnect,
+    void Function(dynamic error)? onConnectError,
+    void Function(dynamic reason)? onDisconnect,
+    void Function(AuditLogModel log)? onAuditLogCreated,
+  }) {
+    final socket = io.io(
+      '${AppConfig.baseUrl}/audit',
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .setAuth({'token': token})
+          .enableReconnection()
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(5000)
+          .setReconnectionAttempts(999999)
+          .enableForceNew()
+          .build(),
+    );
+
+    if (onConnect != null) {
+      socket.onConnect((_) => onConnect());
+    }
+    if (onConnectError != null) {
+      socket.onConnectError(onConnectError);
+    }
+    if (onDisconnect != null) {
+      socket.onDisconnect(onDisconnect);
+    }
+    if (onAuditLogCreated != null) {
+      socket.on('audit_log_created', (payload) {
+        if (payload is Map) {
+          onAuditLogCreated(
+            AuditLogModel.fromJson(Map<String, dynamic>.from(payload)),
+          );
+        }
+      });
     }
 
     return socket;

@@ -29,7 +29,7 @@ class EventsService {
         '/events',
         queryParameters: queryParams,
       );
-      final List<dynamic> data = response.data;
+      final List<dynamic> data = _extractEventsList(response.data);
       return data.map((json) => Event.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Erreur lors de la récupération des événements: $e');
@@ -40,7 +40,7 @@ class EventsService {
   Future<Event> getEvent(String id) async {
     try {
       final response = await _apiClient.get('/events/$id');
-      return Event.fromJson(response.data);
+      return Event.fromJson(_extractEventObject(response.data));
     } catch (e) {
       throw Exception('Erreur lors de la récupération de l\'événement: $e');
     }
@@ -53,7 +53,7 @@ class EventsService {
         '/events',
         data: event.toJson(),
       );
-      return Event.fromJson(response.data);
+      return Event.fromJson(_extractEventObject(response.data));
     } catch (e) {
       throw Exception('Erreur lors de la création de l\'événement: $e');
     }
@@ -66,7 +66,7 @@ class EventsService {
         '/events/$id',
         data: event.toJson(),
       );
-      return Event.fromJson(response.data);
+      return Event.fromJson(_extractEventObject(response.data));
     } catch (e) {
       throw Exception('Erreur lors de la mise à jour de l\'événement: $e');
     }
@@ -85,7 +85,7 @@ class EventsService {
   Future<Event> closeEvent(String id) async {
     try {
       final response = await _apiClient.post('/events/$id/close');
-      return Event.fromJson(response.data);
+      return Event.fromJson(_extractEventObject(response.data));
     } catch (e) {
       throw Exception('Erreur lors de la clôture de l\'événement: $e');
     }
@@ -181,5 +181,26 @@ class EventsService {
       throw Exception(
           'Erreur lors de la mise à jour du statut du joueur: $e');
     }
+  }
+
+  List<dynamic> _extractEventsList(dynamic payload) {
+    if (payload is List) return payload;
+    if (payload is Map) {
+      final data = payload['data'];
+      if (data is Map && data['events'] is List) return data['events'] as List;
+      if (data is List) return data;
+      if (payload['events'] is List) return payload['events'] as List;
+    }
+    return const [];
+  }
+
+  Map<String, dynamic> _extractEventObject(dynamic payload) {
+    if (payload is Map<String, dynamic>) {
+      final data = payload['data'];
+      if (data is Map<String, dynamic>) return data;
+      return payload;
+    }
+    if (payload is Map) return Map<String, dynamic>.from(payload);
+    return <String, dynamic>{};
   }
 }

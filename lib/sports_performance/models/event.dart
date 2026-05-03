@@ -14,10 +14,33 @@ enum EventType {
   const EventType(this.value);
 
   static EventType fromString(String value) {
+    final normalized = switch (value) {
+      'entrainement' => 'test_session',
+      'test_physique' => 'test_session',
+      'autre' => 'test_session',
+      _ => value,
+    };
     return EventType.values.firstWhere(
-      (e) => e.value == value,
+      (e) => e.value == normalized,
       orElse: () => EventType.testSession,
     );
+  }
+
+  String get backendValue {
+    switch (this) {
+      case EventType.testSession:
+        return 'entrainement';
+      case EventType.evaluation:
+        return 'test_physique';
+      case EventType.aiAnalysis:
+        return 'autre';
+      case EventType.match:
+      case EventType.detection:
+        return value;
+      case EventType.medical:
+      case EventType.recovery:
+        return 'autre';
+    }
   }
 
   TestCategory get recommendedCategory {
@@ -68,10 +91,27 @@ enum EventStatus {
   const EventStatus(this.value);
 
   static EventStatus fromString(String value) {
+    final normalized = switch (value) {
+      'scheduled' => 'draft',
+      'ongoing' => 'in_progress',
+      'cancelled' => 'draft',
+      _ => value,
+    };
     return EventStatus.values.firstWhere(
-      (e) => e.value == value,
+      (e) => e.value == normalized,
       orElse: () => EventStatus.draft,
     );
+  }
+
+  String get backendValue {
+    switch (this) {
+      case EventStatus.draft:
+        return 'scheduled';
+      case EventStatus.inProgress:
+        return 'ongoing';
+      case EventStatus.completed:
+        return 'completed';
+    }
   }
 }
 
@@ -106,15 +146,16 @@ class Event {
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
+    final startDateRaw = json['startDate'] ?? json['date'];
+    final endDateRaw = json['endDate'] ?? json['date'];
     return Event(
       id: json['_id'] ?? json['id'],
       title: json['title'],
-      type: EventType.fromString(json['type']),
-      date: DateTime.parse(json['date']),
-      endDate:
-          json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
-      location: json['location'],
-      status: EventStatus.fromString(json['status']),
+      type: EventType.fromString((json['eventType'] ?? json['type']).toString()),
+      date: DateTime.parse(startDateRaw ?? DateTime.now().toIso8601String()),
+      endDate: endDateRaw != null ? DateTime.parse(endDateRaw) : null,
+      location: json['location'] ?? '',
+      status: EventStatus.fromString((json['status'] ?? 'draft').toString()),
       description: json['description'],
       // Handle coachId whether it's populated (Map), ID string, or null
       coachId: json['coachId'] is Map
@@ -142,11 +183,10 @@ class Event {
   Map<String, dynamic> toJson() {
     return {
       'title': title,
-      'type': type.value,
-      'date': date.toIso8601String(),
-      'endDate': endDate?.toIso8601String(),
+      'eventType': type.backendValue,
+      'startDate': date.toIso8601String(),
+      'endDate': (endDate ?? date.add(const Duration(hours: 1))).toIso8601String(),
       'location': location,
-      'status': status.value,
       'description': description,
       if (coachId != null && coachId!.isNotEmpty) 'coachId': coachId,
       'testTypes': testTypes,

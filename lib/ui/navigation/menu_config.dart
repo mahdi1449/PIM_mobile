@@ -56,19 +56,14 @@ class MenuConfig {
             route: AppRoutes.communication,
           ),
           MenuItemConfig(
-            title: 'Players',
-            icon: Icons.people_outline,
-            route: AppRoutes.players,
+            title: 'Users & Clubs',
+            icon: Icons.manage_accounts_outlined,
+            route: AppRoutes.adminUsers,
           ),
           MenuItemConfig(
-            title: 'Reports',
-            icon: Icons.analytics_outlined,
-            route: AppRoutes.reports,
-          ),
-          MenuItemConfig(
-            title: 'Team Chemistry',
-            icon: Icons.hub_outlined,
-            route: AppRoutes.chemistry,
+            title: 'Audit Trail',
+            icon: Icons.receipt_long_outlined,
+            route: AppRoutes.auditLog,
           ),
         ];
       case RoleMapper.clubResponsable:

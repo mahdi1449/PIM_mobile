@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../../config/app_config.dart';
 import '../models/nutrition_models.dart';
 
 class NutritionApiService {
-  static const String _baseUrl = 'http://10.0.2.2:3000/api/sports-performance/nutrition-lab';
+  static String get _baseUrl =>
+      '${AppConfig.apiBaseUrl}/sports-performance/nutrition-lab';
 
   Future<PhysicalProfile?> getPhysicalProfile(String userId) async {
     try {
@@ -16,7 +18,9 @@ class NutritionApiService {
           heightCm: (json['heightCm'] as num?)?.toDouble() ?? 0,
           tourTaille: (json['tourTaille'] as num?)?.toDouble() ?? 0,
           tourCou: (json['tourCou'] as num?)?.toDouble() ?? 0,
-          dateNaissance: json['dateNaissance'] != null ? DateTime.parse(json['dateNaissance']) : DateTime.now(),
+          dateNaissance: json['dateNaissance'] != null
+              ? DateTime.parse(json['dateNaissance'])
+              : DateTime.now(),
           position: json['position'] ?? 'Unknown',
           graissePercent: (json['graissePercent'] as num?)?.toDouble(),
           masseMuscul: (json['masseMuscul'] as num?)?.toDouble(),
@@ -70,7 +74,9 @@ class NutritionApiService {
 
   Future<MetabolicStatus?> getMetabolicStatus(String userId) async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/metabolic-status/$userId'));
+      final response = await http.get(
+        Uri.parse('$_baseUrl/metabolic-status/$userId'),
+      );
       if (response.statusCode == 200) {
         return MetabolicStatus.fromJson(jsonDecode(response.body));
       }
@@ -82,7 +88,9 @@ class NutritionApiService {
 
   Future<WeeklyMealPlan?> getWeeklyMealPlan(String userId) async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/weekly-plan/$userId'));
+      final response = await http.get(
+        Uri.parse('$_baseUrl/weekly-plan/$userId'),
+      );
       if (response.statusCode == 200) {
         return WeeklyMealPlan.fromJson(jsonDecode(response.body));
       }
@@ -94,7 +102,9 @@ class NutritionApiService {
 
   Future<WeeklyMealPlan?> generateAiWeeklyPlan(String userId) async {
     try {
-      final response = await http.post(Uri.parse('$_baseUrl/weekly-plan/generate/$userId'));
+      final response = await http.post(
+        Uri.parse('$_baseUrl/weekly-plan/generate/$userId'),
+      );
       if (response.statusCode == 200 || response.statusCode == 201) {
         return WeeklyMealPlan.fromJson(jsonDecode(response.body));
       }

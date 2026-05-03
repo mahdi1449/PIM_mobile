@@ -1,18 +1,42 @@
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
   // Backend base URL
   // For Android emulator: http://10.0.2.2:3000
-  // For iOS simulator: http://localhost:3000
+  // For Flutter web/iOS simulator: http://localhost:3000
   // For physical device on same Wi-Fi: http://<YOUR_MAC_LOCAL_IP>:3000
-  static const String _baseUrlRaw = String.fromEnvironment(
+  static const String _baseUrlOverride = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:3000',
+    defaultValue: '',
   );
-  static String get baseUrl => _baseUrlRaw;
+  static String get baseUrl {
+    if (_baseUrlOverride.trim().isNotEmpty) {
+      return _baseUrlOverride.trim();
+    }
+    if (kIsWeb) {
+      final host = Uri.base.host.isEmpty ? 'localhost' : Uri.base.host;
+      return 'http://$host:3000';
+    }
+    return 'http://10.0.2.2:3000';
+  }
 
   // Player Value AI service
   // For Android emulator: http://10.0.2.2:8002
-  // For iOS simulator: http://localhost:8002
-  static const String playerValueAiBaseUrl = 'http://10.0.2.2:8002';
+  // For Flutter web/iOS simulator: http://localhost:8002
+  static const String _playerValueAiOverride = String.fromEnvironment(
+    'PLAYER_VALUE_AI_BASE_URL',
+    defaultValue: '',
+  );
+  static String get playerValueAiBaseUrl {
+    if (_playerValueAiOverride.trim().isNotEmpty) {
+      return _playerValueAiOverride.trim();
+    }
+    if (kIsWeb) {
+      final host = Uri.base.host.isEmpty ? 'localhost' : Uri.base.host;
+      return 'http://$host:8002';
+    }
+    return 'http://10.0.2.2:8002';
+  }
 
   static String get apiBaseUrl => '$baseUrl/api';
 

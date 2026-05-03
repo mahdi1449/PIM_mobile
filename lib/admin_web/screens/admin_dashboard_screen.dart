@@ -7,7 +7,7 @@ import 'package:odinclub/user_management/models/user_management_models.dart';
 
 import '../theme/admin_theme.dart';
 
-enum _AdminView { dashboard, users, clubs }
+enum _AdminView { dashboard, users, clubs, audit }
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({
@@ -429,8 +429,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               _navItem(
                 'Audit',
-                false,
-                null,
+                _currentView == _AdminView.audit,
+                () => setState(() => _currentView = _AdminView.audit),
                 icon: Icons.verified_user_outlined,
               ),
               const Spacer(),
@@ -476,6 +476,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       selectedClub,
                       clubUsers,
                     ),
+                    _AdminView.audit => _buildAuditView(),
                   },
           ),
         ),
@@ -1235,6 +1236,692 @@ class _ResponsableManagementRow extends StatelessWidget {
           ],
         ),
       ),
+        ),
+      ),
     );
   }
 }
+
+  Widget _buildAuditView() {
+    final surface = Theme.of(context).colorScheme.surface;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? const Color(0xFF2B356A) : const Color(0xFFE2E8F0);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Audit Trail Report',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: isDark ? Colors.white : const Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF10B981),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Live stream active',
+                    style: TextStyle(
+                      color: Color(0xFF10B981),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: 240,
+              height: 40,
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Quick search logs...',
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white54 : const Color(0xFF94A3B8),
+                    fontSize: 14,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 18,
+                    color: isDark ? Colors.white54 : const Color(0xFF94A3B8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            IconButton(
+              icon: const Icon(Icons.notifications_none),
+              color: isDark ? Colors.white70 : const Color(0xFF64748B),
+              onPressed: () {},
+            ),
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              color: isDark ? Colors.white70 : const Color(0xFF64748B),
+              onPressed: () {},
+            ),
+            const SizedBox(width: 16),
+            Row(
+              children: [
+                const CircleAvatar(
+                  radius: 16,
+                  backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Settings',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: _AuditStatCard(
+                title: 'TOTAL LOGS',
+                value: '759',
+                icon: Icons.bar_chart,
+                iconColor: const Color(0xFF3B82F6),
+                bgColor: const Color(0xFFEFF6FF),
+                isDark: isDark,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _AuditStatCard(
+                title: 'LAST 24H',
+                value: '740',
+                icon: Icons.trending_up,
+                iconColor: const Color(0xFF10B981),
+                bgColor: const Color(0xFFECFDF5),
+                isDark: isDark,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _AuditStatCard(
+                title: 'SUSPICIOUS',
+                value: '0',
+                icon: Icons.warning_amber_rounded,
+                iconColor: const Color(0xFFF59E0B),
+                bgColor: const Color(0xFFFFFBEB),
+                isDark: isDark,
+                borderColor: const Color(0xFFF59E0B),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.tune,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Advanced Filter',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(child: _FilterInput(label: 'Keyword', hint: 'Search...', isDark: isDark)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _FilterInput(label: 'User ID', hint: 'e.g. 8831', isDark: isDark)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _FilterInput(label: 'Club ID', hint: 'e.g. 502', isDark: isDark)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _FilterInput(label: 'Action', hint: 'e.g. login', isDark: isDark)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _FilterInput(label: 'Entity', hint: 'e.g. session', isDark: isDark)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _FilterDropdown(label: 'Module', value: 'All Modules', isDark: isDark)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                      side: BorderSide(color: borderColor),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      foregroundColor: isDark ? Colors.white : const Color(0xFF1E293B),
+                    ),
+                    child: const Text('Clear Filters', style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(width: 12),
+                  FilledButton(
+                    onPressed: () {},
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Search', style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Row(
+                    children: [
+                      Expanded(flex: 2, child: _TableHeaderText('TIME', isDark)),
+                      Expanded(flex: 3, child: _TableHeaderText('ACTION', isDark)),
+                      Expanded(flex: 2, child: _TableHeaderText('MODULE', isDark)),
+                      Expanded(flex: 3, child: _TableHeaderText('USER', isDark)),
+                      Expanded(flex: 2, child: _TableHeaderText('STATUS', isDark)),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: borderColor),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      _AuditLogItem(
+                        timeDate: '2023-11-24',
+                        timeHour: '14:22:05 UTC',
+                        actionTitle: 'USER_LOGIN_SUCCESS',
+                        actionSub: '192.168.1.105',
+                        module: 'AUTH',
+                        moduleColor: const Color(0xFF3B82F6),
+                        userInitial: 'JD',
+                        userName: 'John Doe',
+                        userDetail: 'john.d@enterprise.com • ID: 8831',
+                        status: 'Success',
+                        statusColor: const Color(0xFF10B981),
+                        isDark: isDark,
+                      ),
+                      Divider(height: 1, color: borderColor),
+                      _AuditLogItem(
+                        timeDate: '2023-11-24',
+                        timeHour: '14:18:12 UTC',
+                        actionTitle: 'REPORT_EXPORT_GENERATED',
+                        actionSub: '192.168.1.42',
+                        module: 'REPORTS',
+                        moduleColor: const Color(0xFFA855F7),
+                        userInitial: 'SC',
+                        userName: 'Sarah Connor',
+                        userDetail: 's.connor@audit.io • ID: 4420',
+                        status: 'Success',
+                        statusColor: const Color(0xFF10B981),
+                        isDark: isDark,
+                      ),
+                      Divider(height: 1, color: borderColor),
+                      _AuditLogItem(
+                        timeDate: '2023-11-24',
+                        timeHour: '14:05:44 UTC',
+                        actionTitle: 'SETTINGS_UPDATE_DENIED',
+                        actionSub: '203.0.113.12',
+                        module: 'SYSTEM',
+                        moduleColor: const Color(0xFFF59E0B),
+                        userInitial: 'UK',
+                        userName: 'Unknown User',
+                        userDetail: 'guest_access_99 • ID: 0000',
+                        status: 'Permission Denied',
+                        statusColor: const Color(0xFFEF4444),
+                        isDark: isDark,
+                      ),
+                      Divider(height: 1, color: borderColor),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: borderColor),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(Icons.chevron_left, size: 16, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: borderColor),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(Icons.chevron_right, size: 16, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Page 1 / 31 • ',
+                        style: TextStyle(
+                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '759 logs',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+class _TableHeaderText extends StatelessWidget {
+  const _TableHeaderText(this.text, this.isDark);
+  final String text;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.5,
+        color: isDark ? Colors.white54 : const Color(0xFF64748B),
+      ),
+    );
+  }
+}
+
+class _AuditStatCard extends StatelessWidget {
+  const _AuditStatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.iconColor,
+    required this.bgColor,
+    required this.isDark,
+    this.borderColor,
+  });
+
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color iconColor;
+  final Color bgColor;
+  final bool isDark;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: borderColor ?? (isDark ? const Color(0xFF2B356A) : const Color(0xFFE2E8F0)),
+          width: borderColor != null ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: isDark ? iconColor.withOpacity(0.2) : bgColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: iconColor),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterInput extends StatelessWidget {
+  const _FilterInput({required this.label, required this.hint, required this.isDark});
+  final String label;
+  final String hint;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white70 : const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 40,
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(
+                color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                fontSize: 14,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDark ? const Color(0xFF2B356A) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDark ? const Color(0xFF2B356A) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              filled: false,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FilterDropdown extends StatelessWidget {
+  const _FilterDropdown({required this.label, required this.value, required this.isDark});
+  final String label;
+  final String value;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white70 : const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isDark ? const Color(0xFF2B356A) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+              ),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 18,
+                color: isDark ? Colors.white70 : const Color(0xFF64748B),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AuditLogItem extends StatelessWidget {
+  const _AuditLogItem({
+    required this.timeDate,
+    required this.timeHour,
+    required this.actionTitle,
+    required this.actionSub,
+    required this.module,
+    required this.moduleColor,
+    required this.userInitial,
+    required this.userName,
+    required this.userDetail,
+    required this.status,
+    required this.statusColor,
+    required this.isDark,
+  });
+
+  final String timeDate;
+  final String timeHour;
+  final String actionTitle;
+  final String actionSub;
+  final String module;
+  final Color moduleColor;
+  final String userInitial;
+  final String userName;
+  final String userDetail;
+  final String status;
+  final Color statusColor;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final titleColor = isDark ? Colors.white : const Color(0xFF1E293B);
+    final subColor = isDark ? Colors.white54 : const Color(0xFF94A3B8);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(timeDate, style: TextStyle(fontWeight: FontWeight.w600, color: titleColor)),
+                const SizedBox(height: 4),
+                Text(timeHour, style: TextStyle(fontSize: 12, color: subColor)),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(actionTitle, style: TextStyle(fontWeight: FontWeight.w700, color: titleColor)),
+                const SizedBox(height: 4),
+                Text(actionSub, style: TextStyle(fontSize: 12, color: subColor)),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: moduleColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  module,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: moduleColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: moduleColor.withOpacity(0.15),
+                  child: Text(
+                    userInitial,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: moduleColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(userName, style: TextStyle(fontWeight: FontWeight.w600, color: titleColor)),
+                      const SizedBox(height: 4),
+                      Text(userDetail, style: TextStyle(fontSize: 12, color: subColor)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      status,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
