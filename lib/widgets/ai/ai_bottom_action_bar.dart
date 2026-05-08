@@ -21,7 +21,7 @@ class AiBottomActionBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AiColors.backgroundDark.withOpacity(0.8),
-        border: const Border(top: BorderSide(color: AiColors.borderDark)),
+        border: Border(top: BorderSide(color: AiColors.borderDark)),
       ),
       child: SafeArea(
         top: false,
@@ -37,14 +37,14 @@ class AiBottomActionBar extends StatelessWidget {
                   children: [
                     Text(
                       '$selectedCount Player${selectedCount != 1 ? 's' : ''} Selected',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color: AiColors.textSecondary),
                     ),
                     GestureDetector(
                       onTap: onClearAll,
-                      child: const Text('CLEAR ALL',
+                      child: Text('CLEAR ALL',
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,

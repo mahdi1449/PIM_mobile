@@ -19,7 +19,7 @@ import '../../widgets/warning_banner.dart';
 import '../../services/nutrition_service.dart';
 
 class MedicalAnalysisScreen extends StatefulWidget {
-  const MedicalAnalysisScreen({super.key, required this.player});
+  MedicalAnalysisScreen({super.key, required this.player});
 
   final PlayerModel player;
 
@@ -98,7 +98,7 @@ class _MedicalAnalysisScreenState extends State<MedicalAnalysisScreen>
     _player = widget.player;
     _ballController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: Duration(milliseconds: 1800),
     )..repeat();
   }
 
@@ -124,7 +124,7 @@ class _MedicalAnalysisScreenState extends State<MedicalAnalysisScreen>
                 decoration: TextDecoration.none,
               ),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.s16),
+                padding: EdgeInsets.all(AppSpacing.s16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -134,24 +134,24 @@ class _MedicalAnalysisScreenState extends State<MedicalAnalysisScreen>
                       action: IconButton(
                         tooltip: 'Back',
                         onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(Icons.arrow_back_rounded),
+                        icon: Icon(Icons.arrow_back_rounded),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.s16),
+                    SizedBox(height: AppSpacing.s16),
                     _PlayerHeader(player: player),
-                    const SizedBox(height: AppSpacing.s16),
+                    SizedBox(height: AppSpacing.s16),
                     _ActionCard(isLoading: _isLoading, onRun: _runAnalysis),
                     if (_errorMessage != null && _errorMessage!.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.s12),
+                      SizedBox(height: AppSpacing.s12),
                       _InlineError(message: _errorMessage!),
                     ],
-                    const SizedBox(height: AppSpacing.s16),
+                    SizedBox(height: AppSpacing.s16),
                     AnimatedOpacity(
                       opacity: _result == null ? 0 : 1,
-                      duration: const Duration(milliseconds: 400),
+                      duration: Duration(milliseconds: 400),
                       curve: Curves.easeOut,
                       child: _result == null
-                          ? const SizedBox.shrink()
+                          ? SizedBox.shrink()
                           : _ResultBody(result: _result!, player: player),
                     ),
                   ],
@@ -162,7 +162,7 @@ class _MedicalAnalysisScreenState extends State<MedicalAnalysisScreen>
               Positioned.fill(
                 child: Container(
                   color: AppTheme.background.withValues(alpha: 0.88),
-                  child: const Center(child: _LoadingOverlay()),
+                  child: Center(child: _LoadingOverlay()),
                 ),
               ),
           ],
@@ -173,7 +173,7 @@ class _MedicalAnalysisScreenState extends State<MedicalAnalysisScreen>
 }
 
 class _FootballHero extends StatelessWidget {
-  const _FootballHero({required this.controller});
+  _FootballHero({required this.controller});
 
   final AnimationController controller;
 
@@ -294,7 +294,7 @@ class _FootballHero extends StatelessWidget {
 }
 
 class _LoadingOverlay extends StatefulWidget {
-  const _LoadingOverlay();
+  _LoadingOverlay();
 
   @override
   State<_LoadingOverlay> createState() => _LoadingOverlayState();
@@ -309,7 +309,7 @@ class _LoadingOverlayState extends State<_LoadingOverlay>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: Duration(milliseconds: 1800),
     )..repeat();
   }
 
@@ -327,7 +327,7 @@ class _LoadingOverlayState extends State<_LoadingOverlay>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _FootballHero(controller: _controller),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Text(
           'Analyzing medical signals...',
           style: TextStyle(
@@ -337,7 +337,7 @@ class _LoadingOverlayState extends State<_LoadingOverlay>
             decoration: TextDecoration.none,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           'AI engine running',
           style: TextStyle(
@@ -352,7 +352,7 @@ class _LoadingOverlayState extends State<_LoadingOverlay>
 }
 
 class _ActionCard extends StatelessWidget {
-  const _ActionCard({required this.isLoading, required this.onRun});
+  _ActionCard({required this.isLoading, required this.onRun});
 
   final bool isLoading;
   final VoidCallback onRun;
@@ -368,13 +368,13 @@ class _ActionCard extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primaryBlue,
             foregroundColor: MedicalTheme.surface,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
           child: isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   height: 18,
                   width: 18,
                   child: CircularProgressIndicator(
@@ -386,7 +386,7 @@ class _ActionCard extends StatelessWidget {
         );
 
         return Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppTheme.card,
             borderRadius: BorderRadius.circular(16),
@@ -403,14 +403,14 @@ class _ActionCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       'Generate AI injury insights',
                       style: textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     SizedBox(width: double.infinity, child: button),
                   ],
                 )
@@ -429,7 +429,7 @@ class _ActionCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Text(
                             'Generate AI injury insights',
                             style: textTheme.bodyMedium?.copyWith(
@@ -441,7 +441,7 @@ class _ActionCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     button,
                   ],
                 ),
@@ -452,14 +452,14 @@ class _ActionCard extends StatelessWidget {
 }
 
 class _InlineError extends StatelessWidget {
-  const _InlineError({required this.message});
+  _InlineError({required this.message});
 
   final String message;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.danger.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
@@ -474,7 +474,7 @@ class _InlineError extends StatelessWidget {
 }
 
 class _ResultBody extends StatelessWidget {
-  const _ResultBody({required this.result, required this.player});
+  _ResultBody({required this.result, required this.player});
 
   final MedicalResultModel result;
   final PlayerModel player;
@@ -502,23 +502,23 @@ class _ResultBody extends StatelessWidget {
             message:
                 'Player is currently injured from the latest match. Medical test results do not clear this status.',
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
         ],
         Text(
           'AI Risk Analysis',
           style:
               textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700) ??
-              const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         Center(child: RiskGaugeWidget(risk: result.injuryProbability)),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         ConfidenceCard(confidence: confidence / 100),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Center(child: StatusBadge(status: status)),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         _RiskLegend(),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
@@ -535,59 +535,59 @@ class _ResultBody extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryBlue,
               foregroundColor: MedicalTheme.surface,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            icon: const Icon(Icons.bubble_chart_outlined),
-            label: const Text(
+            icon: Icon(Icons.bubble_chart_outlined),
+            label: Text(
               'View Injury Heatmap',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         if (result.injured) ...[
           _SummaryCard(result: result, probability: probability),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           BulletListCard(
             title: 'Rehabilitation',
             items: result.rehabilitation,
             icon: Icons.fitness_center,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           BulletListCard(
             title: 'Prevention',
             items: result.prevention.isEmpty
-                ? const ['Maintain balanced load and recovery routines.']
+                ? ['Maintain balanced load and recovery routines.']
                 : result.prevention,
             icon: Icons.shield,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           if (result.warning.trim().isNotEmpty)
             WarningBanner(message: result.warning),
         ] else ...[
           _HealthyStatusCard(probability: result.injuryProbability),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           BulletListCard(
             title: 'Prevention',
             items: result.prevention.isEmpty
-                ? const ['Maintain balanced load and recovery routines.']
+                ? ['Maintain balanced load and recovery routines.']
                 : result.prevention,
             icon: Icons.shield,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _HistoryStatCard(totalInjuries: player.injuryHistory),
         ],
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Text(
           'Nutrition Recommendation',
           style:
               textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700) ??
-              const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         NutritionCard(plan: nutritionPlan),
       ],
     );
@@ -595,7 +595,7 @@ class _ResultBody extends StatelessWidget {
 }
 
 class _PlayerHeader extends StatelessWidget {
-  const _PlayerHeader({required this.player});
+  _PlayerHeader({required this.player});
 
   final PlayerModel player;
 
@@ -605,7 +605,7 @@ class _PlayerHeader extends StatelessWidget {
     final isInjured = player.isInjured == true;
     final injuryLabel = (player.lastInjuryType ?? '').trim();
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.card,
         borderRadius: BorderRadius.circular(16),
@@ -626,7 +626,7 @@ class _PlayerHeader extends StatelessWidget {
               size: 30,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -639,7 +639,7 @@ class _PlayerHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   player.position,
                   style: textTheme.bodyMedium?.copyWith(
@@ -648,7 +648,7 @@ class _PlayerHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   'Base fitness: ${player.baseFitness}',
                   style: textTheme.bodySmall?.copyWith(
@@ -659,9 +659,9 @@ class _PlayerHeader extends StatelessWidget {
             ),
           ),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 140),
+            constraints: BoxConstraints(maxWidth: 140),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: isInjured
                     ? AppTheme.danger.withOpacity(0.12)
@@ -691,7 +691,7 @@ class _PlayerHeader extends StatelessWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.result, required this.probability});
+  _SummaryCard({required this.result, required this.probability});
 
   final MedicalResultModel result;
   final double probability;
@@ -705,7 +705,7 @@ class _SummaryCard extends StatelessWidget {
         : result.recoveryDays.toString();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.card,
         borderRadius: BorderRadius.circular(16),
@@ -726,11 +726,8 @@ class _SummaryCard extends StatelessWidget {
                 ),
               ),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                duration: Duration(milliseconds: 300),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: severityColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -746,19 +743,19 @@ class _SummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             result.injuryType,
             style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Monitor recovery and adjust training load based on AI guidance.',
             style: textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Row(
             children: [
               _MetricTile(
@@ -766,7 +763,7 @@ class _SummaryCard extends StatelessWidget {
                 value: '${probability.toStringAsFixed(0)}%',
                 accentColor: severityColor,
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               _MetricTile(
                 label: 'Recovery days',
                 value: recoveryLabel,
@@ -793,7 +790,7 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _MetricTile extends StatelessWidget {
-  const _MetricTile({
+  _MetricTile({
     required this.label,
     required this.value,
     required this.accentColor,
@@ -808,7 +805,7 @@ class _MetricTile extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppTheme.surfaceAlt,
           borderRadius: BorderRadius.circular(12),
@@ -823,7 +820,7 @@ class _MetricTile extends StatelessWidget {
                 color: AppTheme.textSecondary,
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
             Text(
               value,
               style: TextStyle(
@@ -840,7 +837,7 @@ class _MetricTile extends StatelessWidget {
 }
 
 class _HealthyStatusCard extends StatelessWidget {
-  const _HealthyStatusCard({required this.probability});
+  _HealthyStatusCard({required this.probability});
 
   final double probability;
 
@@ -855,7 +852,7 @@ class _HealthyStatusCard extends StatelessWidget {
         : 'HIGH RISK';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.card,
         borderRadius: BorderRadius.circular(16),
@@ -867,10 +864,7 @@ class _HealthyStatusCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppTheme.success.withOpacity(0.16),
                   borderRadius: BorderRadius.circular(12),
@@ -883,7 +877,7 @@ class _HealthyStatusCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Text(
                 riskLabel,
                 style: textTheme.labelMedium?.copyWith(
@@ -893,12 +887,12 @@ class _HealthyStatusCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             'Player is in good condition.',
             style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Training load is within safe limits.',
             style: textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
@@ -910,7 +904,7 @@ class _HealthyStatusCard extends StatelessWidget {
 }
 
 class _HistoryStatCard extends StatelessWidget {
-  const _HistoryStatCard({required this.totalInjuries});
+  _HistoryStatCard({required this.totalInjuries});
 
   final int totalInjuries;
 
@@ -918,7 +912,7 @@ class _HistoryStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.card,
         borderRadius: BorderRadius.circular(16),
@@ -955,9 +949,9 @@ class _RiskLegend extends StatelessWidget {
           'Legend',
           style:
               textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600) ??
-              const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Wrap(
           spacing: 12,
           runSpacing: 8,
@@ -973,7 +967,7 @@ class _RiskLegend extends StatelessWidget {
 }
 
 class _LegendItem extends StatelessWidget {
-  const _LegendItem({required this.color, required this.label});
+  _LegendItem({required this.color, required this.label});
 
   final Color color;
   final String label;
@@ -982,7 +976,7 @@ class _LegendItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
@@ -996,11 +990,8 @@ class _LegendItem extends StatelessWidget {
             height: 8,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: textTheme.bodySmall ?? const TextStyle(fontSize: 12),
-          ),
+          SizedBox(width: 6),
+          Text(label, style: textTheme.bodySmall ?? TextStyle(fontSize: 12)),
         ],
       ),
     );

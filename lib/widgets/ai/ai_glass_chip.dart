@@ -34,7 +34,7 @@ class AiGlassChip extends StatelessWidget {
               Icon(icon, color: iconColor, size: 16),
               const SizedBox(width: 8),
               Text(label,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: AiColors.textMuted)),

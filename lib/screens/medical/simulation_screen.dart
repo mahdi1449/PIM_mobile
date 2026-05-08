@@ -17,7 +17,7 @@ import '../../ui/theme/app_spacing.dart';
 import '../../widgets/alert_overlay.dart';
 
 class SimulationScreen extends StatefulWidget {
-  const SimulationScreen({super.key});
+  SimulationScreen({super.key});
 
   @override
   State<SimulationScreen> createState() => _SimulationScreenState();
@@ -25,7 +25,7 @@ class SimulationScreen extends StatefulWidget {
 
 class _SimulationScreenState extends State<SimulationScreen>
     with TickerProviderStateMixin {
-  static const Duration _simulationDuration = Duration(seconds: 30);
+  static Duration _simulationDuration = Duration(seconds: 30);
 
   final SimulationService _simulationService = SimulationService();
   final CommentaryService _commentaryService = CommentaryService();
@@ -122,7 +122,7 @@ class _SimulationScreenState extends State<SimulationScreen>
       _hasEnded = false;
     });
 
-    List<PlayerModel> availablePlayers = const [];
+    List<PlayerModel> availablePlayers = [];
     try {
       availablePlayers = await _simulationService.fetchAvailablePlayers();
       if (!mounted) {
@@ -173,7 +173,7 @@ class _SimulationScreenState extends State<SimulationScreen>
     try {
       await _matchSimulationService
           .warmup(selectedPlayers)
-          .timeout(const Duration(seconds: 4));
+          .timeout(Duration(seconds: 4));
     } catch (_) {
       // Ignore warmup failures/timeouts so the simulation can still start.
     }
@@ -572,7 +572,7 @@ class _SimulationScreenState extends State<SimulationScreen>
               'shotsOnTargetAway': _shotsOnTargetAway,
             },
           )
-          .timeout(const Duration(seconds: 120));
+          .timeout(Duration(seconds: 120));
     });
   }
 
@@ -629,7 +629,7 @@ class _SimulationScreenState extends State<SimulationScreen>
 
   void _scheduleWhistle() {
     _whistleTimer?.cancel();
-    _whistleTimer = Timer(const Duration(seconds: 27), () {
+    _whistleTimer = Timer(Duration(seconds: 27), () {
       if (!_isRunning) {
         return;
       }
@@ -684,7 +684,7 @@ class _SimulationScreenState extends State<SimulationScreen>
       _showCommentary = text.isNotEmpty;
     });
     if (text.isNotEmpty) {
-      _commentaryHideTimer = Timer(const Duration(seconds: 3), () {
+      _commentaryHideTimer = Timer(Duration(seconds: 3), () {
         if (!mounted) {
           return;
         }
@@ -765,7 +765,7 @@ class _SimulationScreenState extends State<SimulationScreen>
           child: Stack(
             children: [
               AnimatedSwitcher(
-                duration: const Duration(milliseconds: 450),
+                duration: Duration(milliseconds: 450),
                 child: _resultsFuture != null
                     ? _ResultsView(
                         resultsFuture: _resultsFuture!,
@@ -832,7 +832,7 @@ class _SimulationScreenState extends State<SimulationScreen>
               ballTarget: _ballTarget?.position,
               repaint: _fieldRepaint,
             ),
-            child: const SizedBox.expand(),
+            child: SizedBox.expand(),
           ),
         );
       },
@@ -841,7 +841,7 @@ class _SimulationScreenState extends State<SimulationScreen>
 }
 
 class _SimulationView extends StatelessWidget {
-  const _SimulationView({
+  _SimulationView({
     required this.isStarting,
     required this.isRunning,
     required this.errorMessage,
@@ -890,11 +890,11 @@ class _SimulationView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      key: const ValueKey('simulation-view'),
+      key: ValueKey('simulation-view'),
       children: [
         if (!isRunning)
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.s16,
               AppSpacing.s16,
               AppSpacing.s16,
@@ -902,7 +902,7 @@ class _SimulationView extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Kick off a 30-second match simulation',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -915,16 +915,13 @@ class _SimulationView extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryBlue,
                     foregroundColor: MedicalTheme.surface,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: isStarting
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
@@ -939,7 +936,7 @@ class _SimulationView extends StatelessWidget {
           ),
         if (!isRunning)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16),
             child: _SelectionCard(
               playersFuture: playersFuture,
               selectedIds: selectedIds,
@@ -948,15 +945,15 @@ class _SimulationView extends StatelessWidget {
           ),
         if (errorMessage != null && errorMessage!.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16),
             child: _InlineError(message: errorMessage!),
           ),
         if (isRunning)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16),
             child: _LiveAlertPanel(alert: latestAlert),
           ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -1001,7 +998,7 @@ class _SimulationView extends StatelessWidget {
 
               if (isWide) {
                 return Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Row(
                     children: [
                       _SideStatsColumn(
@@ -1011,9 +1008,9 @@ class _SimulationView extends StatelessWidget {
                         chances: shotsOnTargetHome,
                         alignRight: false,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(child: field),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       _SideStatsColumn(
                         title: 'Opponents',
                         possession: 100 - possessionHome,
@@ -1027,11 +1024,11 @@ class _SimulationView extends StatelessWidget {
               }
 
               return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Column(
                   children: [
                     Expanded(child: field),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
@@ -1043,7 +1040,7 @@ class _SimulationView extends StatelessWidget {
                             alignRight: false,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
                           child: _SideStatsColumn(
                             title: 'Opponents',
@@ -1067,7 +1064,7 @@ class _SimulationView extends StatelessWidget {
 }
 
 class _LiveAlertPanel extends StatelessWidget {
-  const _LiveAlertPanel({required this.alert});
+  _LiveAlertPanel({required this.alert});
 
   final AlertModel? alert;
 
@@ -1086,9 +1083,9 @@ class _LiveAlertPanel extends StatelessWidget {
     final detailLine = alert == null ? null : _detailLine(alert!);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      duration: Duration(milliseconds: 220),
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(18),
@@ -1097,7 +1094,7 @@ class _LiveAlertPanel extends StatelessWidget {
           BoxShadow(
             color: statusColor.withOpacity(0.2),
             blurRadius: 14,
-            offset: const Offset(0, 6),
+            offset: Offset(0, 6),
           ),
         ],
       ),
@@ -1105,7 +1102,7 @@ class _LiveAlertPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: statusColor.withOpacity(0.14),
               borderRadius: BorderRadius.circular(12),
@@ -1120,7 +1117,7 @@ class _LiveAlertPanel extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1131,7 +1128,7 @@ class _LiveAlertPanel extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: textTheme.bodySmall?.copyWith(
@@ -1140,7 +1137,7 @@ class _LiveAlertPanel extends StatelessWidget {
                   ),
                 ),
                 if (statLine != null) ...[
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     statLine,
                     style: textTheme.bodySmall?.copyWith(
@@ -1149,7 +1146,7 @@ class _LiveAlertPanel extends StatelessWidget {
                   ),
                 ],
                 if (detailLine != null) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     detailLine,
                     style: textTheme.bodySmall?.copyWith(
@@ -1158,7 +1155,7 @@ class _LiveAlertPanel extends StatelessWidget {
                   ),
                 ],
                 if (reasons != null) ...[
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     reasons,
                     style: textTheme.bodySmall?.copyWith(
@@ -1169,7 +1166,7 @@ class _LiveAlertPanel extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             alert == null ? '--' : '${(alert!.risk * 100).round()}%',
             style: textTheme.labelLarge?.copyWith(
@@ -1228,7 +1225,7 @@ class _LiveAlertPanel extends StatelessWidget {
 }
 
 class _SelectionCard extends StatelessWidget {
-  const _SelectionCard({
+  _SelectionCard({
     required this.playersFuture,
     required this.selectedIds,
     required this.onTogglePlayer,
@@ -1257,8 +1254,8 @@ class _SelectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(18),
@@ -1273,12 +1270,9 @@ class _SelectionCard extends StatelessWidget {
                 'Select your 11 players',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               ),
-              const Spacer(),
+              Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryBlue.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -1297,13 +1291,13 @@ class _SelectionCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           FutureBuilder<List<PlayerModel>>(
             future: playersFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(12),
                   child: Center(
                     child: CircularProgressIndicator(
                       color: AppTheme.accentBlue,
@@ -1386,14 +1380,14 @@ class _SelectionCard extends StatelessWidget {
 }
 
 class _PlayedBadge extends StatelessWidget {
-  const _PlayedBadge({required this.label});
+  _PlayedBadge({required this.label});
 
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppTheme.accentBlue.withOpacity(0.15),
         borderRadius: BorderRadius.circular(10),
@@ -1412,14 +1406,14 @@ class _PlayedBadge extends StatelessWidget {
 }
 
 class _InjuryBadge extends StatelessWidget {
-  const _InjuryBadge({required this.label});
+  _InjuryBadge({required this.label});
 
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppTheme.danger.withOpacity(0.15),
         borderRadius: BorderRadius.circular(10),
@@ -1438,7 +1432,7 @@ class _InjuryBadge extends StatelessWidget {
 }
 
 class _OverlayCard extends StatelessWidget {
-  const _OverlayCard({
+  _OverlayCard({
     required this.isRunning,
     required this.countdown,
     required this.homeScore,
@@ -1467,7 +1461,7 @@ class _OverlayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppTheme.surfaceAlt.withOpacity(0.92),
         borderRadius: BorderRadius.circular(16),
@@ -1476,7 +1470,7 @@ class _OverlayCard extends StatelessWidget {
           BoxShadow(
             color: AppTheme.textPrimary.withOpacity(0.22),
             blurRadius: 12,
-            offset: const Offset(0, 6),
+            offset: Offset(0, 6),
           ),
         ],
       ),
@@ -1486,7 +1480,7 @@ class _OverlayCard extends StatelessWidget {
           Row(
             children: [
               _TeamBadge(color: AppTheme.danger, label: 'Odin'),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 '$homeScore - $awayScore',
                 style: TextStyle(
@@ -1495,22 +1489,22 @@ class _OverlayCard extends StatelessWidget {
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               _TeamBadge(color: AppTheme.accentBlue, label: 'Opponents'),
-              const Spacer(),
+              Spacer(),
               _LivePill(isLive: isRunning),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               _CountdownBadge(label: countdown),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Row(
             children: [
               Text(
                 'Possession',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
@@ -1522,25 +1516,25 @@ class _OverlayCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text(
                 '$possessionHome%',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Row(
             children: [
               _StatPill(label: 'Shots', value: '$shotsHome / $shotsAway'),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               _StatPill(
                 label: 'On target',
                 value: '$shotsOnTargetHome / $shotsOnTargetAway',
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             eventText,
             style: TextStyle(
@@ -1550,14 +1544,14 @@ class _OverlayCard extends StatelessWidget {
             ),
           ),
           if (eventFeed.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: eventFeed
                   .take(2)
                   .map(
                     (event) => Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: EdgeInsets.only(top: 4),
                       child: Text(
                         '• $event',
                         style: TextStyle(
@@ -1577,7 +1571,7 @@ class _OverlayCard extends StatelessWidget {
 }
 
 class _ScoreboardBar extends StatelessWidget {
-  const _ScoreboardBar({
+  _ScoreboardBar({
     required this.isRunning,
     required this.countdown,
     required this.homeScore,
@@ -1596,7 +1590,7 @@ class _ScoreboardBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -1610,7 +1604,7 @@ class _ScoreboardBar extends StatelessWidget {
       child: Row(
         children: [
           _TeamDot(label: homeLabel, color: AppTheme.danger),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             homeLabel.toUpperCase(),
             style: TextStyle(
@@ -1619,7 +1613,7 @@ class _ScoreboardBar extends StatelessWidget {
               fontSize: 12,
             ),
           ),
-          const Spacer(),
+          Spacer(),
           Text(
             '$homeScore - $awayScore',
             style: TextStyle(
@@ -1628,7 +1622,7 @@ class _ScoreboardBar extends StatelessWidget {
               fontSize: 18,
             ),
           ),
-          const Spacer(),
+          Spacer(),
           Text(
             awayLabel.toUpperCase(),
             style: TextStyle(
@@ -1637,11 +1631,11 @@ class _ScoreboardBar extends StatelessWidget {
               fontSize: 12,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           _TeamDot(label: awayLabel, color: AppTheme.accentBlue),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           _LivePill(isLive: isRunning),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           _CountdownBadge(label: countdown),
         ],
       ),
@@ -1650,7 +1644,7 @@ class _ScoreboardBar extends StatelessWidget {
 }
 
 class _TeamDot extends StatelessWidget {
-  const _TeamDot({required this.label, required this.color});
+  _TeamDot({required this.label, required this.color});
 
   final String label;
   final Color color;
@@ -1666,7 +1660,7 @@ class _TeamDot extends StatelessWidget {
 }
 
 class _SideStatsColumn extends StatelessWidget {
-  const _SideStatsColumn({
+  _SideStatsColumn({
     required this.title,
     required this.possession,
     required this.shots,
@@ -1686,7 +1680,7 @@ class _SideStatsColumn extends StatelessWidget {
         ? CrossAxisAlignment.end
         : CrossAxisAlignment.start;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.surface.withOpacity(0.7),
         borderRadius: BorderRadius.circular(16),
@@ -1703,11 +1697,11 @@ class _SideStatsColumn extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _SideStat(label: 'Possession %', value: possession.toString()),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _SideStat(label: 'Shots', value: shots.toString()),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _SideStat(label: 'Chances', value: chances.toString()),
         ],
       ),
@@ -1716,7 +1710,7 @@ class _SideStatsColumn extends StatelessWidget {
 }
 
 class _SideStat extends StatelessWidget {
-  const _SideStat({required this.label, required this.value});
+  _SideStat({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -1734,7 +1728,7 @@ class _SideStat extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Text(
           value,
           style: TextStyle(
@@ -1749,7 +1743,7 @@ class _SideStat extends StatelessWidget {
 }
 
 class _LegendDot extends StatelessWidget {
-  const _LegendDot({required this.color, required this.label});
+  _LegendDot({required this.color, required this.label});
 
   final Color color;
   final String label;
@@ -1763,7 +1757,7 @@ class _LegendDot extends StatelessWidget {
           height: 10,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(
           label,
           style: TextStyle(
@@ -1778,7 +1772,7 @@ class _LegendDot extends StatelessWidget {
 }
 
 class _TeamBadge extends StatelessWidget {
-  const _TeamBadge({required this.color, required this.label});
+  _TeamBadge({required this.color, required this.label});
 
   final Color color;
   final String label;
@@ -1792,7 +1786,7 @@ class _TeamBadge extends StatelessWidget {
           height: 10,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(
           label,
           style: TextStyle(
@@ -1807,7 +1801,7 @@ class _TeamBadge extends StatelessWidget {
 }
 
 class _LivePill extends StatelessWidget {
-  const _LivePill({required this.isLive});
+  _LivePill({required this.isLive});
 
   final bool isLive;
 
@@ -1815,7 +1809,7 @@ class _LivePill extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isLive ? AppTheme.success : AppTheme.textSecondary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
@@ -1834,7 +1828,7 @@ class _LivePill extends StatelessWidget {
 }
 
 class _StatPill extends StatelessWidget {
-  const _StatPill({required this.label, required this.value});
+  _StatPill({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -1842,7 +1836,7 @@ class _StatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppTheme.surfaceAlt,
         borderRadius: BorderRadius.circular(12),
@@ -1859,7 +1853,7 @@ class _StatPill extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Text(
             value,
             style: TextStyle(
@@ -1875,14 +1869,14 @@ class _StatPill extends StatelessWidget {
 }
 
 class _CountdownBadge extends StatelessWidget {
-  const _CountdownBadge({required this.label});
+  _CountdownBadge({required this.label});
 
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppTheme.primaryBlue.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
@@ -1901,7 +1895,7 @@ class _CountdownBadge extends StatelessWidget {
 }
 
 class _LiveCommentaryBanner extends StatelessWidget {
-  const _LiveCommentaryBanner({required this.text, required this.isVisible});
+  _LiveCommentaryBanner({required this.text, required this.isVisible});
 
   final String text;
   final bool isVisible;
@@ -1910,19 +1904,16 @@ class _LiveCommentaryBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedOpacity(
       opacity: isVisible && text.isNotEmpty ? 1 : 0,
-      duration: const Duration(milliseconds: 300),
+      duration: Duration(milliseconds: 300),
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
+        duration: Duration(milliseconds: 300),
         switchInCurve: Curves.easeOut,
         switchOutCurve: Curves.easeIn,
         child: text.isEmpty
-            ? const SizedBox.shrink()
+            ? SizedBox.shrink()
             : Container(
                 key: ValueKey(text),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceAlt.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(16),
@@ -1931,7 +1922,7 @@ class _LiveCommentaryBanner extends StatelessWidget {
                     BoxShadow(
                       color: AppTheme.textPrimary.withOpacity(0.25),
                       blurRadius: 12,
-                      offset: const Offset(0, 6),
+                      offset: Offset(0, 6),
                     ),
                   ],
                 ),
@@ -1939,7 +1930,7 @@ class _LiveCommentaryBanner extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.mic, color: AppTheme.accentBlue, size: 16),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       'Live Commentary',
                       style: TextStyle(
@@ -1948,7 +1939,7 @@ class _LiveCommentaryBanner extends StatelessWidget {
                         fontSize: 11,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                     Flexible(
                       child: Text(
                         text,
@@ -1986,20 +1977,20 @@ class _FieldPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final fieldPaint = Paint()
-      ..color = const Color(0xFF0A2A6B)
+      ..color = Color(0xFF0A2A6B)
       ..style = PaintingStyle.fill;
 
     final stripePaint = Paint()
-      ..color = const Color(0xFF0C327B)
+      ..color = Color(0xFF0C327B)
       ..style = PaintingStyle.fill;
 
     final linePaint = Paint()
-      ..color = const Color(0xFF82B5FF)
+      ..color = Color(0xFF82B5FF)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
     final standPaint = Paint()
-      ..color = const Color(0xFF08122F)
+      ..color = Color(0xFF08122F)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(Offset.zero & size, fieldPaint);
@@ -2111,7 +2102,7 @@ class PlayerDot {
 }
 
 class MatchSummary {
-  const MatchSummary({
+  MatchSummary({
     required this.homeScore,
     required this.awayScore,
     required this.possessionHome,
@@ -2131,7 +2122,7 @@ class MatchSummary {
 }
 
 class _ResultsView extends StatelessWidget {
-  const _ResultsView({
+  _ResultsView({
     required this.resultsFuture,
     required this.onReset,
     required this.summary,
@@ -2144,7 +2135,7 @@ class _ResultsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<SimulationResultModel>>(
-      key: const ValueKey('results-view'),
+      key: ValueKey('results-view'),
       future: resultsFuture,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -2154,7 +2145,7 @@ class _ResultsView extends StatelessWidget {
         final isLoading = snapshot.connectionState == ConnectionState.waiting;
         final results = snapshot.data ?? [];
         if (!isLoading && results.isEmpty) {
-          return const _ErrorState(message: 'No results were returned.');
+          return _ErrorState(message: 'No results were returned.');
         }
 
         final injured = results.where((result) {
@@ -2168,7 +2159,7 @@ class _ResultsView extends StatelessWidget {
         }).toList();
 
         return ListView.separated(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           itemBuilder: (context, index) {
             if (index == 0) {
               return _ResultsHeader(
@@ -2179,12 +2170,12 @@ class _ResultsView extends StatelessWidget {
               );
             }
             if (isLoading && index == 1) {
-              return const _LoadingResultsCard();
+              return _LoadingResultsCard();
             }
             final offset = isLoading ? 2 : 1;
             return _ResultCard(result: results[index - offset]);
           },
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, __) => SizedBox(height: 12),
           itemCount: results.length + 1 + (isLoading ? 1 : 0),
         );
       },
@@ -2193,7 +2184,7 @@ class _ResultsView extends StatelessWidget {
 }
 
 class _ResultsHeader extends StatelessWidget {
-  const _ResultsHeader({
+  _ResultsHeader({
     required this.onReset,
     required this.summary,
     required this.injuredPlayers,
@@ -2211,7 +2202,7 @@ class _ResultsHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppTheme.surface,
             borderRadius: BorderRadius.circular(18),
@@ -2219,7 +2210,7 @@ class _ResultsHeader extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Match results + medical updates',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
@@ -2236,9 +2227,9 @@ class _ResultsHeader extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         _MatchStatsCard(summary: summary),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         _InjuredPlayersCard(players: injuredPlayers, isLoading: isLoading),
       ],
     );
@@ -2246,7 +2237,7 @@ class _ResultsHeader extends StatelessWidget {
 }
 
 class _MatchStatsCard extends StatelessWidget {
-  const _MatchStatsCard({required this.summary});
+  _MatchStatsCard({required this.summary});
 
   final MatchSummary summary;
 
@@ -2254,7 +2245,7 @@ class _MatchStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final possessionAway = 100 - summary.possessionHome;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(18),
@@ -2267,22 +2258,22 @@ class _MatchStatsCard extends StatelessWidget {
             'Match stats',
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _StatRow(
             label: 'Score',
             value: '${summary.homeScore} - ${summary.awayScore}',
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           _StatRow(
             label: 'Possession',
             value: '${summary.possessionHome}% / $possessionAway%',
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           _StatRow(
             label: 'Shots',
             value: '${summary.shotsHome} / ${summary.shotsAway}',
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           _StatRow(
             label: 'Shots on target',
             value:
@@ -2295,7 +2286,7 @@ class _MatchStatsCard extends StatelessWidget {
 }
 
 class _InjuredPlayersCard extends StatelessWidget {
-  const _InjuredPlayersCard({required this.players, required this.isLoading});
+  _InjuredPlayersCard({required this.players, required this.isLoading});
 
   final List<SimulationResultModel> players;
   final bool isLoading;
@@ -2303,7 +2294,7 @@ class _InjuredPlayersCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(18),
@@ -2316,7 +2307,7 @@ class _InjuredPlayersCard extends StatelessWidget {
             'Injured players (match squad)',
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           if (players.isEmpty && isLoading)
             Text(
               'Medical analysis running...'
@@ -2347,12 +2338,12 @@ class _InjuredPlayersCard extends StatelessWidget {
 }
 
 class _LoadingResultsCard extends StatelessWidget {
-  const _LoadingResultsCard();
+  _LoadingResultsCard();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(18),
@@ -2383,7 +2374,7 @@ class _LoadingResultsCard extends StatelessWidget {
 }
 
 class _InjuryChip extends StatelessWidget {
-  const _InjuryChip({required this.name, this.detail});
+  _InjuryChip({required this.name, this.detail});
 
   final String name;
   final String? detail;
@@ -2391,7 +2382,7 @@ class _InjuryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppTheme.danger.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
@@ -2408,7 +2399,7 @@ class _InjuryChip extends StatelessWidget {
 }
 
 class _StatRow extends StatelessWidget {
-  const _StatRow({required this.label, required this.value});
+  _StatRow({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -2418,7 +2409,7 @@ class _StatRow extends StatelessWidget {
     return Row(
       children: [
         Text(label, style: TextStyle(color: AppTheme.textSecondary)),
-        const Spacer(),
+        Spacer(),
         Text(value, style: TextStyle(fontWeight: FontWeight.w600)),
       ],
     );
@@ -2426,7 +2417,7 @@ class _StatRow extends StatelessWidget {
 }
 
 class _ResultCard extends StatelessWidget {
-  const _ResultCard({required this.result});
+  _ResultCard({required this.result});
 
   final SimulationResultModel result;
 
@@ -2463,7 +2454,7 @@ class _ResultCard extends StatelessWidget {
     final statusColor = _statusColor();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.card,
         borderRadius: BorderRadius.circular(20),
@@ -2472,7 +2463,7 @@ class _ResultCard extends StatelessWidget {
           BoxShadow(
             color: statusColor.withOpacity(0.2),
             blurRadius: 18,
-            offset: const Offset(0, 6),
+            offset: Offset(0, 6),
           ),
         ],
       ),
@@ -2489,16 +2480,16 @@ class _ResultCard extends StatelessWidget {
               ),
               if (result.playedMatch)
                 Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: EdgeInsets.only(right: 8),
                   child: _PlayedBadge(label: _playedLabel()),
                 ),
               _StatusBadge(label: result.status, color: statusColor),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           TweenAnimationBuilder<double>(
             tween: Tween<double>(begin: 0, end: probability),
-            duration: const Duration(milliseconds: 900),
+            duration: Duration(milliseconds: 900),
             curve: Curves.easeOutCubic,
             builder: (context, value, _) {
               return ClipRRect(
@@ -2512,21 +2503,21 @@ class _ResultCard extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Row(
             children: [
               Text(
                 'Injury probability ${(probability * 100).toStringAsFixed(0)}%',
                 style: TextStyle(color: AppTheme.textSecondary),
               ),
-              const Spacer(),
+              Spacer(),
               Text(
                 'Load ${result.load.toStringAsFixed(0)}',
                 style: TextStyle(color: AppTheme.textSecondary),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -2553,7 +2544,7 @@ class _ResultCard extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label, required this.color});
+  _StatusBadge({required this.label, required this.color});
 
   final String label;
   final Color color;
@@ -2561,7 +2552,7 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
@@ -2580,7 +2571,7 @@ class _StatusBadge extends StatelessWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.label, required this.value});
+  _InfoChip({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -2588,7 +2579,7 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AppTheme.surfaceAlt,
         borderRadius: BorderRadius.circular(14),
@@ -2616,14 +2607,14 @@ class _InfoChip extends StatelessWidget {
 }
 
 class _InlineError extends StatelessWidget {
-  const _InlineError({required this.message});
+  _InlineError({required this.message});
 
   final String message;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.danger.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
@@ -2638,7 +2629,7 @@ class _InlineError extends StatelessWidget {
 }
 
 class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message});
+  _ErrorState({required this.message});
 
   final String message;
 
@@ -2646,12 +2637,12 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, color: AppTheme.danger, size: 36),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,

@@ -10,6 +10,9 @@ import 'screens/login_screen.dart';
 import 'theme/dark_theme.dart';
 import 'theme/light_theme.dart';
 import 'theme/theme_controller.dart';
+import 'finance/theme/finance_theme.dart';
+import 'analysis/theme/analysis_theme.dart';
+import 'communication/communication_theme.dart';
 
 // Providers
 import 'providers/campaign_provider.dart';
@@ -67,6 +70,11 @@ class RootApp extends StatelessWidget {
       child: ValueListenableBuilder<ThemeMode>(
         valueListenable: ThemeController.mode,
         builder: (context, themeMode, _) {
+          final isDark = themeMode == ThemeMode.dark;
+          FinancePalette.setDarkMode(isDark);
+          AnalysisPalette.setDarkMode(isDark);
+          CommunicationPalette.setDarkMode(isDark);
+
           return MaterialApp(
             title: 'ODINCLUB PIM',
             debugShowCheckedModeBanner: false,

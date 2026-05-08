@@ -267,7 +267,7 @@ class AppRoutes {
       case medicalPlayers:
         return AppRouteData(
           title: 'Medical Players',
-          builder: (_) => const MedicalPlayersScreen(),
+          builder: (_) => MedicalPlayersScreen(),
         );
       case medicalAnalysisDetail:
         return AppRouteData(
@@ -292,7 +292,7 @@ class AppRoutes {
       case medicalSimulation:
         return AppRouteData(
           title: 'Injury Simulation',
-          builder: (_) => const SimulationScreen(),
+          builder: (_) => SimulationScreen(),
           showAppBar: true,
           usePadding: false,
         );
