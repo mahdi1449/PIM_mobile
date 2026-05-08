@@ -6,7 +6,9 @@ class TestTypesService {
 
   TestTypesService(this._apiClient);
 
-  // Get all test types
+  /// Récupère le catalogue des types de tests disponibles.
+  /// Gère différents formats de réponse JSON du backend.
+  /// [activeOnly] : si `true`, ne retourne que les tests actifs (utilisables dans un événement).
   Future<List<TestType>> getTestTypes({bool activeOnly = false}) async {
     try {
       final response = await _apiClient.get(
@@ -37,7 +39,7 @@ class TestTypesService {
     }
   }
 
-  // Get test type by ID
+  /// Récupère les détails d'un type de test par son ID (formule de normalisation, seuils).
   Future<TestType> getTestType(String id) async {
     try {
       final response = await _apiClient.get('/test-types/$id');
@@ -47,7 +49,7 @@ class TestTypesService {
     }
   }
 
-  // Create test type
+  /// Crée un nouveau type de test dans le catalogue.
   Future<TestType> createTestType(TestType testType) async {
     try {
       final response = await _apiClient.post(
@@ -60,7 +62,7 @@ class TestTypesService {
     }
   }
 
-  // Update test type
+  /// Met à jour un type de test existant (ex: modifier les seuils de normalisation).
   Future<TestType> updateTestType(String id, TestType testType) async {
     try {
       final response = await _apiClient.patch(
@@ -73,7 +75,7 @@ class TestTypesService {
     }
   }
 
-  // Delete test type
+  /// Supprime un type de test du catalogue.
   Future<void> deleteTestType(String id) async {
     try {
       await _apiClient.delete('/test-types/$id');

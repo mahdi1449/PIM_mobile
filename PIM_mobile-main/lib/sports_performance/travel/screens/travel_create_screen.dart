@@ -273,6 +273,9 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
             type: StepperType.vertical,
             currentStep: _currentStep,
             onStepContinue: () {
+              if (_currentStep == 3) {
+                _autoGenerateRooms();
+              }
               if (_currentStep < 4) setState(() => _currentStep++);
               else _submit();
             },
@@ -680,6 +683,34 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
   }
 
   // ─── ÉTAPE 4 : ROOMING LIST ───────────────────────────────────────────────
+  List<String> get _assignedIds {
+    final ids = <String>[];
+    for (final r in _rooms) {
+      if (r.occupant1Id != null) ids.add(r.occupant1Id!);
+      if (r.occupant2Id != null) ids.add(r.occupant2Id!);
+    }
+    return ids;
+  }
+
+  void _autoGenerateRooms() {
+    if (_rooms.isNotEmpty) return;
+    
+    int totalParticipants = _selectedPlayerIds.length + _selectedStaffIds.length;
+    if (totalParticipants == 0) return;
+
+    int doubles = totalParticipants ~/ 2;
+    int singles = totalParticipants % 2;
+
+    setState(() {
+      for (int i = 0; i < doubles; i++) {
+        _rooms.add(HotelRoom(roomNumber: '${101 + i}', type: 'double'));
+      }
+      for (int i = 0; i < singles; i++) {
+        _rooms.add(HotelRoom(roomNumber: '${101 + doubles + i}', type: 'single'));
+      }
+    });
+  }
+
   Widget _buildRoomingStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -755,6 +786,11 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
   }
 
   Widget _buildOccupantSelector(int roomIdx, int occIdx, String? currentId, List<Player> players, List<Map<String, dynamic>> staff) {
+    final assignedIds = _assignedIds;
+    
+    final filteredPlayers = players.where((p) => p.id == currentId || !assignedIds.contains(p.id)).toList();
+    final filteredStaff = staff.where((s) => s['_id'] == currentId || !assignedIds.contains(s['_id'])).toList();
+
     return Row(
       children: [
         Text('Occupant $occIdx :', style: const TextStyle(color: Colors.white38, fontSize: 11)),
@@ -762,14 +798,14 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
         Expanded(
           child: DropdownButton<String>(
             isExpanded: true,
-            value: (players.any((p) => p.id == currentId) || staff.any((s) => s['_id'] == currentId)) 
+            value: (filteredPlayers.any((p) => p.id == currentId) || filteredStaff.any((s) => s['_id'] == currentId)) 
                 ? currentId 
                 : null,
             hint: const Text('Choisir...', style: TextStyle(color: Colors.white12, fontSize: 12)),
             dropdownColor: SPColors.backgroundTertiary,
             items: [
               const DropdownMenuItem<String>(value: null, child: Text('Vide', style: TextStyle(color: Colors.white24, fontSize: 12))),
-              ...players.map((p) => DropdownMenuItem(
+              ...filteredPlayers.map((p) => DropdownMenuItem(
                 value: p.id, 
                 child: Row(
                   children: [
@@ -780,7 +816,7 @@ class _TravelCreateScreenState extends ConsumerState<TravelCreateScreen> {
                   ],
                 ),
               )),
-              ...staff.map((s) => DropdownMenuItem(
+              ...filteredStaff.map((s) => DropdownMenuItem(
                 value: s['_id'], 
                 child: Row(
                   children: [

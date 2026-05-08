@@ -1,18 +1,22 @@
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
   // Backend base URL
-  // For Android emulator: http://10.0.2.2:3000
-  // For iOS simulator: http://localhost:3000
-  // For physical device on same Wi-Fi: http://<YOUR_MAC_LOCAL_IP>:3000
-  static const String _baseUrlRaw = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:3000',
-  );
-  static String get baseUrl => _baseUrlRaw;
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:3000';
+    }
+    // For Android emulator
+    return 'http://10.0.2.2:3000';
+  }
 
   // Player Value AI service
-  // For Android emulator: http://10.0.2.2:8002
-  // For iOS simulator: http://localhost:8002
-  static const String playerValueAiBaseUrl = 'http://10.0.2.2:8002';
+  static String get playerValueAiBaseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:8002';
+    }
+    return 'http://10.0.2.2:8002';
+  }
 
   static String get apiBaseUrl => '$baseUrl/api';
 

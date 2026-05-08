@@ -6,7 +6,7 @@ class TestResultsService {
 
   TestResultsService(this._apiClient);
 
-  // Get all test results for an event player
+  /// Récupère tous les résultats de tests pour un joueur spécifique dans le cadre d'un événement.
   Future<List<TestResult>> getTestResults(String eventPlayerId) async {
     try {
       final response =
@@ -19,7 +19,9 @@ class TestResultsService {
     }
   }
 
-  // Create test result
+  /// Enregistre un nouveau résultat de test pour un joueur.
+  /// La [rawValue] est la valeur brute mesurée sur le terrain (ex: secondes, kg, cm).
+  /// Le backend calculera automatiquement le score normalisé sur 100.
   Future<TestResult> createTestResult(
     String eventPlayerId,
     String testTypeId,
@@ -43,7 +45,7 @@ class TestResultsService {
     }
   }
 
-  // Update test result
+  /// Met à jour une performance existante.
   Future<TestResult> updateTestResult(
     String id,
     double rawValue, {
@@ -64,7 +66,7 @@ class TestResultsService {
     }
   }
 
-  // Delete test result
+  /// Supprime un résultat de test définitif de l'historique du joueur.
   Future<void> deleteTestResult(String id) async {
     try {
       await _apiClient.delete('/test-results/$id');

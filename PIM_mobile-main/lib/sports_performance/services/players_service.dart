@@ -6,7 +6,7 @@ class PlayersService {
 
   PlayersService(this._apiClient);
 
-  // Get all players
+  /// Récupère la liste de tous les joueurs actifs du club.
   Future<List<Player>> getPlayers() async {
     try {
       final response = await _apiClient.get('/players');
@@ -17,7 +17,7 @@ class PlayersService {
     }
   }
 
-  // Get player by ID
+  /// Récupère le profil complet d'un joueur par son identifiant unique.
   Future<Player> getPlayer(String id) async {
     try {
       final response = await _apiClient.get('/players/$id');
@@ -27,7 +27,7 @@ class PlayersService {
     }
   }
 
-  // Create player
+  /// Crée un nouveau profil de joueur.
   Future<Player> createPlayer(Player player) async {
     try {
       final response = await _apiClient.post(
@@ -40,7 +40,7 @@ class PlayersService {
     }
   }
 
-  // Update player
+  /// Met à jour les informations personnelles ou sportives d'un joueur.
   Future<Player> updatePlayer(String id, Player player) async {
     try {
       final response = await _apiClient.patch(
@@ -53,7 +53,7 @@ class PlayersService {
     }
   }
 
-  // Delete player
+  /// Supprime un joueur de la base de données (ou l'archive selon la logique backend).
   Future<void> deletePlayer(String id) async {
     try {
       await _apiClient.delete('/players/$id');

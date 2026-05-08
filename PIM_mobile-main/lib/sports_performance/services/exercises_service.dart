@@ -6,7 +6,7 @@ class ExercisesService {
 
   ExercisesService(this._apiClient);
 
-  // Get all exercises
+  /// Récupère la liste des exercices disponibles, filtrable par catégorie ou origine (IA vs Manuel).
   Future<List<Exercise>> getExercises({String? category, bool? aiGenerated}) async {
     try {
       final Map<String, dynamic> queryParams = {};
@@ -24,7 +24,7 @@ class ExercisesService {
     }
   }
 
-  // Get exercise by ID
+  /// Récupère les détails d'un exercice spécifique.
   Future<Exercise> getExercise(String id) async {
     try {
       final response = await _apiClient.get('/exercises/$id');
@@ -34,7 +34,8 @@ class ExercisesService {
     }
   }
 
-  // Generate AI Drill
+  /// Demande à l'IA de générer un nouvel exercice (drill) personnalisé.
+  /// Le [context] contient les besoins spécifiques (ex: améliorer la vitesse, endurance).
   Future<Exercise> generateAiDrill(Map<String, dynamic> context) async {
     try {
       final response = await _apiClient.post(
@@ -47,7 +48,8 @@ class ExercisesService {
     }
   }
 
-  // Adapt Difficulty
+  /// Ajuste dynamiquement la difficulté d'un exercice.
+  /// Le [performanceRatio] détermine si l'exercice doit devenir plus dur (>1) ou plus simple (<1).
   Future<Exercise> adaptDifficulty(String id, double performanceRatio) async {
     try {
       final response = await _apiClient.patch(
@@ -60,7 +62,7 @@ class ExercisesService {
     }
   }
 
-  // Get AI insights for a player
+  /// Récupère des analyses prédictives (insights) sur les besoins d'entraînement d'un joueur.
   Future<Map<String, dynamic>> getPlayerInsights(String playerId) async {
     try {
       final response = await _apiClient.get('/exercises/insights/$playerId');
@@ -70,7 +72,7 @@ class ExercisesService {
     }
   }
 
-  // Delete exercise
+  /// Supprime un exercice de la bibliothèque.
   Future<void> deleteExercise(String id) async {
     try {
       await _apiClient.delete('/exercises/$id');
@@ -79,7 +81,7 @@ class ExercisesService {
     }
   }
 
-  // Update exercise
+  /// Met à jour les paramètres d'un exercice.
   Future<Exercise> updateExercise(String id, Map<String, dynamic> data) async {
     try {
       final response = await _apiClient.patch('/exercises/$id', data: data);
@@ -89,7 +91,8 @@ class ExercisesService {
     }
   }
 
-  // Record exercise session completion
+  /// Enregistre la complétion d'une session d'entraînement par un joueur.
+  /// Permet de suivre le volume d'entraînement (durée, répétitions).
   Future<Map<String, dynamic>> recordCompletion(
     String exerciseId, {
     required String playerId,

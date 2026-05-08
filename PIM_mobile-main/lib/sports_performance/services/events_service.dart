@@ -7,7 +7,8 @@ class EventsService {
 
   EventsService(this._apiClient);
 
-  // Get all events with optional filters
+  /// Récupère la liste des événements sportifs avec des filtres optionnels.
+  /// Gère dynamiquement différents formats de réponse JSON (List ou Map avec clé 'data').
   Future<List<Event>> getEvents({
     DateTime? startDate,
     DateTime? endDate,
@@ -53,7 +54,7 @@ class EventsService {
     }
   }
 
-  // Get event by ID
+  /// Récupère les détails d'un événement unique par son identifiant.
   Future<Event> getEvent(String id) async {
     try {
       final response = await _apiClient.get('/sports-events/$id');
@@ -63,7 +64,7 @@ class EventsService {
     }
   }
 
-  // Create event
+  /// Crée un nouvel événement (match ou entraînement) sur le backend.
   Future<Event> createEvent(Event event) async {
     try {
       final response = await _apiClient.post(
@@ -76,7 +77,7 @@ class EventsService {
     }
   }
 
-  // Update event
+  /// Met à jour les informations d'un événement existant.
   Future<Event> updateEvent(String id, Event event) async {
     try {
       final response = await _apiClient.patch(
@@ -89,7 +90,7 @@ class EventsService {
     }
   }
 
-  // Delete event
+  /// Supprime un événement de la base de données.
   Future<void> deleteEvent(String id) async {
     try {
       await _apiClient.delete('/sports-events/$id');
@@ -98,7 +99,7 @@ class EventsService {
     }
   }
 
-  // Close event
+  /// Clôture un événement, empêchant toute modification ultérieure des participants.
   Future<Event> closeEvent(String id) async {
     try {
       final response = await _apiClient.post('/sports-events/$id/close');
@@ -108,8 +109,9 @@ class EventsService {
     }
   }
 
-  /// Lance l'analyse IA sur tous les joueurs complétés d'un event.
-  /// Retourne un récapitulatif {analyzed, failed, results}.
+  /// Lance l'analyse IA sur tous les joueurs complétés d'un événement.
+  /// L'IA va traiter les résultats des tests pour générer des recommandations de recrutement.
+  /// Retourne un récapitulatif : {analyzed, failed, results}.
   Future<Map<String, dynamic>> analyzeEvent(String eventId) async {
     try {
       final response = await _apiClient.post('/sports-events/$eventId/analyze');
@@ -119,7 +121,7 @@ class EventsService {
     }
   }
 
-  /// Enregistre la décision finale du coach pour un joueur.
+  /// Enregistre la décision finale de recrutement prise par le coach pour un joueur.
   Future<void> setRecruitmentDecision(
     String eventId,
     String playerId, {
@@ -135,7 +137,8 @@ class EventsService {
     }
   }
 
-  // Get event players
+  /// Récupère la liste des joueurs (participants) associés à un événement.
+  /// Gère différents formats de parsing pour assurer la compatibilité avec le backend.
   Future<List<EventPlayer>> getEventPlayers(String eventId) async {
     try {
       final response = await _apiClient.get('/sports-events/$eventId/players');
@@ -164,7 +167,7 @@ class EventsService {
     }
   }
 
-  // Add player to event
+  /// Ajoute un joueur à la liste des participants d'un événement.
   Future<EventPlayer> addPlayerToEvent(
     String eventId,
     String playerId, {
@@ -185,7 +188,7 @@ class EventsService {
     }
   }
 
-  // Remove player from event
+  /// Retire un joueur d'un événement spécifique.
   Future<void> removePlayerFromEvent(String eventId, String playerId) async {
     try {
       await _apiClient.delete('/sports-events/$eventId/players/$playerId');
@@ -195,7 +198,7 @@ class EventsService {
     }
   }
 
-  // Update event player status
+  /// Met à jour le statut (présent, blessé, exclu) ou les notes du coach pour un participant.
   Future<EventPlayer> updateEventPlayer(
     String eventId,
     String playerId, {
@@ -217,3 +220,4 @@ class EventsService {
     }
   }
 }
+

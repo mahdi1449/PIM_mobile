@@ -3,30 +3,43 @@ import '../models/cognitive_session.dart';
 import '../services/cognitive_lab_service.dart';
 import '../../services/api_client.dart';
 
+/// Provider ChangeNotifier pour le Laboratoire Cognitif.
+/// Gère l'état de la dernière session, du score de référence (baseline) et de
+/// la vue d'équipe pour détecter les joueurs en état de fatigue mentale critique.
 class CognitiveLabProvider with ChangeNotifier {
   final CognitiveLabService _service = CognitiveLabService(ApiClient());
 
+  /// Indique si un chargement est en cours.
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  /// Dernière session cognitive enregistrée pour le joueur courant.
   CognitiveSession? _latestSession;
   CognitiveSession? get latestSession => _latestSession;
 
+  /// Score de référence (baseline) du joueur, calculé sur les premières sessions.
   Map<String, dynamic>? _baseline;
   Map<String, dynamic>? get baseline => _baseline;
 
+  /// Historique des sessions cognitives du joueur.
   List<Map<String, dynamic>> _history = [];
   List<Map<String, dynamic>> get history => _history;
 
+  /// Résumé de l'état cognitif global de l'équipe du jour.
   Map<String, dynamic> _squadSummary = {};
   Map<String, dynamic> get squadSummary => _squadSummary;
 
+  /// Liste des joueurs dont le score cognitif est en dessous du seuil d'alerte.
   List<dynamic> _atRiskPlayers = [];
   List<dynamic> get atRiskPlayers => _atRiskPlayers;
 
+  /// Toutes les sessions du jour pour l'équipe.
   List<dynamic> _allSessions = [];
   List<dynamic> get allSessions => _allSessions;
 
+  /// Charge le tableau de bord cognitif d'un joueur.
+  /// Reconstruit la session la plus récente avec les informations du joueur injectées.
+  /// Si le joueur est nouveau (aucune session), crée un squelette de session.
   Future<void> fetchDashboard(String playerId) async {
     _isLoading = true;
     notifyListeners();
@@ -60,6 +73,7 @@ class CognitiveLabProvider with ChangeNotifier {
     }
   }
 
+  /// Charge la vue d'équipe : résumé global, joueurs à risque et toutes les sessions du jour.
   Future<void> fetchSquadOverview() async {
     _isLoading = true;
     notifyListeners();
@@ -77,6 +91,8 @@ class CognitiveLabProvider with ChangeNotifier {
     }
   }
 
+  /// Soumet une nouvelle session cognitive et met à jour l'état local immédiatement.
+  /// Déclenche aussi un rechargement complet du dashboard pour mettre à jour la baseline.
   Future<CognitiveSession?> submitSession(Map<String, dynamic> sessionData) async {
     _isLoading = true;
     notifyListeners();

@@ -12,8 +12,9 @@ class ReactionTestScreen extends StatefulWidget {
 }
 
 class _ReactionTestScreenState extends State<ReactionTestScreen> with TickerProviderStateMixin {
-  final int totalRounds = 15;
   int currentRound = 0;
+  int timeLeft = 30; // 30 seconds timer
+  Timer? countdownTimer;
   List<int> reactionTimes = [];
 
   bool isWaiting = true;
@@ -50,11 +51,26 @@ class _ReactionTestScreenState extends State<ReactionTestScreen> with TickerProv
       duration: const Duration(milliseconds: 300),
     );
 
+    _startCountdown();
     _startNextRound();
+  }
+
+  void _startCountdown() {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      setState(() {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          timer.cancel();
+          _finishTest();
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
+    countdownTimer?.cancel();
     delayTimer?.cancel();
     noGoTimer?.cancel();
     _pulseController.dispose();
@@ -143,14 +159,18 @@ class _ReactionTestScreenState extends State<ReactionTestScreen> with TickerProv
 
   void _nextStep() {
     currentRound++;
-    if (currentRound >= totalRounds) {
-      _finishTest();
-    } else {
+    if (timeLeft > 0) {
       _startNextRound();
     }
   }
 
   void _finishTest() {
+    countdownTimer?.cancel();
+    delayTimer?.cancel();
+    noGoTimer?.cancel();
+
+    int totalTargetsShown = correctGo + missedGo + commissionErrors + correctRejections;
+
     if (reactionTimes.isEmpty && correctGo == 0) {
       widget.onComplete({
         'avgMs': 1000,
@@ -169,7 +189,9 @@ class _ReactionTestScreenState extends State<ReactionTestScreen> with TickerProv
     int worstMs = reactionTimes.isNotEmpty ? reactionTimes.reduce(max) : 1200;
 
     // Professional accuracy: (Succeeded trials / Total trials)
-    int accuracy = (((correctGo + correctRejections) / totalRounds) * 100).round();
+    int accuracy = totalTargetsShown > 0
+        ? (((correctGo + correctRejections) / totalTargetsShown) * 100).round()
+        : 0;
 
     widget.onComplete({
       'avgMs': avgMs,
@@ -208,14 +230,28 @@ class _ReactionTestScreenState extends State<ReactionTestScreen> with TickerProv
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.cyanAccent.withOpacity(0.15),
+                        Colors.cyanAccent.withOpacity(0.02),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white10),
+                    border: Border.all(color: Colors.cyanAccent.withOpacity(0.3), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.cyanAccent.withOpacity(0.05),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildInfoColumn("ROUND", "${currentRound + 1}/$totalRounds", Colors.white70),
+                      _buildInfoColumn("TIME", "${timeLeft}s", Colors.white),
                       _buildInfoColumn("SPEED", "${currentSpawnWindow.toInt()}ms", Colors.cyanAccent),
                       _buildInfoColumn("ERRORS", "$commissionErrors", Colors.redAccent),
                     ],
@@ -229,9 +265,16 @@ class _ReactionTestScreenState extends State<ReactionTestScreen> with TickerProv
                       child: Container(
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.02),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.cyanAccent.withOpacity(0.05),
+                              Colors.transparent,
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
                           borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: Colors.white.withOpacity(0.05)),
+                          border: Border.all(color: Colors.cyanAccent.withOpacity(0.15), width: 1),
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,

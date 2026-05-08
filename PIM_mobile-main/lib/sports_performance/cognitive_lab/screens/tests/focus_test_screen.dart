@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 class FocusTestScreen extends StatefulWidget {
@@ -31,10 +32,19 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
   int errors = 0;
   DateTime? startTime;
 
+  int timeLeft = 30; // 30 seconds timer
+  Timer? countdownTimer;
+
   @override
   void initState() {
     super.initState();
     _startTest();
+  }
+
+  @override
+  void dispose() {
+    countdownTimer?.cancel();
+    super.dispose();
   }
 
   void _startTest() {
@@ -53,6 +63,21 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
       currentBlack = 1;
       currentRed = 8;
       startTime = DateTime.now();
+    });
+
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      setState(() {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          timer.cancel();
+          _finishTest();
+        }
+      });
     });
   }
 
@@ -76,6 +101,7 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
     if (isCorrect) {
       setState(() => tile.isDone = true);
       if (currentBlack > 8 && currentRed < 1) {
+        countdownTimer?.cancel();
         _finishTest();
       }
     } else {
@@ -84,6 +110,7 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
   }
 
   void _finishTest() {
+    countdownTimer?.cancel();
     final elapsed = DateTime.now().difference(startTime!).inSeconds;
     widget.onComplete({
       'completionTime': elapsed,
@@ -105,13 +132,28 @@ class _FocusTestScreenState extends State<FocusTestScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.04),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.cyanAccent.withOpacity(0.15),
+                  Colors.cyanAccent.withOpacity(0.02),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white10),
+              border: Border.all(color: Colors.cyanAccent.withOpacity(0.3), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.cyanAccent.withOpacity(0.05),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+                _buildInfoColumn("TIME", "${timeLeft}s", Colors.white),
                 _buildInfoColumn("ERRORS", "$errors", Colors.redAccent),
                 _buildInfoColumn("PROGRESS", "${(tiles.where((t) => t.isDone).length / 16 * 100).round()}%", Colors.cyanAccent),
               ],

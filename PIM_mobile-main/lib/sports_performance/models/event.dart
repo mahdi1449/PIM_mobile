@@ -151,8 +151,8 @@ class Event {
       'location': location,
       'status': status.value,
       'description': description,
-      if (coachId != null && coachId!.isNotEmpty) 'coachId': coachId.toString(),
-      if (clubId != null && clubId!.isNotEmpty) 'clubId': clubId.toString(),
+      'coachId': (coachId != null && coachId!.isNotEmpty && coachId != 'unknown_coach') ? coachId.toString() : '000000000000000000000000',
+      if (clubId != null && clubId!.isNotEmpty && clubId != 'unknown_club') 'clubId': clubId.toString(),
       'testTypes': testTypes,
     };
   }

@@ -167,13 +167,16 @@ class ProfilTab extends StatelessWidget {
   }
 
   Widget _buildQuickStats() {
+    String rankSuffix = profile.rank == 1 ? 'er' : 'ème';
+    String rankDisplay = profile.rank > 0 ? '${profile.rank}$rankSuffix' : '--';
+
     return Row(
       children: [
         _statItem('${profile.totalPoints}', 'TOTAL', Icons.emoji_events_outlined, Colors.amberAccent),
         const SizedBox(width: 12),
-        _statItem('12', 'BADGES', Icons.workspace_premium_outlined, Colors.purpleAccent),
+        _statItem('${profile.badgesCount}', 'BADGES', Icons.workspace_premium_outlined, Colors.purpleAccent),
         const SizedBox(width: 12),
-        _statItem('3ème', 'RANG', Icons.leaderboard_outlined, Colors.orangeAccent),
+        _statItem(rankDisplay, 'RANG', Icons.leaderboard_outlined, Colors.orangeAccent),
         const SizedBox(width: 12),
         _statItem('${profile.activeStreak}j', 'SÉRIE', Icons.local_fire_department_outlined, Colors.redAccent),
       ],
@@ -235,6 +238,9 @@ class ProfilTab extends StatelessWidget {
     } else if (action.type.contains('MATCH')) {
       icon = Icons.sports_soccer_outlined;
       color = Colors.greenAccent;
+    } else if (action.type == 'PURCHASE') {
+      icon = Icons.shopping_bag_outlined;
+      color = Colors.redAccent;
     }
 
     return Container(
@@ -268,11 +274,9 @@ class ProfilTab extends StatelessWidget {
             ),
           ),
           Text(
-            '+${action.points}',
+            '${action.points > 0 ? '+' : ''}${action.points} PTS',
             style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 15),
           ),
-          const SizedBox(width: 4),
-          Text('PTS', style: TextStyle(color: color.withOpacity(0.5), fontSize: 9, fontWeight: FontWeight.w900)),
         ],
       ),
     );

@@ -1,10 +1,19 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/nutrition_models.dart';
 
+/// Service d'accès aux données du Laboratoire Nutritionnel.
+/// Gère les profils physiques, les enregistrements de nutrition quotidiens,
+/// le statut métabolique calculé par l'IA et la génération de plans alimentaires hebdomadaires.
+/// Utilise une URL distincte selon la plateforme (Web vs Emulateur Android).
 class NutritionApiService {
-  static const String _baseUrl = 'http://10.0.2.2:3000/api/sports-performance/nutrition-lab';
+  static const String _baseUrl = kIsWeb 
+      ? 'http://localhost:3000/api/sports-performance/nutrition-lab' 
+      : 'http://10.0.2.2:3000/api/sports-performance/nutrition-lab';
 
+  /// Récupère le profil physique d'un joueur (poids, taille, tour de taille, BMR calculé).
+  /// Retourne `null` si aucun profil n'a encore été enregistré.
   Future<PhysicalProfile?> getPhysicalProfile(String userId) async {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/profile/$userId'));
@@ -30,6 +39,8 @@ class NutritionApiService {
     return null;
   }
 
+  /// Enregistre ou met à jour le profil physique d'un joueur.
+  /// Retourne `null` si la sauvegarde réussit, ou un message d'erreur si elle échoue.
   Future<String?> savePhysicalProfile(PhysicalProfile profile) async {
     try {
       final response = await http.post(
@@ -54,6 +65,8 @@ class NutritionApiService {
     }
   }
 
+  /// Enregistre un journal nutritionnel quotidien (calories, macros consommés).
+  /// Permet au backend de suivre la conformité du joueur à son plan alimentaire.
   Future<bool> logNutrition(NutritionLog log) async {
     try {
       final response = await http.post(
@@ -68,6 +81,9 @@ class NutritionApiService {
     }
   }
 
+  /// Récupère le statut métabolique actuel d'un joueur.
+  /// Le statut est calculé par l'IA en tenant compte de la fatigue cognitive (Brain Drain)
+  /// et de l'intensité du jour (match, entraînement, récupération).
   Future<MetabolicStatus?> getMetabolicStatus(String userId) async {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/metabolic-status/$userId'));
@@ -80,6 +96,7 @@ class NutritionApiService {
     return null;
   }
 
+  /// Récupère le plan alimentaire hebdomadaire actuel du joueur.
   Future<WeeklyMealPlan?> getWeeklyMealPlan(String userId) async {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/weekly-plan/$userId'));
@@ -92,6 +109,8 @@ class NutritionApiService {
     return null;
   }
 
+  /// Demande à l'IA de générer un nouveau plan alimentaire personnalisé pour la semaine.
+  /// Le plan est calculé en fonction du profil physique, du calendrier et des objectifs du joueur.
   Future<WeeklyMealPlan?> generateAiWeeklyPlan(String userId) async {
     try {
       final response = await http.post(Uri.parse('$_baseUrl/weekly-plan/generate/$userId'));

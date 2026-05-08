@@ -77,9 +77,24 @@ enum PitchPosition {
   const PitchPosition(this.value);
 
   static PitchPosition fromString(String value) {
+    final lowerValue = value.toLowerCase();
+    
+    if (lowerValue.contains('gk') || lowerValue.contains('gardien') || lowerValue.contains('goalkeeper')) {
+      return PitchPosition.gk;
+    }
+    if (lowerValue.contains('def') || lowerValue.contains('défenseur') || lowerValue.contains('defenseur')) {
+      return PitchPosition.def;
+    }
+    if (lowerValue.contains('mid') || lowerValue.contains('milieu') || lowerValue.contains('center')) {
+      return PitchPosition.mid;
+    }
+    if (lowerValue.contains('att') || lowerValue.contains('attaquant') || lowerValue.contains('forward') || lowerValue.contains('striker')) {
+      return PitchPosition.att;
+    }
+
     return PitchPosition.values.firstWhere(
-      (e) => e.value == value,
-      orElse: () => PitchPosition.def,
+      (e) => e.value.toLowerCase() == lowerValue,
+      orElse: () => PitchPosition.mid,
     );
   }
 }
