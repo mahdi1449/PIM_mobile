@@ -24,8 +24,26 @@ import 'erp/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('fr_FR', null);
-  await ThemeController.load();
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('Flutter framework error: ${details.exceptionAsString()}');
+    debugPrintStack(stackTrace: details.stack);
+  };
+
+  try {
+    await initializeDateFormatting('fr_FR', null);
+  } catch (error, stackTrace) {
+    debugPrint('Date locale init failed (fr_FR): $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+
+  try {
+    await ThemeController.load();
+  } catch (error, stackTrace) {
+    debugPrint('Theme init failed, falling back to default mode: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+
   runApp(const ProviderScope(child: RootApp()));
 }
 
@@ -130,7 +148,12 @@ class _AuthCheckState extends State<AuthCheck> {
     }
 
     if (_session != null) {
-      return buildRoleHome(_session!);
+      try {
+        return buildRoleHome(_session!);
+      } catch (error, stackTrace) {
+        debugPrint('Role home build failed, redirecting to login: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
     }
 
     return const LoginScreen();

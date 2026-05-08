@@ -20,8 +20,6 @@ class AuditLogScreen extends StatefulWidget {
 class _AuditLogScreenState extends State<AuditLogScreen> {
   final UserManagementApi _api = UserManagementApi();
   final TextEditingController _keywordController = TextEditingController();
-  final TextEditingController _userIdController = TextEditingController();
-  final TextEditingController _clubIdController = TextEditingController();
   final TextEditingController _actionController = TextEditingController();
   final TextEditingController _entityTypeController = TextEditingController();
 
@@ -53,8 +51,6 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
   @override
   void dispose() {
     _keywordController.dispose();
-    _userIdController.dispose();
-    _clubIdController.dispose();
     _actionController.dispose();
     _entityTypeController.dispose();
     _auditSocket?.dispose();
@@ -77,8 +73,6 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
           page: _pageIndex,
           limit: 25,
           keyword: _keywordController.text,
-          userId: _userIdController.text,
-          clubId: _clubIdController.text,
           action: _actionController.text,
           module: _module,
           entityType: _entityTypeController.text,
@@ -100,8 +94,6 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
 
   void _clearFilters() {
     _keywordController.clear();
-    _userIdController.clear();
-    _clubIdController.clear();
     _actionController.clear();
     _entityTypeController.clear();
     setState(() => _module = null);
@@ -152,16 +144,12 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
 
   bool _matchesCurrentFilters(AuditLogModel log) {
     final keyword = _keywordController.text.trim().toLowerCase();
-    final userId = _userIdController.text.trim();
-    final clubId = _clubIdController.text.trim();
     final action = _actionController.text.trim().toLowerCase();
     final entityType = _entityTypeController.text.trim().toLowerCase();
 
     if (_module != null && _module!.isNotEmpty && log.module != _module) {
       return false;
     }
-    if (userId.isNotEmpty && log.userId != userId) return false;
-    if (clubId.isNotEmpty && log.clubId != clubId) return false;
     if (action.isNotEmpty && !log.action.toLowerCase().contains(action)) {
       return false;
     }
@@ -234,8 +222,6 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
         const SizedBox(height: AppSpacing.s16),
         _FiltersCard(
           keywordController: _keywordController,
-          userIdController: _userIdController,
-          clubIdController: _clubIdController,
           actionController: _actionController,
           entityTypeController: _entityTypeController,
           module: _module,
@@ -271,8 +257,6 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
 class _FiltersCard extends StatelessWidget {
   const _FiltersCard({
     required this.keywordController,
-    required this.userIdController,
-    required this.clubIdController,
     required this.actionController,
     required this.entityTypeController,
     required this.module,
@@ -283,8 +267,6 @@ class _FiltersCard extends StatelessWidget {
   });
 
   final TextEditingController keywordController;
-  final TextEditingController userIdController;
-  final TextEditingController clubIdController;
   final TextEditingController actionController;
   final TextEditingController entityTypeController;
   final String? module;
@@ -309,8 +291,6 @@ class _FiltersCard extends StatelessWidget {
             runSpacing: AppSpacing.s12,
             children: [
               _FilterField(controller: keywordController, label: 'Keyword'),
-              _FilterField(controller: userIdController, label: 'User ID'),
-              _FilterField(controller: clubIdController, label: 'Club ID'),
               _FilterField(controller: actionController, label: 'Action'),
               _FilterField(controller: entityTypeController, label: 'Entity'),
               SizedBox(
