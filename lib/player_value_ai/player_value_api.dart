@@ -8,7 +8,7 @@ class PlayerValueApi {
 
   final http.Client _client;
 
-  Uri _uri(String path) => Uri.parse('${AppConfig.playerValueAiBaseUrl}$path');
+  Uri _uri(String path) => Uri.parse('${AppConfig.apiBaseUrl}/ai$path');
 
   Future<PlayerValueResponse> predict(PlayerValueRequest request) async {
     final response = await _client.post(
