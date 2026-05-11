@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../user_management/models/user_management_models.dart';
-import '../../ui/components/app_card.dart';
 import '../../ui/components/app_section_header.dart';
 import '../../ui/navigation/app_routes.dart';
 import '../../ui/shell/app_shell.dart';
-import '../../ui/theme/app_colors.dart';
 import '../../ui/theme/app_spacing.dart';
 
 class StaffTechniqueDashboardScreen extends StatelessWidget {
@@ -47,39 +45,37 @@ class StaffTechniqueDashboardScreen extends StatelessWidget {
                 title: 'ANALYSE MATCH',
                 subtitle: 'Video + IA',
                 icon: Icons.analytics_rounded,
-                iconColor: AppColors.primaryLight,
+                iconColor: _StaffTechPalette.neonBlue,
                 onTap: () => navigateTo(AppRoutes.analysis),
               ),
               _QuickActionTile(
                 title: 'CHEMIE D\'EQUIPE',
                 subtitle: 'Cohesion groupe',
                 icon: Icons.hub_outlined,
-                iconColor: AppColors.success,
+                iconColor: _StaffTechPalette.mint,
                 onTap: () => navigateTo(AppRoutes.chemistry),
               ),
               _QuickActionTile(
                 title: 'CALENDRIER',
                 subtitle: 'Gestion charge',
                 icon: Icons.calendar_month_rounded,
-                iconColor: AppColors.warning,
+                iconColor: _StaffTechPalette.orange,
                 onTap: () => navigateTo(AppRoutes.calendar),
               ),
               _QuickActionTile(
                 title: 'JOUEURS',
                 subtitle: 'Roster complet',
                 icon: Icons.groups_rounded,
-                iconColor: AppColors.primaryLight,
+                iconColor: _StaffTechPalette.neonBlue,
                 onTap: () => navigateTo(AppRoutes.players),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.s16),
-          Text(
+          const Text(
             'RESSOURCES & DONNEES',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.56),
+            style: TextStyle(
+              color: _StaffTechPalette.sectionLabel,
               fontSize: 15,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
@@ -90,7 +86,7 @@ class StaffTechniqueDashboardScreen extends StatelessWidget {
             title: 'Tests & Rapports',
             subtitle: 'Performance et evaluations',
             icon: Icons.assessment_rounded,
-            iconColor: AppColors.primaryLight,
+            iconColor: _StaffTechPalette.neonBlue,
             onTap: () => navigateTo(AppRoutes.reports),
           ),
           const SizedBox(height: AppSpacing.s12),
@@ -98,7 +94,7 @@ class StaffTechniqueDashboardScreen extends StatelessWidget {
             title: 'Bibliotheque d\'exercices',
             subtitle: 'Exercices et modeles d\'entrainement',
             icon: Icons.menu_book_rounded,
-            iconColor: AppColors.success,
+            iconColor: _StaffTechPalette.mint,
             onTap: () => navigateTo(AppRoutes.exercises),
           ),
           const SizedBox(height: AppSpacing.s12),
@@ -106,7 +102,7 @@ class StaffTechniqueDashboardScreen extends StatelessWidget {
             title: 'Planification de Saison',
             subtitle: 'Generer la saison avec l\'IA',
             icon: Icons.route_rounded,
-            iconColor: AppColors.secondary,
+            iconColor: _StaffTechPalette.violetBlue,
             onTap: () => navigateTo(AppRoutes.seasonPlanning),
           ),
           const SizedBox(height: AppSpacing.s12),
@@ -114,15 +110,39 @@ class StaffTechniqueDashboardScreen extends StatelessWidget {
             title: 'Analyse Tactique & Adversaire',
             subtitle: 'XI de depart sur-mesure',
             icon: Icons.sports_soccer_rounded,
-            iconColor: AppColors.warning,
+            iconColor: _StaffTechPalette.orange,
             onTap: () => navigateTo(AppRoutes.tactics),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          _ResourceActionTile(
+            title: 'Simulation tactique',
+            subtitle: 'Animer les mouvements et phases de jeu',
+            icon: Icons.animation_rounded,
+            iconColor: _StaffTechPalette.violetBlue,
+            onTap: () => navigateTo(AppRoutes.tacticalAnimator),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          _ResourceActionTile(
+            title: 'Scenarios tactiques',
+            subtitle: 'Corners, coups francs, penalties et touches',
+            icon: Icons.flag_rounded,
+            iconColor: _StaffTechPalette.orange,
+            onTap: () => navigateTo(AppRoutes.tacticalScenarios),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          _ResourceActionTile(
+            title: 'Media Training',
+            subtitle: 'Seances, lecons et evaluation prise de parole',
+            icon: Icons.mic_external_on_rounded,
+            iconColor: _StaffTechPalette.mint,
+            onTap: () => navigateTo(AppRoutes.mediaTraining),
           ),
           const SizedBox(height: AppSpacing.s12),
           _ResourceActionTile(
             title: 'Tests physiques',
             subtitle: 'Creer et gerer les tests',
             icon: Icons.fitness_center_rounded,
-            iconColor: AppColors.primaryLight,
+            iconColor: _StaffTechPalette.neonBlue,
             onTap: () => navigateTo(AppRoutes.tests),
           ),
           const SizedBox(height: AppSpacing.s12),
@@ -130,24 +150,8 @@ class StaffTechniqueDashboardScreen extends StatelessWidget {
             title: 'Labo Cognitif IA',
             subtitle: 'Evaluer la fatigue mentale',
             icon: Icons.psychology_outlined,
-            iconColor: AppColors.success,
+            iconColor: _StaffTechPalette.mint,
             onTap: () => navigateTo(AppRoutes.squadCognitiveOverview),
-          ),
-          const SizedBox(height: AppSpacing.s12),
-          _ResourceActionTile(
-            title: 'Voyages & Logistique',
-            subtitle: 'Gestion des déplacements',
-            icon: Icons.flight_takeoff_rounded,
-            iconColor: AppColors.primaryLight,
-            onTap: () => navigateTo(AppRoutes.travelList),
-          ),
-          const SizedBox(height: AppSpacing.s12),
-          _ResourceActionTile(
-            title: 'Gamification & Classement',
-            subtitle: 'Récompenses et points',
-            icon: Icons.emoji_events_rounded,
-            iconColor: AppColors.warning,
-            onTap: () => navigateTo(AppRoutes.gamification),
           ),
           const SizedBox(height: AppSpacing.s16),
           const _PerformanceScoreCard(score: 88, deltaPct: 4.2),
@@ -174,14 +178,61 @@ class _QuickActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return InkWell(
       onTap: onTap,
-      icon: icon,
-      title: title,
-      subtitle: subtitle,
-      accentColor: iconColor,
-      padding: const EdgeInsets.all(12),
-      trailing: const SizedBox.shrink(),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_StaffTechPalette.cardGradA, _StaffTechPalette.cardGradB],
+          ),
+          border: Border.all(color: _StaffTechPalette.cardBorder),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: _StaffTechPalette.iconSurface,
+              ),
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+            const SizedBox(height: AppSpacing.s4),
+            const Spacer(),
+            Text(
+              title,
+              style: const TextStyle(
+                color: _StaffTechPalette.textPrimary,
+                fontSize: 13,
+                height: 1.05,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: _StaffTechPalette.textMuted,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.1,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -203,12 +254,65 @@ class _ResourceActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return InkWell(
       onTap: onTap,
-      icon: icon,
-      title: title,
-      subtitle: subtitle,
-      accentColor: iconColor,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_StaffTechPalette.cardGradA, _StaffTechPalette.cardGradB],
+          ),
+          border: Border.all(color: _StaffTechPalette.cardBorder),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 62,
+              height: 62,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: _StaffTechPalette.iconSurface,
+              ),
+              child: Icon(icon, color: iconColor, size: 28),
+            ),
+            const SizedBox(width: AppSpacing.s16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: _StaffTechPalette.textPrimary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.s4),
+                  Text(
+                    subtitle.toUpperCase(),
+                    style: const TextStyle(
+                      color: _StaffTechPalette.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: _StaffTechPalette.chevron,
+              size: 30,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -222,16 +326,27 @@ class _PerformanceScoreCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ratio = (score / 100).clamp(0.0, 1.0);
-    return AppCard(
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_StaffTechPalette.cardGradA, _StaffTechPalette.cardGradB],
+        ),
+        border: Border.all(color: _StaffTechPalette.mint, width: 1.4),
+      ),
+      padding: const EdgeInsets.all(18),
       child: Column(
         children: [
           Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Text(
                   'SCORE PERFORMANCE',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.success,
+                  style: TextStyle(
+                    color: _StaffTechPalette.mint,
                     fontSize: 19,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
@@ -241,7 +356,7 @@ class _PerformanceScoreCard extends StatelessWidget {
               Text(
                 '+${deltaPct.toStringAsFixed(1)}%',
                 style: const TextStyle(
-                  color: AppColors.success,
+                  color: _StaffTechPalette.mint,
                   fontSize: 19,
                   fontWeight: FontWeight.w800,
                 ),
@@ -254,21 +369,20 @@ class _PerformanceScoreCard extends StatelessWidget {
             children: [
               Text(
                 '$score',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                style: const TextStyle(
+                  color: _StaffTechPalette.textPrimary,
                   fontSize: 64,
                   fontWeight: FontWeight.w800,
                   height: 1,
                 ),
               ),
               const SizedBox(width: AppSpacing.s8),
-              Padding(
+              const Padding(
                 padding: EdgeInsets.only(bottom: 10),
                 child: Text(
                   '/100',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.58),
+                  style: TextStyle(
+                    color: _StaffTechPalette.textMuted,
                     fontSize: 30,
                     fontWeight: FontWeight.w700,
                   ),
@@ -282,12 +396,28 @@ class _PerformanceScoreCard extends StatelessWidget {
             child: LinearProgressIndicator(
               minHeight: 10,
               value: ratio,
-              color: AppColors.success,
-              backgroundColor: AppColors.success.withValues(alpha: 0.14),
+              color: _StaffTechPalette.mint,
+              backgroundColor: _StaffTechPalette.softTrack,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+abstract class _StaffTechPalette {
+  static const Color textPrimary = Color(0xFFDDE8FF);
+  static const Color textMuted = Color(0xFF8CA1C7);
+  static const Color sectionLabel = Color(0xFF5E74A3);
+  static const Color chevron = Color(0xFF5A6F97);
+  static const Color iconSurface = Color(0xFF1D2A48);
+  static const Color softTrack = Color(0xFF10203D);
+  static const Color cardGradA = Color(0xFF192744);
+  static const Color cardGradB = Color(0xFF1B2A46);
+  static const Color cardBorder = Color(0xFF2A3E61);
+  static const Color neonBlue = Color(0xFF4A8DFF);
+  static const Color violetBlue = Color(0xFF6E88FF);
+  static const Color mint = Color(0xFF50E4BE);
+  static const Color orange = Color(0xFFFFB14A);
 }

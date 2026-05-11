@@ -104,7 +104,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: OdinTheme.accentRed.withOpacity(0.2),
+          color: OdinTheme.accentRed.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Icon(Icons.delete_rounded, color: OdinTheme.accentRed),
@@ -121,12 +121,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             gradient: notif.isRead ? OdinTheme.cardGradient : null,
-            color: notif.isRead ? null : OdinTheme.primaryBlue.withOpacity(0.08),
+            color: notif.isRead ? null : OdinTheme.primaryBlue.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: notif.isRead
                   ? OdinTheme.cardBorder
-                  : OdinTheme.primaryBlue.withOpacity(0.3),
+                  : OdinTheme.primaryBlue.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -136,7 +136,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -188,7 +188,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
+                            color: color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(

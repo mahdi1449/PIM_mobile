@@ -20,43 +20,32 @@ class EventTypeCard extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        child: Container(
           height: 100,
           decoration: BoxDecoration(
             color: isSelected 
-                ? SPColors.primaryBlue.withOpacity(0.15) 
-                : SPColors.backgroundSecondary.withOpacity(0.4),
+                ? SPColors.primaryBlue.withOpacity(0.1) 
+                : SPColors.backgroundSecondary.withOpacity(0.5),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? SPColors.primaryBlue.withOpacity(0.8) : SPColors.borderPrimary.withOpacity(0.4),
-              width: 1.5,
+              color: isSelected ? SPColors.primaryBlue : SPColors.borderPrimary.withOpacity(0.3),
+              width: isSelected ? 2 : 1,
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: SPColors.primaryBlue.withOpacity(0.2),
-                      blurRadius: 12,
-                      spreadRadius: 1,
-                    )
-                  ]
-                : [],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                _getIcon(isSelected),
+                _getIcon(),
                 color: isSelected ? SPColors.primaryBlue : SPColors.textTertiary,
-                size: 32,
+                size: 28,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 _getLabel(),
                 style: SPTypography.bodyMedium.copyWith(
-                  color: isSelected ? SPColors.primaryBlue : SPColors.textTertiary,
-                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
-                  letterSpacing: 0.5,
+                  color: isSelected ? Colors.white : SPColors.textTertiary,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ],
@@ -66,22 +55,22 @@ class EventTypeCard extends StatelessWidget {
     );
   }
 
-  IconData _getIcon(bool selected) {
+  IconData _getIcon() {
     switch (type) {
       case EventType.testSession:
-        return selected ? Icons.speed : Icons.speed_outlined;
+        return Icons.speed_outlined;
       case EventType.match:
-        return selected ? Icons.sports_soccer : Icons.sports_soccer_outlined;
+        return Icons.sports_soccer_outlined;
       case EventType.evaluation:
-        return selected ? Icons.assignment : Icons.assignment_outlined;
+        return Icons.assignment_outlined;
       case EventType.detection:
-        return selected ? Icons.visibility : Icons.visibility_outlined;
+        return Icons.visibility_outlined;
       case EventType.medical:
-        return selected ? Icons.medical_services : Icons.medical_services_outlined;
+        return Icons.medical_services_outlined;
       case EventType.recovery:
-        return selected ? Icons.self_improvement : Icons.self_improvement_outlined;
+        return Icons.self_improvement_outlined;
       case EventType.aiAnalysis:
-        return selected ? Icons.psychology : Icons.psychology_outlined;
+        return Icons.psychology_outlined;
     }
   }
 
@@ -104,4 +93,3 @@ class EventTypeCard extends StatelessWidget {
     }
   }
 }
-

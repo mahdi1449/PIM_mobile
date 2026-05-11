@@ -73,7 +73,11 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.initialObjective != null) _buildPrescriptionBanner(),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            _buildSectionHeader('Poste Cible', Icons.person_pin_circle_outlined),
+            const SizedBox(height: 16),
+            _buildPositionSelector(),
+            const SizedBox(height: 32),
 
             _buildSectionHeader('Joueur Concerné (Optionnel)', Icons.person_search_outlined),
             const SizedBox(height: 16),
@@ -84,17 +88,38 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
             ],
             const SizedBox(height: 32),
 
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
               children: [
-                _buildSectionHeader('Durée', Icons.timer_outlined),
-                const SizedBox(height: 12),
-                _buildDropdown(
-                  value: _durationOptions.entries
-                      .firstWhere((e) => e.value == _duration)
-                      .key,
-                  items: _durationOptions.keys.toList(),
-                  onChanged: (val) => setState(() => _duration = _durationOptions[val]!),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader('Âge', Icons.calendar_month_outlined),
+                      const SizedBox(height: 12),
+                      _buildDropdown(
+                        value: _selectedAge,
+                        items: ['Academy (U9-U12)', 'Youth (U13-U16)', 'Elite (U17-U23)', 'Professional'],
+                        onChanged: (val) => setState(() => _selectedAge = val!),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader('Durée', Icons.timer_outlined),
+                      const SizedBox(height: 12),
+                      _buildDropdown(
+                        value: _durationOptions.entries
+                            .firstWhere((e) => e.value == _duration)
+                            .key,
+                        items: _durationOptions.keys.toList(),
+                        onChanged: (val) => setState(() => _duration = _durationOptions[val]!),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -154,41 +179,21 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [SPColors.primaryBlue.withOpacity(0.2), SPColors.backgroundSecondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SPColors.primaryBlue.withOpacity(0.4), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: SPColors.primaryBlue.withOpacity(0.15),
-            blurRadius: 15,
-            spreadRadius: 2,
-          ),
-        ],
+        color: SPColors.primaryBlue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SPColors.primaryBlue.withOpacity(0.3)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [SPColors.primaryBlue, SPColors.primaryBlueLight],
-              ),
+              color: SPColors.primaryBlue,
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: SPColors.primaryBlue.withOpacity(0.4),
-                  blurRadius: 8,
-                ),
-              ],
             ),
-            child: const Icon(Icons.psychology, color: Colors.white, size: 24),
+            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -198,20 +203,15 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
                 Text(
                   'PRESCRIPTION D\'ACTION IA',
                   style: SPTypography.overline.copyWith(
-                    color: SPColors.primaryBlueLight,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
+                    color: SPColors.primaryBlue,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Génération ciblée basée sur les analyses de scouting pour corriger : ',
-                  style: SPTypography.bodySmall.copyWith(color: SPColors.textSecondary, height: 1.4),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  widget.initialObjective ?? '',
-                  style: SPTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                  'Basé sur les dernières analyses de scouting pour corriger : ${widget.initialObjective}',
+                  style: SPTypography.bodySmall.copyWith(color: SPColors.textSecondary),
                 ),
               ],
             ),
@@ -231,35 +231,31 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: InkWell(
               onTap: () => setState(() => _selectedPosition = pos),
-              borderRadius: BorderRadius.circular(16),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
+              child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  color: isSelected ? SPColors.primaryBlue : SPColors.backgroundSecondary,
-                  borderRadius: BorderRadius.circular(16),
+                  color: isSelected ? SPColors.primaryBlue.withOpacity(0.1) : SPColors.backgroundSecondary,
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isSelected ? SPColors.primaryBlueLight : SPColors.borderPrimary,
-                    width: isSelected ? 1.5 : 1,
+                    color: isSelected ? SPColors.primaryBlue : SPColors.borderPrimary,
+                    width: isSelected ? 2 : 1,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: SPColors.primaryBlue.withOpacity(0.4),
-                            blurRadius: 12,
+                            color: SPColors.primaryBlue.withOpacity(0.3),
+                            blurRadius: 10,
                             spreadRadius: 1,
-                            offset: const Offset(0, 4),
                           ),
                         ]
-                      : [],
+                      : null,
                 ),
                 child: Center(
                   child: Text(
                     pos.value,
                     style: TextStyle(
                       color: isSelected ? Colors.white : SPColors.textSecondary,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                      letterSpacing: 1.0,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 ),
@@ -363,43 +359,29 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
       child: ElevatedButton(
         onPressed: isLoading ? null : _generate,
         style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.zero,
+          backgroundColor: SPColors.primaryBlue,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
           elevation: 10,
           shadowColor: SPColors.primaryBlue.withOpacity(0.5),
         ),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF2B3BEE), Color(0xFF4A55E6)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Container(
-            alignment: Alignment.center,
-            child: isLoading
-                ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.auto_awesome, color: Colors.white),
-                      SizedBox(width: 12),
-                      Text(
-                        'GENERATE SMART DRILL',
-                        style: TextStyle(
-                          color: Colors.white,
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+        child: isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.auto_awesome),
+                  SizedBox(width: 12),
+                  Text(
+                    'GENERATE SMART DRILL',
+                    style: TextStyle(
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-          ),
-        ),
+                ],
+              ),
       ),
     );
   }
@@ -553,89 +535,50 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
                 const SizedBox(height: 16),
                 Column(
                   children: exercise.technicalData!.steps.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final stepNumber = index + 1;
-                    
-                    final List<Color> stepColors = [
-                      const Color(0xFF4A55E6), // Blue
-                      const Color(0xFF9C27B0), // Purple
-                      const Color(0xFFFF9800), // Orange
-                      const Color(0xFF00BCD4), // Cyan
-                      const Color(0xFFE91E63), // Pink
-                    ];
-                    final stepColor = stepColors[index % stepColors.length];
-
+                    final index = entry.key + 1;
+                    final isFirst = index == 1;
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Container(
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: SPColors.backgroundSecondary.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(20),
-                          // Uniform border fixes the Flutter crash
-                          border: Border.all(color: SPColors.borderPrimary.withOpacity(0.2), width: 1),
-                          boxShadow: [
-                            BoxShadow(
-                              color: stepColor.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
+                          color: isFirst ? SPColors.primaryBlue.withOpacity(0.05) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isFirst ? SPColors.primaryBlue.withOpacity(0.3) : SPColors.borderPrimary.withOpacity(0.5),
+                          ),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Colored left stripe
-                                Container(
-                                  width: 4,
-                                  color: stepColor,
-                                ),
-                                // Main content
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          width: 36,
-                                          height: 36,
-                                          decoration: BoxDecoration(
-                                            color: stepColor.withOpacity(0.15),
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(color: stepColor.withOpacity(0.5)),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              '$stepNumber',
-                                              style: TextStyle(
-                                                color: stepColor,
-                                                fontWeight: FontWeight.w900,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 20),
-                                        Expanded(
-                                          child: Text(
-                                            entry.value,
-                                            style: SPTypography.bodyMedium.copyWith(
-                                              color: Colors.white.withOpacity(0.95),
-                                              height: 1.7, // Très aéré
-                                              fontSize: 14.5, // Plus grand
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: isFirst ? SPColors.primaryBlue : SPColors.backgroundTertiary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '$index',
+                                  style: TextStyle(
+                                    color: isFirst ? Colors.white : SPColors.textTertiary,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                entry.value,
+                                style: SPTypography.bodySmall.copyWith(
+                                  color: isFirst ? Colors.white : SPColors.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -643,63 +586,12 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
                 ),
               ],
 
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [SPColors.backgroundSecondary.withOpacity(0.8), SPColors.backgroundPrimary.withOpacity(0.5)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: SPColors.borderPrimary.withOpacity(0.5)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildMetricCell('Séries', exercise.technicalData?.sets.toString() ?? '-'),
-                        Container(height: 40, width: 1, color: SPColors.borderPrimary.withOpacity(0.5)),
-                        _buildMetricCell('Difficulté', '${exercise.difficulty}/5'),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Container(height: 1, width: double.infinity, color: SPColors.borderPrimary.withOpacity(0.3)),
-                    const SizedBox(height: 20),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'REPS',
-                          style: SPTypography.overline.copyWith(
-                            color: SPColors.textTertiary,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          exercise.technicalData?.reps.toString() ?? '-',
-                          textAlign: TextAlign.center,
-                          style: SPTypography.h3.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            height: 1.4,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              Row(
+                children: [
+                  _buildMetricCell('Séries', exercise.technicalData?.sets.toString() ?? '-'),
+                  _buildMetricCell('Reps', exercise.technicalData?.reps.toString() ?? '-'),
+                  _buildMetricCell('Difficulté', '${exercise.difficulty}/5'),
+                ],
               ),
               const SizedBox(height: 24),
               // Equipment
@@ -713,38 +605,23 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
               ),
               const SizedBox(height: 12),
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: 8,
+                runSpacing: 8,
                 children: (exercise.technicalData?.equipment ?? []).map((item) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: SPColors.backgroundPrimary.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: SPColors.borderPrimary.withOpacity(0.8)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      color: SPColors.backgroundTertiary,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: SPColors.borderPrimary),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.sports_soccer, size: 14, color: SPColors.textTertiary),
-                        const SizedBox(width: 6),
-                        Text(
-                          item.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      item.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   );
                 }).toList(),
@@ -805,25 +682,11 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
   Widget _buildMetricCell(String label, String value) {
     return Expanded(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label.toUpperCase(),
-            style: SPTypography.overline.copyWith(
-              color: SPColors.textTertiary,
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: SPTypography.h3.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              height: 1.2,
-            ),
-          ),
+          Text(label, style: SPTypography.caption.copyWith(color: SPColors.textTertiary)),
+          const SizedBox(height: 4),
+          Text(value, style: SPTypography.h4.copyWith(color: Colors.white)),
         ],
       ),
     );
@@ -860,21 +723,8 @@ class _GeneratorFormState extends ConsumerState<GeneratorForm> {
         setState(() {
           _selectedPlayerId = player?.id;
           if (player != null) {
-            // 1. Auto-select position based on player's real position
+            // Auto-select position if player is chosen
             _selectedPosition = PitchPosition.fromString(player.position);
-            
-            // 2. Auto-fill main objective with medical data (Weight)
-            if (player.weight != null && player.weight! > 0) {
-              _objective = 'Gestion du Poids (${player.weight} kg)';
-              _objectiveController.text = _objective;
-            } else {
-              _objective = 'Amélioration Physique Globale';
-              _objectiveController.text = _objective;
-            }
-          } else {
-            // Generic player selected, reset to empty
-            _objective = '';
-            _objectiveController.text = '';
           }
         });
       },

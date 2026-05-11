@@ -173,36 +173,18 @@ class _EventReportScreenState extends ConsumerState<EventReportScreen> {
             ),
             if (generationAsyncValue.hasError) ...[
               const SizedBox(height: 24),
-              Builder(
-                builder: (context) {
-                  String errMsg = generationAsyncValue.error.toString();
-                  if (errMsg.contains('No valid players found')) {
-                    errMsg = "Impossible de générer le rapport : Aucun joueur n'a été ajouté à ce suivi, ou aucun résultat de test n'a été enregistré. Allez dans l'onglet 'Participants' pour ajouter des joueurs.";
-                  } else {
-                    errMsg = errMsg.replaceAll('Exception: ', '');
-                  }
-                  
-                  return Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: SPColors.error.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: SPColors.error.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.warning_amber_rounded, color: SPColors.error),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            errMsg,
-                            style: SPTypography.caption.copyWith(color: SPColors.error, fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: SPColors.error.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: SPColors.error.withOpacity(0.3)),
+                ),
+                child: Text(
+                  generationAsyncValue.error.toString().replaceAll('Exception: ', ''),
+                  style: SPTypography.caption.copyWith(color: SPColors.error),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ],
           ],
@@ -223,14 +205,10 @@ class _EventReportScreenState extends ConsumerState<EventReportScreen> {
         ),
       );
     } else {
-      final errorStr = ref.read(reportGenerationProvider).error.toString();
-      final msg = errorStr.contains('No valid players found') 
-          ? "Ajoutez des joueurs et des résultats avant de générer le rapport."
-          : errorStr.replaceAll('Exception: ', '');
-          
+      final error = ref.read(reportGenerationProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(msg),
+          content: Text('Generation failed: $error'),
           backgroundColor: SPColors.error,
         ),
       );

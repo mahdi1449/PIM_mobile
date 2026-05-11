@@ -5,8 +5,6 @@ import 'package:intl/intl.dart';
 import '../../core/theme.dart';
 import '../../providers/events_provider.dart';
 import '../../models/event.dart';
-import '../../../../ui/navigation/app_routes.dart';
-import '../../../../ui/shell/app_shell.dart';
 import 'event_detail_screen.dart';
 import 'event_form_screen.dart';
 
@@ -52,85 +50,59 @@ class _EventsScreenState extends State<EventsScreen> {
       backgroundColor: OdinTheme.background,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 120,
-            pinned: true,
-            backgroundColor: OdinTheme.background,
-            elevation: 0,
-            leading: IconButton(
-              icon: Icon(
-                Navigator.of(context).canPop() 
-                  ? Icons.arrow_back_rounded 
-                  : Icons.menu_rounded, 
-                color: Colors.white
-              ),
-              onPressed: () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                } else {
-                  final shellScope = AppShellScope.of(context);
-                  if (shellScope != null) {
-                    shellScope.goBack();
-                  } else {
-                    Scaffold.of(context).openDrawer();
-                  }
-                }
-              },
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0xFF020617),
-                      Color(0xFF0B1120),
-                    ],
-                  ),
-                ),
-                padding: const EdgeInsets.fromLTRB(20, 40, 20, 0),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: OdinTheme.primaryBlue.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.08)),
-                      ),
-                      child: const Icon(
-                        Icons.event_available_rounded,
-                        color: OdinTheme.primaryBlue,
-                        size: 26,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Entraînements & Matchs',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        Text(
-                          'Planification et suivi',
-                          style: TextStyle(
-                            color: Color(0xFF9CA3AF),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF020617),
+                    Color(0xFF0B1120),
                   ],
                 ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: OdinTheme.primaryBlue.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    ),
+                    child: const Icon(
+                      Icons.event_available_rounded,
+                      color: OdinTheme.primaryBlue,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Entraînements & Matchs',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      Text(
+                        'Planification et suivi des événements',
+                        style: TextStyle(
+                          color: Color(0xFF9CA3AF),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -143,7 +115,7 @@ class _EventsScreenState extends State<EventsScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
               ),
               child: Column(
                 children: [
@@ -171,7 +143,7 @@ class _EventsScreenState extends State<EventsScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
-                              color: OdinTheme.primaryBlue.withOpacity(0.15),
+                              color: OdinTheme.primaryBlue.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Text(
@@ -220,7 +192,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       weekendTextStyle: const TextStyle(color: Colors.white70, fontSize: 13),
                       outsideTextStyle: const TextStyle(color: Colors.white24, fontSize: 13),
                       todayDecoration: BoxDecoration(
-                        color: OdinTheme.primaryBlue.withOpacity(0.15),
+                        color: OdinTheme.primaryBlue.withValues(alpha: 0.15),
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -304,7 +276,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: OdinTheme.primaryBlue.withOpacity(0.4),
+                          color: OdinTheme.primaryBlue.withValues(alpha: 0.4),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         )
@@ -312,13 +284,13 @@ class _EventsScreenState extends State<EventsScreen> {
                     ),
                     child: IconButton(
                       icon: const Icon(Icons.add_rounded, size: 28, color: Colors.white),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const EventFormScreen(),
-                            ),
-                          );
-                        },
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const EventFormScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -351,6 +323,16 @@ class _EventsScreenState extends State<EventsScreen> {
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const EventFormScreen(),
+            ),
+          );
+        },
+        child: const Icon(Icons.add_rounded),
+      ),
     );
   }
 
@@ -371,32 +353,31 @@ class _EventsScreenState extends State<EventsScreen> {
         Provider.of<EventsProvider>(context, listen: false).selectEvent(event);
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => EventDetailScreen(eventId: event.id),
-            settings: RouteSettings(arguments: event.id),
+            builder: (_) => EventDetailScreen(eventId: event.id),
           ),
         );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
+        constraints: const BoxConstraints(minHeight: 108),
         decoration: BoxDecoration(
           color: const Color(0xFF111827),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
-            // Left Status Bar
+            // Left Glow Bar
             Container(
               width: 4,
-              height: 40,
+              height: 70,
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(2),
-                boxShadow: [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8)],
+                borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
+                boxShadow: [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8)],
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             
             // Time Column
             SizedBox(
@@ -419,77 +400,73 @@ class _EventsScreenState extends State<EventsScreen> {
             
             // Info Column
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          event.title,
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            event.title,
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
+                          ),
                         ),
-                      ),
-                      Flexible(
-                        child: Container(
+                        Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.15),
+                            color: color.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             (event.location?.toUpperCase() ?? 'PITCH 1'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.5),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_rounded, size: 12, color: Color(0xFF6B7280)),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
+                        const SizedBox(width: 12),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on_rounded, size: 12, color: Color(0xFF6B7280)),
+                        const SizedBox(width: 4),
+                        Text(
                           event.location ?? 'Main Training Complex',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(color: Color(0xFF6B7280), fontSize: 11),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 40,
-                        child: Stack(
-                          children: [
-                            CircleAvatar(radius: 10, backgroundColor: const Color(0xFF1F2937), child: Text('JD', style: TextStyle(fontSize: 8, color: color))),
-                            Positioned(left: 12, child: CircleAvatar(radius: 10, backgroundColor: const Color(0xFF374151), child: Text('MK', style: TextStyle(fontSize: 8, color: color)))),
-                          ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 40,
+                          child: Stack(
+                            children: [
+                              CircleAvatar(radius: 10, backgroundColor: const Color(0xFF1F2937), child: Text('JD', style: TextStyle(fontSize: 8, color: color))),
+                              Positioned(left: 12, child: CircleAvatar(radius: 10, backgroundColor: const Color(0xFF374151), child: Text('MK', style: TextStyle(fontSize: 8, color: color)))),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Spacer(),
-                      Text(
-                        'Lead: ${event.createdBy ?? 'Staff'}',
-                        style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 10),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
-                        child: const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 16),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 8),
+                        const Spacer(),
+                        Text(
+                          'Lead: ${event.createdBy ?? 'Staff'}',
+                          style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 10),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), shape: BoxShape.circle),
+                          child: const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 16),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

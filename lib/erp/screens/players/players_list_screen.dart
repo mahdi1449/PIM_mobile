@@ -78,7 +78,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF1F2937),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     ),
                     child: const Icon(Icons.groups_rounded, color: OdinTheme.primaryBlue, size: 28),
                   ),
@@ -138,7 +138,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,7 +166,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             elevation: 8,
-                            shadowColor: OdinTheme.primaryBlue.withOpacity(0.5),
+                            shadowColor: OdinTheme.primaryBlue.withValues(alpha: 0.5),
                           ),
                         ),
                     ],
@@ -268,12 +268,12 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF111827).withOpacity(0.6),
+        color: const Color(0xFF111827).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -302,7 +302,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                       width: 70,
                       height: 70,
                       decoration: BoxDecoration(
-                        color: OdinTheme.primaryBlue.withOpacity(0.1),
+                        color: OdinTheme.primaryBlue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                         image: player.photoUrl != null 
                           ? DecorationImage(image: NetworkImage(player.photoUrl!), fit: BoxFit.cover)
@@ -357,10 +357,10 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                       Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Text('Prev: ', style: TextStyle(color: OdinTheme.textTertiary.withOpacity(0.5), fontSize: 12)),
+                          Text('Prev: ', style: TextStyle(color: OdinTheme.textTertiary.withValues(alpha: 0.5), fontSize: 12)),
                           Text('${player.stats?['prev_sprint'] ?? '4.2s'}', style: const TextStyle(color: OdinTheme.primaryBlue, fontSize: 12, fontWeight: FontWeight.bold)),
-                          Text(' • ', style: TextStyle(color: OdinTheme.textTertiary.withOpacity(0.5))),
-                          Text('Target: ', style: TextStyle(color: OdinTheme.textTertiary.withOpacity(0.5), fontSize: 12)),
+                          Text(' • ', style: TextStyle(color: OdinTheme.textTertiary.withValues(alpha: 0.5))),
+                          Text('Target: ', style: TextStyle(color: OdinTheme.textTertiary.withValues(alpha: 0.5), fontSize: 12)),
                           Text('${player.stats?['target_sprint'] ?? '4.1s'}', style: const TextStyle(color: OdinTheme.textSecondary, fontSize: 12)),
                         ],
                       ),
@@ -398,7 +398,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.1),
+                          color: accentColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -435,7 +435,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
         border: Border.all(color: OdinTheme.cardBorder),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -448,7 +448,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(label, style: const TextStyle(color: OdinTheme.textTertiary, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1)),
-              Icon(icon, color: OdinTheme.textTertiary.withOpacity(0.3), size: 24),
+              Icon(icon, color: OdinTheme.textTertiary.withValues(alpha: 0.3), size: 24),
             ],
           ),
           const SizedBox(height: 8),
@@ -541,7 +541,7 @@ class _PlayersListScreenState extends State<PlayersListScreen> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: color, size: 20),

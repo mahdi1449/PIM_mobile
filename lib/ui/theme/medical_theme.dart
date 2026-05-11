@@ -4,20 +4,20 @@ import 'package:google_fonts/google_fonts.dart';
 class MedicalTheme {
   MedicalTheme._();
 
-  static const Color background = Color(0xFF0F172A);
-  static const Color backgroundSoft = Color(0xFF1E293B);
-  static const Color surface = Color(0xFF1E293B);
-  static const Color surfaceAlt = Color(0xFF334155);
+  static const Color background = Color(0xFFF5F8FD);
+  static const Color backgroundSoft = Color(0xFFE9F0FA);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surfaceAlt = Color(0xFFF1F5FC);
   static const Color card = surface;
-  static const Color cardBorder = Color(0xFF334155);
+  static const Color cardBorder = Color(0xFFD9E3F0);
 
-  static const Color primaryBlue = Color(0xFF23AED1);
-  static const Color accentBlue = Color(0xFF05708D);
-  static const Color accentTeal = Color(0xFF00E5FF);
+  static const Color primaryBlue = Color(0xFF2F6BFF);
+  static const Color accentBlue = Color(0xFF3D8CFF);
+  static const Color accentTeal = Color(0xFF1CB6B0);
 
-  static const Color textPrimary = Color(0xFFF8FAFC);
-  static const Color textSecondary = Color(0xFF94A3B8);
-  static const Color textMuted = Color(0xFF64748B);
+  static const Color textPrimary = Color(0xFF0F1D33);
+  static const Color textSecondary = Color(0xFF5B6B82);
+  static const Color textMuted = Color(0xFF93A3B8);
 
   static const Color success = Color(0xFF1AAE7C);
   static const Color warning = Color(0xFFF3A43B);
@@ -31,10 +31,9 @@ class MedicalTheme {
 
   static List<BoxShadow> get softShadow => [
     BoxShadow(
-      color: primaryBlue.withOpacity(0.05),
+      color: const Color(0xFF0B1D3A).withValues(alpha: 0.06),
       blurRadius: 24,
-      spreadRadius: 2,
-      offset: const Offset(0, 8),
+      offset: const Offset(0, 12),
     ),
   ];
 

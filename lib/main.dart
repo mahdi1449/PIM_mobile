@@ -1,84 +1,102 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
-import 'package:provider/provider.dart';
-import 'package:intl/date_symbol_data_local.dart';
-
-import 'services/api_service.dart';
-import 'user_management/models/user_management_models.dart';
-import 'utils/role_router.dart';
-import 'screens/login_screen.dart';
-import 'theme/dark_theme.dart';
-import 'theme/light_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as prov;
+import 'admin_web/admin_web_shell.dart';
+import 'admin_web/theme/admin_theme.dart';
+import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
-
-// Providers
+import 'screens/login_screen.dart';
+import 'services/api_service.dart';
 import 'providers/campaign_provider.dart';
-import 'erp/providers/events_provider.dart';
-import 'erp/providers/teams_provider.dart';
-import 'erp/providers/clubs_provider.dart';
-import 'erp/providers/players_provider.dart';
-import 'erp/providers/staff_provider.dart';
-import 'erp/providers/notifications_provider.dart';
-import 'erp/providers/readiness_provider.dart';
-import 'erp/providers/auth_provider.dart';
-import 'sports_performance/gamification/providers/gamification_provider.dart';
 import 'sports_performance/cognitive_lab/providers/cognitive_lab_provider.dart';
+import 'utils/role_router.dart';
+import 'user_management/models/user_management_models.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('fr_FR', null);
-  await ThemeController.load();
-  runApp(const ProviderScope(child: RootApp()));
+void main() {
+  if (kIsWeb) {
+    runApp(const AdminWebApp());
+    return;
+  }
+  runApp(
+    ProviderScope(
+      child: prov.MultiProvider(
+        providers: [
+          prov.ChangeNotifierProvider(create: (_) => CampaignProvider()),
+          prov.ChangeNotifierProvider(create: (_) => CognitiveLabProvider()),
+        ],
+        child: const MyApp(),
+      ),
+    ),
+  );
 }
 
-class RootApp extends StatelessWidget {
-  const RootApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CampaignProvider()),
-        ChangeNotifierProvider(create: (_) => EventsProvider()),
-        ChangeNotifierProvider(create: (_) => TeamsProvider()),
-        ChangeNotifierProvider(create: (_) => ClubsProvider()),
-        ChangeNotifierProvider(create: (_) => PlayersProvider()),
-        ChangeNotifierProvider(create: (_) => StaffProvider()),
-        ChangeNotifierProvider(create: (_) => NotificationsProvider()),
-        ChangeNotifierProvider(create: (_) => ReadinessProvider()),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => GamificationProvider()),
-        ChangeNotifierProvider(create: (_) => CognitiveLabProvider()),
-      ],
-      child: ValueListenableBuilder<ThemeMode>(
-        valueListenable: ThemeController.mode,
-        builder: (context, themeMode, _) {
-          return MaterialApp(
-            title: 'ODINCLUB PIM',
-            debugShowCheckedModeBanner: false,
-            themeAnimationDuration: const Duration(milliseconds: 280),
-            themeAnimationCurve: Curves.easeOutCubic,
-            themeMode: themeMode,
-            theme: LightTheme.data,
-            darkTheme: DarkTheme.data,
-            home: const AuthCheck(),
-          );
-        },
-      ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.mode,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'ODIN Club',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: mode,
+          debugShowCheckedModeBanner: false,
+          home: const AuthWrapper(),
+        );
+      },
     );
   }
 }
 
-class AuthCheck extends StatefulWidget {
-  const AuthCheck({super.key});
+class AdminWebApp extends StatefulWidget {
+  const AdminWebApp({super.key});
 
   @override
-  State<AuthCheck> createState() => _AuthCheckState();
+  State<AdminWebApp> createState() => _AdminWebAppState();
 }
 
-class _AuthCheckState extends State<AuthCheck> {
-  final ApiService _apiService = ApiService();
-  bool _checking = true;
+class _AdminWebAppState extends State<AdminWebApp> {
+  ThemeMode _themeMode = ThemeMode.dark;
+
+  void _toggleTheme() {
+    setState(() {
+      _themeMode = _themeMode == ThemeMode.dark
+          ? ThemeMode.light
+          : ThemeMode.dark;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = _themeMode == ThemeMode.dark;
+    AdminPalette.setDarkMode(isDark);
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'ODIN Admin Web',
+      themeMode: _themeMode,
+      theme: buildAdminWebLightTheme(),
+      darkTheme: buildAdminWebDarkTheme(),
+      home: AdminWebShell(onToggleTheme: _toggleTheme),
+    );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  final _apiService = ApiService();
+  bool _isLoading = true;
   SessionModel? _session;
 
   @override
@@ -88,44 +106,63 @@ class _AuthCheckState extends State<AuthCheck> {
   }
 
   Future<void> _checkAuth() async {
+    final token = await _apiService.getToken();
+    SessionModel? session;
+    if (token != null) {
+      session = _sessionFromToken(token);
+    }
+    setState(() {
+      _session = session;
+      _isLoading = false;
+    });
+  }
+
+  SessionModel _sessionFromToken(String token) {
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final isLoggedIn = await authProvider.tryAutoLogin();
-      
-      if (isLoggedIn) {
-        final userData = authProvider.user!;
-        final token = await _apiService.getToken();
-        
-        _session = SessionModel(
-          token: token ?? '',
-          userId: userData.id,
-          role: userData.role,
-          email: userData.email,
-          status: userData.status,
-          clubId: userData.clubId,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
+      final parts = token.split('.');
+      if (parts.length == 3) {
+        final payload = parts[1];
+        final normalized = base64.normalize(payload);
+        final decoded = utf8.decode(base64.decode(normalized));
+        final Map<String, dynamic> payloadMap = jsonDecode(decoded);
+        return SessionModel(
+          token: token,
+          userId: (payloadMap['sub'] ?? '').toString(),
+          role: (payloadMap['role'] ?? '').toString(),
+          email: (payloadMap['email'] ?? '').toString(),
+          status: (payloadMap['status'] ?? '').toString(),
+          clubId: payloadMap['clubId']?.toString(),
+          clubName: payloadMap['clubName']?.toString(),
+          firstName: payloadMap['firstName']?.toString(),
+          lastName: payloadMap['lastName']?.toString(),
+          photoUrl: payloadMap['photoUrl']?.toString(),
         );
       }
-    } catch (e) {
-      debugPrint('Auth check failed: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _checking = false);
-      }
-    }
+    } catch (_) {}
+    return SessionModel(
+      token: token,
+      userId: '',
+      role: '',
+      email: '',
+      status: '',
+      clubId: null,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_checking) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
 
-    if (_session != null) {
-      return buildRoleHome(_session!);
+    final session = _session;
+    if (session != null) {
+      return buildRoleHome(session);
     }
-
     return const LoginScreen();
   }
 }

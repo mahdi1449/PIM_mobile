@@ -27,35 +27,35 @@ class _MetabolicScannerScreenState extends State<MetabolicScannerScreen>
   final List<Map<String, dynamic>> _mealTemplates = [
     {
       'label': 'Repas Pré-Match',
-      'subtitle': '60g Glucides · 25g Protéines',
+      'subtitle': '80g Glucides · 40g Protéines',
       'icon': Icons.sports_soccer,
       'color': const Color(0xFF10B981),
       'type': MealType.preMatch,
-      'carbs': 60.0, 'proteins': 25.0, 'fats': 10.0, 'hydration': 400.0,
+      'carbs': 80.0, 'proteins': 40.0, 'fats': 15.0, 'hydration': 500.0,
     },
     {
       'label': 'Shake Récupération',
-      'subtitle': '20g Glucides · 25g Protéines (Whey)',
+      'subtitle': '30g Glucides · 50g Protéines (Whey)',
       'icon': Icons.fitness_center,
       'color': const Color(0xFF3B82F6),
       'type': MealType.postMatchRecovery,
-      'carbs': 20.0, 'proteins': 25.0, 'fats': 2.0, 'hydration': 300.0,
+      'carbs': 30.0, 'proteins': 50.0, 'fats': 5.0, 'hydration': 300.0,
     },
     {
       'label': 'Veille de Match',
-      'subtitle': '90g Glucides · 30g Protéines',
+      'subtitle': '120g Glucides · 35g Protéines',
       'icon': Icons.nightlight_outlined,
       'color': const Color(0xFF8B5CF6),
       'type': MealType.highCarb,
-      'carbs': 90.0, 'proteins': 30.0, 'fats': 15.0, 'hydration': 400.0,
+      'carbs': 120.0, 'proteins': 35.0, 'fats': 20.0, 'hydration': 400.0,
     },
     {
-      'label': 'Hydratation Flash',
-      'subtitle': '500ml eau · Électrolytes',
+      'label': 'Hydratation Intensive',
+      'subtitle': '1000ml eau · Électrolytes',
       'icon': Icons.water_drop_outlined,
       'color': const Color(0xFF06B6D4),
       'type': MealType.hydration,
-      'carbs': 0.0, 'proteins': 0.0, 'fats': 0.0, 'hydration': 500.0,
+      'carbs': 0.0, 'proteins': 0.0, 'fats': 0.0, 'hydration': 1000.0,
     },
   ];
 
@@ -88,31 +88,15 @@ class _MetabolicScannerScreenState extends State<MetabolicScannerScreen>
     if (_status == null) return false;
     final type = template['type'] as MealType;
 
-    // Calcul des consommations actuelles
-    final double currentCarbs = (_status!.current['carbs'] ?? 0).toDouble();
-    final double targetCarbs = (_status!.targets['carbs'] ?? 1).toDouble();
-    final double currentProt = (_status!.current['proteins'] ?? 0).toDouble();
-    final double targetProt = (_status!.targets['proteins'] ?? 1).toDouble();
-    final double currentHydra = (_status!.current['hydrationMl'] ?? 0).toDouble();
-    final double targetHydra = (_status!.targets['hydrationMl'] ?? 1).toDouble();
-
-    // Si c'est de l'hydratation seule
     if (type == MealType.hydration) {
-      return currentHydra < targetHydra * 1.1; // On autorise 10% de marge
+      return (_status!.current['hydrationMl'] ?? 0) < (_status!.targets['hydrationMl'] ?? 1);
     }
 
-    // Pour les repas complets : on bloque si l'un des macros majeurs (Glucides ou Protéines) 
-    // dépasse déjà l'objectif de plus de 10%
-    final bool carbsExcess = currentCarbs >= targetCarbs * 1.1;
-    final bool protExcess = currentProt >= targetProt * 1.1;
+    // Pour les autres repas, si le besoin en Glucides ET Protéines est comblé, on bloque
+    final bool carbsMet = (_status!.current['carbs'] ?? 0) >= (_status!.targets['carbs'] ?? 1);
+    final bool protMet = (_status!.current['proteins'] ?? 0) >= (_status!.targets['proteins'] ?? 1);
 
-    // Si on est déjà en excès sur les deux, on bloque tout
-    if (carbsExcess && protExcess) return false;
-
-    // Si le template apporte beaucoup de protéines (ex: > 15g) et qu'on est déjà au max en protéines
-    if (template['proteins'] > 15 && protExcess) return false;
-
-    return true;
+    return !carbsMet || !protMet;
   }
 
   Future<void> _quickLog(Map<String, dynamic> template) async {
@@ -143,18 +127,9 @@ class _MetabolicScannerScreenState extends State<MetabolicScannerScreen>
           backgroundColor: const Color(0xFF10B981),
           content: Row(
             children: [
-              const Icon(Icons.stars, color: Colors.yellowAccent),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('${template['label']} enregistré !', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, decoration: TextDecoration.none)),
-                    const Text('+20 points gagnés (Nutrition)', style: TextStyle(color: Colors.white, fontSize: 10, decoration: TextDecoration.none)),
-                  ],
-                ),
-              ),
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              Text('${template['label']} enregistré !', style: const TextStyle(color: Colors.white, decoration: TextDecoration.none)),
             ],
           ),
         ),

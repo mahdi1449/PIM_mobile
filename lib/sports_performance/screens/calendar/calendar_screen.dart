@@ -33,6 +33,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return Scaffold(
       backgroundColor: SPColors.backgroundPrimary,
+      appBar: AppBar(
+        title: const Text('Sports Performance'),
+        backgroundColor: SPColors.backgroundPrimary,
+        elevation: 0,
+      ),
       body: eventsAsyncValue.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
@@ -131,9 +136,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: SPColors.backgroundSecondary.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SPColors.borderPrimary.withOpacity(0.4), width: 1.5),
+        color: SPColors.backgroundSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SPColors.borderPrimary),
       ),
       child: TableCalendar(
         firstDay: DateTime.utc(2020, 1, 1),
@@ -158,24 +163,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             color: SPColors.textSecondary,
           ),
           defaultTextStyle: SPTypography.bodyMedium.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
+            color: SPColors.textPrimary,
           ),
-          selectedDecoration: BoxDecoration(
-            color: SPColors.primaryBlue.withOpacity(0.9),
+          selectedDecoration: const BoxDecoration(
+            color: SPColors.primaryBlue,
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: SPColors.primaryBlue.withOpacity(0.4),
-                blurRadius: 8,
-                spreadRadius: 2,
-              )
-            ],
           ),
           todayDecoration: BoxDecoration(
             color: SPColors.primaryBlue.withOpacity(0.3),
             shape: BoxShape.circle,
-            border: Border.all(color: SPColors.primaryBlue.withOpacity(0.5), width: 1),
           ),
           markerDecoration: const BoxDecoration(
             color: SPColors.primaryBlue,
@@ -202,11 +198,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: SPColors.backgroundSecondary.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: SPColors.borderPrimary.withOpacity(0.4), width: 1.5),
+              color: SPColors.backgroundSecondary,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: SPColors.borderPrimary),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -218,35 +214,31 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       'SELECTED DATE',
                       style: SPTypography.overline.copyWith(
                         color: SPColors.textTertiary,
-                        letterSpacing: 1.5,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       DateFormat('EEEE, MMM dd').format(_selectedDay!),
                       style: SPTypography.h4.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
+                        color: SPColors.textPrimary,
                       ),
                     ),
                   ],
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: SPColors.primaryBlue.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: SPColors.primaryBlue.withOpacity(0.6), width: 1.5),
+                    color: SPColors.primaryBlue,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
+                    child: Text(
                     '${events.length} SUIVI${events.length > 1 ? 'S' : ''}',
                     style: SPTypography.caption.copyWith(
-                      color: SPColors.primaryBlue,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -277,18 +269,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: SPColors.backgroundSecondary.withOpacity(0.4),
+        color: SPColors.backgroundSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: SPColors.borderPrimary.withOpacity(0.4), width: 1.5),
+        border: Border.all(color: SPColors.borderPrimary),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: SPColors.primaryBlue.withOpacity(0.15),
+            color: SPColors.backgroundTertiary,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: SPColors.primaryBlue.withOpacity(0.3), width: 1),
           ),
           child: Icon(
             _getEventIcon(event.type),

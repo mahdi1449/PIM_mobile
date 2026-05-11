@@ -57,7 +57,7 @@ class _FinanceDashboardScreenState extends State<FinanceDashboardScreen> {
                        gradient: LinearGradient(
                          begin: Alignment.topLeft,
                          end: Alignment.bottomRight,
-                         colors: [OdinTheme.primaryBlue, OdinTheme.primaryBlue.withOpacity(0.7)],
+                         colors: [OdinTheme.primaryBlue, OdinTheme.primaryBlue.withValues(alpha: 0.7)],
                        ),
                        borderRadius: BorderRadius.circular(16),
                      ),
@@ -133,7 +133,7 @@ class _FinanceDashboardScreenState extends State<FinanceDashboardScreen> {
                          children: [
                            CircleAvatar(
                              radius: 18,
-                             backgroundColor: OdinTheme.primaryBlue.withOpacity(0.15),
+                             backgroundColor: OdinTheme.primaryBlue.withValues(alpha: 0.15),
                              child: const Icon(Icons.person_rounded, color: OdinTheme.primaryBlue, size: 18),
                            ),
                            const SizedBox(width: 14),

@@ -4,6 +4,7 @@ import '../../../../user_management/models/user_management_models.dart';
 import '../providers/cognitive_lab_provider.dart';
 import 'tests/reaction_test_screen.dart';
 import 'tests/focus_test_screen.dart';
+import 'tests/memory_test_screen.dart';
 import 'tests/decision_test_screen.dart';
 import 'tests/wellness_test_screen.dart';
 
@@ -18,8 +19,8 @@ class CognitiveTestFlowScreen extends StatefulWidget {
 
 class _CognitiveTestFlowScreenState extends State<CognitiveTestFlowScreen> {
   int _currentStep = 0;
-  // Total steps: 0=Wellness, 1=Reaction, 2=Focus, 3=Decision
-  static const int _totalSteps = 4;
+  // Total steps: 0=Wellness, 1=Reaction, 2=Focus, 3=Memory, 4=Decision
+  static const int _totalSteps = 5;
 
   Map<String, dynamic> _sessionData = {};
 
@@ -27,6 +28,7 @@ class _CognitiveTestFlowScreenState extends State<CognitiveTestFlowScreen> {
     '🧘 Wellness Check',
     '⚡ Reaction',
     '🎯 Focus',
+    '🧠 Memory',
     '🏆 Decision Making',
   ];
 
@@ -42,6 +44,11 @@ class _CognitiveTestFlowScreenState extends State<CognitiveTestFlowScreen> {
 
   void _onFocusComplete(Map<String, int> results) {
     _sessionData['focus'] = results;
+    setState(() => _currentStep++);
+  }
+
+  void _onMemoryComplete(Map<String, int> results) {
+    _sessionData['memory'] = results;
     setState(() => _currentStep++);
   }
 
@@ -98,6 +105,9 @@ class _CognitiveTestFlowScreenState extends State<CognitiveTestFlowScreen> {
         currentTest = FocusTestScreen(onComplete: _onFocusComplete);
         break;
       case 3:
+        currentTest = MemoryTestScreen(onComplete: _onMemoryComplete);
+        break;
+      case 4:
         currentTest = DecisionTestScreen(onComplete: _onDecisionComplete);
         break;
       default:

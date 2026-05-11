@@ -8,7 +8,6 @@ class User {
   final String role;
   final String? userType;
   final String status;
-  final String? playerId;
   final DateTime? createdAt;
 
   User({
@@ -21,39 +20,22 @@ class User {
     required this.role,
     this.userType,
     this.status = 'active',
-    this.playerId,
     this.createdAt,
   });
 
   String get fullName => '$firstName $lastName';
 
   factory User.fromJson(Map<String, dynamic> json) {
-    // Robustly extract ID
-    final id = (json['id'] ?? json['_id'] ?? json['sub'] ?? json['userId'] ?? '').toString();
-    
-    // Robustly extract Club ID
-    String clubId = '';
-    if (json['clubId'] != null) {
-      clubId = json['clubId'].toString();
-    } else if (json['club'] != null) {
-      if (json['club'] is Map) {
-        clubId = (json['club']['id'] ?? json['club']['_id'] ?? '').toString();
-      } else {
-        clubId = json['club'].toString();
-      }
-    }
-
     return User(
-      id: id,
+      id: json['id'] ?? '',
       email: json['email'] ?? '',
       firstName: json['firstName'] ?? '',
       lastName: json['lastName'] ?? '',
       phone: json['phone'],
-      clubId: clubId,
+      clubId: json['clubId'] ?? '',
       role: json['role'] ?? '',
       userType: json['userType'],
       status: json['status'] ?? 'active',
-      playerId: json['playerId']?.toString(),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,

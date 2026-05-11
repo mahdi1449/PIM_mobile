@@ -211,9 +211,9 @@ class _PlayerFormScreenState extends State<PlayerFormScreen> {
                         Container(
                           width: 64, height: 64,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: OdinTheme.primaryBlue.withOpacity(0.5), width: 2),
+                            border: Border.all(color: OdinTheme.primaryBlue.withValues(alpha: 0.5), width: 2),
                           ),
                           child: const Icon(Icons.sports_soccer_rounded, color: OdinTheme.primaryBlue, size: 30),
                         ),
@@ -234,7 +234,7 @@ class _PlayerFormScreenState extends State<PlayerFormScreen> {
                             Text(
                               _isEdit ? 'Mettez à jour la fiche' : 'Remplissez tous les champs essentiels',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.65),
+                                color: Colors.white.withValues(alpha: 0.65),
                                 fontSize: 13,
                               ),
                             ),
@@ -356,7 +356,7 @@ class _PlayerFormScreenState extends State<PlayerFormScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: OdinTheme.primaryBlue.withOpacity(0.35),
+                            color: OdinTheme.primaryBlue.withValues(alpha: 0.35),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -395,7 +395,7 @@ class _PlayerFormScreenState extends State<PlayerFormScreen> {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: OdinTheme.primaryBlue.withOpacity(0.15),
+            color: OdinTheme.primaryBlue.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: OdinTheme.primaryBlue, size: 16),

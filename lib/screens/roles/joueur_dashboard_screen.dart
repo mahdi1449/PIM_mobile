@@ -7,14 +7,16 @@ import '../../ui/shell/app_shell.dart';
 import '../../ui/theme/app_spacing.dart';
 
 class JoueurDashboardScreen extends StatelessWidget {
-  const JoueurDashboardScreen({super.key, required this.session});
+  const JoueurDashboardScreen({
+    super.key,
+    required this.session,
+  });
 
   final SessionModel session;
 
   @override
   Widget build(BuildContext context) {
-    final displayName = '${session.firstName ?? ''} ${session.lastName ?? ''}'
-        .trim();
+    final displayName = '${session.firstName ?? ''} ${session.lastName ?? ''}'.trim();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -68,6 +70,28 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(onTap: onTap, icon: icon, title: title, subtitle: subtitle);
+    return AppCard(
+      onTap: onTap,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+            child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(width: AppSpacing.s16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: AppSpacing.s4),
+                Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

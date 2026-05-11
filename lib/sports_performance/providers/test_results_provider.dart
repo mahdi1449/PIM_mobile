@@ -3,28 +3,26 @@ import '../models/test_result.dart';
 import '../services/api_client.dart';
 import '../services/test_results_service.dart';
 
-/// Fournit une instance de [TestResultsService] pour les providers de résultats.
+// Service Provider
 final testResultsServiceProvider = Provider((ref) {
   final apiClient = ApiClient();
   return TestResultsService(apiClient);
 });
 
-/// Provider récupérant les résultats de tests d'un participant ([eventPlayerId]).
-/// Cache invalidé après chaque mutation.
+// Test Results Provider for Event Player
 final testResultsProvider =
     FutureProvider.family<List<TestResult>, String>((ref, eventPlayerId) async {
   final service = ref.read(testResultsServiceProvider);
   return service.getTestResults(eventPlayerId);
 });
 
-/// Provider de formulaire gérant l'enregistrement et la modification des résultats de tests.
+// Test Result Form State Provider
 final testResultFormProvider =
     StateNotifierProvider<TestResultFormNotifier, AsyncValue<TestResult?>>((ref) {
   final service = ref.read(testResultsServiceProvider);
   return TestResultFormNotifier(service, ref);
 });
 
-/// Notifier gérant la création, mise à jour et suppression des résultats de tests.
 class TestResultFormNotifier extends StateNotifier<AsyncValue<TestResult?>> {
   final TestResultsService _service;
   final Ref _ref;
@@ -32,7 +30,6 @@ class TestResultFormNotifier extends StateNotifier<AsyncValue<TestResult?>> {
   TestResultFormNotifier(this._service, this._ref)
       : super(const AsyncValue.data(null));
 
-  /// Soumet une valeur brute mesurée sur le terrain et force le rechargement du cache.
   Future<TestResult?> createTestResult({
     required String eventPlayerId,
     required String testTypeId,
@@ -58,7 +55,6 @@ class TestResultFormNotifier extends StateNotifier<AsyncValue<TestResult?>> {
     }
   }
 
-  /// Corrige une valeur brute enregistrée et invalide le cache des résultats.
   Future<TestResult?> updateTestResult({
     required String id,
     required String eventPlayerId,
@@ -81,7 +77,6 @@ class TestResultFormNotifier extends StateNotifier<AsyncValue<TestResult?>> {
     }
   }
 
-  /// Supprime un résultat de test et rafraîchit la liste du joueur.
   Future<bool> deleteTestResult(String id, String eventPlayerId) async {
     try {
       await _service.deleteTestResult(id);
@@ -92,5 +87,3 @@ class TestResultFormNotifier extends StateNotifier<AsyncValue<TestResult?>> {
     }
   }
 }
-
-

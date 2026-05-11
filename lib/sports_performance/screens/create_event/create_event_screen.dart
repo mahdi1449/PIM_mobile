@@ -10,10 +10,7 @@ import '../../theme/sp_typography.dart';
 import '../event_detail/event_detail_screen.dart';
 import 'widgets/event_type_card.dart';
 import '../../models/test_type.dart';
-import 'package:provider/provider.dart' as pub;
 import '../../providers/test_types_provider.dart';
-import '../../../erp/providers/auth_provider.dart';
-import '../../../ui/shell/app_shell.dart';
 
 class CreateEventScreen extends ConsumerStatefulWidget {
   final Event? eventToEdit;
@@ -103,11 +100,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
-      final auth = pub.Provider.of<AuthProvider>(context, listen: false);
-      
-      final coachId = auth.user?.id ?? 'unknown_coach';
-      final clubId = auth.user?.clubId ?? 'unknown_club';
-
       setState(() => _isLoading = true);
 
       try {
@@ -126,8 +118,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
           date: eventDateTime,
           location: widget.eventToEdit?.location ?? 'Training Ground',
           status: widget.eventToEdit?.status ?? EventStatus.draft,
-          coachId: coachId, 
-          clubId: clubId,
+          coachId: widget.eventToEdit?.coachId ?? '507f1f77bcf86cd799439011', 
           testTypes: _selectedTestTypeIds.toList(),
         );
 
@@ -140,40 +131,31 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
         if (eventResult != null && mounted) {
           if (widget.eventToEdit == null) {
+            // Only add players on creation for now (or diff logic)
             for (final playerId in _selectedPlayerIds) {
               await ref.read(eventFormProvider.notifier).addPlayerToEvent(eventResult.id, playerId);
             }
           }
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Suivi créé avec succès'),
-              backgroundColor: Colors.green,
-            ),
+            SnackBar(content: Text(widget.eventToEdit != null ? 'Suivi mis à jour avec succès' : 'Suivi créé avec succès')),
           );
           
-          if (mounted) Navigator.pop(context);
-        } else if (mounted) {
-          final state = ref.read(eventFormProvider);
-          String errorMsg = 'Échec de l\'opération';
-          if (state is AsyncError) {
-             errorMsg = state.error.toString().replaceFirst('Exception: ', '');
+          if (widget.eventToEdit != null) {
+            Navigator.pop(context);
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EventDetailScreen(eventId: eventResult!.id),
+              ),
+            );
           }
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$errorMsg (ID: ${auth.user!.id})'), 
-              backgroundColor: Colors.redAccent
-            ),
-          );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${e.toString().replaceFirst('Exception: ', '')} (ID: ${auth.user?.id})'), 
-              backgroundColor: Colors.redAccent
-            ),
+            SnackBar(content: Text('Error: $e'), backgroundColor: SPColors.error),
           );
         }
       } finally {
@@ -389,57 +371,28 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   Widget _buildTitleField() {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            SPColors.backgroundSecondary.withOpacity(0.7),
-            SPColors.backgroundSecondary.withOpacity(0.3),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: SPColors.primaryBlue.withOpacity(0.3), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: SPColors.primaryBlue.withOpacity(0.05),
-            blurRadius: 15,
-            spreadRadius: 1,
-          )
-        ],
+        color: SPColors.backgroundSecondary.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: SPColors.borderPrimary.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 16, top: 16, bottom: 4),
-            child: Row(
-              children: [
-                Icon(Icons.title_rounded, color: SPColors.primaryBlue, size: 14),
-                const SizedBox(width: 8),
-                Text(
-                  'TITRE DU SUIVI',
-                  style: SPTypography.overline.copyWith(
-                    color: SPColors.primaryBlue, 
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.0,
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.only(left: 16, top: 8),
+            child: Text(
+              'TITRE DU SUIVI',
+              style: SPTypography.overline.copyWith(color: SPColors.primaryBlue, fontSize: 8),
             ),
           ),
           TextFormField(
             controller: _titleController,
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               hintText: 'e.g. Morning Sprint Power Test',
-              hintStyle: TextStyle(color: SPColors.textTertiary.withOpacity(0.5), fontWeight: FontWeight.normal, fontSize: 16),
-              contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+              hintStyle: TextStyle(color: SPColors.textTertiary.withOpacity(0.5)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              filled: false,
-              fillColor: Colors.transparent,
             ),
             validator: (v) => v!.isEmpty ? 'Titre requis' : null,
           ),
@@ -459,44 +412,21 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              SPColors.backgroundSecondary.withOpacity(0.7),
-              SPColors.backgroundSecondary.withOpacity(0.3),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: SPColors.primaryBlue.withOpacity(0.3), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: SPColors.primaryBlue.withOpacity(0.05),
-              blurRadius: 15,
-              spreadRadius: 1,
-            )
-          ],
+          color: SPColors.backgroundSecondary.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: SPColors.borderPrimary.withOpacity(0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(label, style: SPTypography.overline.copyWith(color: SPColors.primaryBlue, fontSize: 8)),
+            const SizedBox(height: 8),
             Row(
               children: [
-                Icon(icon, color: SPColors.primaryBlue, size: 14),
-                const SizedBox(width: 8),
-                Text(
-                  label, 
-                  style: SPTypography.overline.copyWith(
-                    color: SPColors.primaryBlue, 
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.0,
-                  ),
-                ),
+                Expanded(child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 13))),
+                Icon(icon, color: SPColors.primaryBlue, size: 20),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -506,49 +436,38 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   Widget _buildParticipantSelection(AsyncValue<List<Player>> playersAsync) {
     return Container(
       decoration: BoxDecoration(
-        color: SPColors.backgroundSecondary.withOpacity(0.15),
+        color: SPColors.backgroundSecondary.withOpacity(0.3),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: SPColors.primaryBlue.withOpacity(0.15), width: 1.5),
+        border: Border.all(color: SPColors.borderPrimary.withOpacity(0.2)),
       ),
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: SPColors.backgroundSecondary.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: SPColors.borderPrimary.withOpacity(0.3)),
-              ),
-              child: Row(
-                children: [
-                  _buildToggleItem('SQUAD', _isSquadSelection, () => setState(() => _isSquadSelection = true)),
-                  _buildToggleItem('CUSTOM', !_isSquadSelection, () => setState(() => _isSquadSelection = false)),
-                ],
-              ),
+            child: Row(
+              children: [
+                _buildToggleItem('SQUAD', _isSquadSelection, () => setState(() => _isSquadSelection = true)),
+                _buildToggleItem('CUSTOM', !_isSquadSelection, () => setState(() => _isSquadSelection = false)),
+              ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              height: 48,
-              decoration: BoxDecoration(
-                color: SPColors.backgroundSecondary.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: SPColors.borderPrimary.withOpacity(0.3), width: 1.5),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => _searchQuery = v),
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Search players...',
-                  hintStyle: TextStyle(color: SPColors.textTertiary.withOpacity(0.5)),
-                  prefixIcon: const Icon(Icons.search, color: SPColors.textTertiary, size: 20),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _searchQuery = v),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Search players...',
+                hintStyle: TextStyle(color: SPColors.textTertiary.withOpacity(0.5)),
+                prefixIcon: const Icon(Icons.search, color: SPColors.textTertiary, size: 20),
+                filled: true,
+                fillColor: SPColors.backgroundSecondary.withOpacity(0.5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
               ),
             ),
           ),
@@ -592,36 +511,18 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            gradient: isSelected ? LinearGradient(
-              colors: [
-                SPColors.primaryBlue,
-                const Color(0xFF007AFF),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ) : null,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: SPColors.primaryBlue.withOpacity(0.4),
-                      blurRadius: 12,
-                      spreadRadius: 1,
-                    )
-                  ]
-                : [],
+            color: isSelected ? SPColors.primaryBlue : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
             child: Text(
               label,
               style: SPTypography.overline.copyWith(
                 color: isSelected ? Colors.white : SPColors.textTertiary,
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                letterSpacing: 1.5,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
@@ -633,77 +534,44 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   Widget _buildPlayerItem(Player player) {
     final isSelected = _selectedPlayerIds.contains(player.id);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isSelected ? SPColors.primaryBlue.withOpacity(0.05) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? SPColors.primaryBlue.withOpacity(0.3) : Colors.transparent,
-            width: 1,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundImage: player.photo != null ? NetworkImage(player.photo!) : null,
+            child: player.photo == null ? const Icon(Icons.person, color: Colors.white, size: 20) : null,
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    SPColors.primaryBlue.withOpacity(0.6),
-                    const Color(0xFFAF52DE).withOpacity(0.6),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(player.fullName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(
+                  '${player.position.toUpperCase()} • FIRST TEAM', 
+                  style: SPTypography.caption.copyWith(color: SPColors.textTertiary, fontSize: 9),
                 ),
-                border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
-              ),
-              child: player.photo != null 
-                  ? ClipOval(
-                      child: Image.network(
-                        player.photo!, 
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.white, size: 20),
-                      ),
-                    )
-                  : const Icon(Icons.person, color: Colors.white, size: 20),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(player.fullName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${player.position.toUpperCase()} • FIRST TEAM', 
-                    style: SPTypography.caption.copyWith(color: SPColors.textTertiary, fontSize: 10, letterSpacing: 0.5),
-                  ),
-                ],
-              ),
-            ),
-            Checkbox(
-              value: isSelected,
-              onChanged: (v) {
-                setState(() {
-                  if (v == true) {
-                    _selectedPlayerIds.add(player.id);
-                  } else {
-                    _selectedPlayerIds.remove(player.id);
-                  }
-                });
-              },
-              checkColor: Colors.white,
-              activeColor: SPColors.primaryBlue,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-              side: BorderSide(color: isSelected ? SPColors.primaryBlue : SPColors.borderPrimary.withOpacity(0.5), width: 1.5),
-            ),
-          ],
-        ),
+          ),
+          Checkbox(
+            value: isSelected,
+            onChanged: (v) {
+              setState(() {
+                if (v == true) {
+                  _selectedPlayerIds.add(player.id);
+                } else {
+                  _selectedPlayerIds.remove(player.id);
+                }
+              });
+            },
+            checkColor: Colors.white,
+            activeColor: SPColors.primaryBlue,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            side: BorderSide(color: SPColors.borderPrimary.withOpacity(0.5)),
+          ),
+        ],
       ),
     );
   }
@@ -711,31 +579,28 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   Widget _buildTestSelection(AsyncValue<List<TestType>> testTypesAsync) {
     return Container(
       decoration: BoxDecoration(
-        color: SPColors.backgroundSecondary.withOpacity(0.15),
+        color: SPColors.backgroundSecondary.withOpacity(0.3),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: SPColors.primaryBlue.withOpacity(0.15), width: 1.5),
+        border: Border.all(color: SPColors.borderPrimary.withOpacity(0.2)),
       ),
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Container(
-              height: 48,
-              decoration: BoxDecoration(
-                color: SPColors.backgroundSecondary.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: SPColors.borderPrimary.withOpacity(0.3), width: 1.5),
-              ),
-              child: TextField(
-                onChanged: (v) => setState(() => _testSearchQuery = v),
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Search test types...',
-                  hintStyle: TextStyle(color: SPColors.textTertiary.withOpacity(0.5)),
-                  prefixIcon: const Icon(Icons.search, color: SPColors.textTertiary, size: 20),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            child: TextField(
+              onChanged: (v) => setState(() => _testSearchQuery = v),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Search test types...',
+                hintStyle: TextStyle(color: SPColors.textTertiary.withOpacity(0.5)),
+                prefixIcon: const Icon(Icons.search, color: SPColors.textTertiary, size: 20),
+                filled: true,
+                fillColor: SPColors.backgroundSecondary.withOpacity(0.5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
               ),
             ),
           ),

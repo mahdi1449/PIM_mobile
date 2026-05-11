@@ -6,40 +6,21 @@ class TestTypesService {
 
   TestTypesService(this._apiClient);
 
-  /// Récupère le catalogue des types de tests disponibles.
-  /// Gère différents formats de réponse JSON du backend.
-  /// [activeOnly] : si `true`, ne retourne que les tests actifs (utilisables dans un événement).
+  // Get all test types
   Future<List<TestType>> getTestTypes({bool activeOnly = false}) async {
     try {
       final response = await _apiClient.get(
         '/test-types',
         queryParameters: activeOnly ? {'activeOnly': 'true'} : null,
       );
-      
-      dynamic rawData = response.data;
-      List<dynamic> listData = [];
-      
-      if (rawData is List) {
-        listData = rawData;
-      } else if (rawData is Map) {
-        if (rawData['data'] != null) {
-          if (rawData['data'] is List) {
-            listData = rawData['data'];
-          } else if (rawData['data'] is Map && rawData['data']['testTypes'] is List) {
-            listData = rawData['data']['testTypes'];
-          }
-        } else if (rawData['testTypes'] is List) {
-          listData = rawData['testTypes'];
-        }
-      }
-      
-      return listData.map((json) => TestType.fromJson(json)).toList();
+      final List<dynamic> data = response.data;
+      return data.map((json) => TestType.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Erreur lors de la récupération des types de tests: $e');
     }
   }
 
-  /// Récupère les détails d'un type de test par son ID (formule de normalisation, seuils).
+  // Get test type by ID
   Future<TestType> getTestType(String id) async {
     try {
       final response = await _apiClient.get('/test-types/$id');
@@ -49,7 +30,7 @@ class TestTypesService {
     }
   }
 
-  /// Crée un nouveau type de test dans le catalogue.
+  // Create test type
   Future<TestType> createTestType(TestType testType) async {
     try {
       final response = await _apiClient.post(
@@ -62,7 +43,7 @@ class TestTypesService {
     }
   }
 
-  /// Met à jour un type de test existant (ex: modifier les seuils de normalisation).
+  // Update test type
   Future<TestType> updateTestType(String id, TestType testType) async {
     try {
       final response = await _apiClient.patch(
@@ -75,7 +56,7 @@ class TestTypesService {
     }
   }
 
-  /// Supprime un type de test du catalogue.
+  // Delete test type
   Future<void> deleteTestType(String id) async {
     try {
       await _apiClient.delete('/test-types/$id');

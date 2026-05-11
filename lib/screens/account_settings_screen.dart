@@ -21,7 +21,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         elevation: 0,
         title: const Text(
           'Account & Settings',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       body: ListView(
@@ -35,7 +37,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             trailing: Switch(
               value: isDark,
               onChanged: (_) => ThemeController.toggle(),
-              activeThumbColor: AppTheme.blueCiel,
+              activeColor: AppTheme.blueCiel,
             ),
           ),
           const Divider(height: 1),
@@ -60,7 +62,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           ),
           const Divider(height: 1),
           _sectionTitle('About'),
-          _tile(icon: Icons.info_outline, title: 'Version', subtitle: '1.0.0'),
+          _tile(
+            icon: Icons.info_outline,
+            title: 'Version',
+            subtitle: '1.0.0',
+          ),
         ],
       ),
     );
@@ -74,7 +80,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: AppTheme.darkGrey.withValues(alpha: 0.8),
+          color: AppTheme.darkGrey.withOpacity(0.8),
           letterSpacing: 0.8,
         ),
       ),
@@ -93,7 +99,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppTheme.blueCiel.withValues(alpha: 0.15),
+          color: AppTheme.blueCiel.withOpacity(0.15),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: AppTheme.blueFonce, size: 22),
@@ -109,7 +115,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         subtitle,
         style: TextStyle(
           fontSize: 13,
-          color: AppTheme.darkGrey.withValues(alpha: 0.7),
+          color: AppTheme.darkGrey.withOpacity(0.7),
         ),
       ),
       trailing: trailing,

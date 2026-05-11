@@ -44,9 +44,9 @@ class _PendingUsersScreenState extends State<PendingUsersScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: OdinTheme.primaryBlue.withOpacity(0.15),
+                      color: OdinTheme.primaryBlue.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     ),
                     child: const Icon(Icons.verified_user_rounded,
                         color: OdinTheme.primaryBlue, size: 26),
@@ -154,10 +154,10 @@ class _UserApprovalCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: OdinTheme.surfaceLight,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -168,7 +168,7 @@ class _UserApprovalCard extends StatelessWidget {
           ListTile(
             contentPadding: const EdgeInsets.all(16),
             leading: CircleAvatar(
-              backgroundColor: OdinTheme.primaryBlue.withOpacity(0.2),
+              backgroundColor: OdinTheme.primaryBlue.withValues(alpha: 0.2),
               child: Text(
                 '${user['firstName']?[0] ?? ''}${user['lastName']?[0] ?? ''}',
                 style: const TextStyle(color: OdinTheme.primaryBlue, fontWeight: FontWeight.bold),
@@ -185,7 +185,7 @@ class _UserApprovalCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: OdinTheme.accentOrange.withOpacity(0.1),
+                    color: OdinTheme.accentOrange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(

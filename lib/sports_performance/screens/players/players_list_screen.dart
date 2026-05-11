@@ -6,7 +6,6 @@ import '../../theme/sp_colors.dart';
 import '../../theme/sp_typography.dart';
 import 'create_player_screen.dart';
 import '../../cognitive_lab/screens/cognitive_dashboard_screen.dart';
-import '../../gamification/screens/gamification_dashboard_screen.dart';
 import '../../../ui/shell/app_shell.dart';
 
 class PlayersListScreen extends ConsumerStatefulWidget {
@@ -182,60 +181,37 @@ class _PlayersListScreenState extends ConsumerState<PlayersListScreen> {
             ),
           ],
         ),
-        trailing: SizedBox(
-          width: 120, // Fixe la largeur pour éviter l'overflow
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.psychology, color: Colors.cyanAccent, size: 20),
-                onPressed: () {
-                  final shell = AppShellScope.of(context);
-                  if (shell != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CognitiveDashboardScreen(
-                          session: shell.session,
-                          targetPlayerId: player.id,
-                          targetPlayerName: player.fullName,
-                        ),
-                      ),
-                    );
-                  }
-                },
-              ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.emoji_events_rounded, color: Colors.orangeAccent, size: 20),
-                onPressed: () {
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.psychology, color: Colors.cyanAccent, size: 22),
+              onPressed: () {
+                final shell = AppShellScope.of(context);
+                if (shell != null) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => GamificationDashboardScreen(
-                        playerId: player.id,
-                        playerName: player.fullName,
+                      builder: (context) => CognitiveDashboardScreen(
+                        session: shell.session,
+                        targetPlayerId: player.id,
+                        targetPlayerName: player.fullName,
                       ),
                     ),
                   );
-                },
-              ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.edit_outlined, color: SPColors.textTertiary, size: 18),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => CreatePlayerScreen(playerToEdit: player)),
-                  );
-                },
-              ),
-            ],
-          ),
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: SPColors.textTertiary, size: 20),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CreatePlayerScreen(playerToEdit: player)),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

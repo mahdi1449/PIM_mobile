@@ -86,7 +86,6 @@ class Event {
   final EventStatus status;
   final String? description;
   final String? coachId;
-  final String? clubId;
   final List<String> testTypes;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -101,7 +100,6 @@ class Event {
     required this.status,
     this.description,
     this.coachId,
-    this.clubId,
     required this.testTypes,
     this.createdAt,
     this.updatedAt,
@@ -124,7 +122,6 @@ class Event {
           : (json['coachId'] != null && json['coachId'].toString().isNotEmpty
               ? json['coachId'].toString()
               : null),
-      clubId: json['clubId']?.toString(),
       // Handle testTypes whether they are populated objects or ID strings
       testTypes: (json['testTypes'] as List?)?.map((item) {
             if (item is Map) {
@@ -151,8 +148,7 @@ class Event {
       'location': location,
       'status': status.value,
       'description': description,
-      'coachId': (coachId != null && coachId!.isNotEmpty && coachId != 'unknown_coach') ? coachId.toString() : '000000000000000000000000',
-      if (clubId != null && clubId!.isNotEmpty && clubId != 'unknown_club') 'clubId': clubId.toString(),
+      if (coachId != null && coachId!.isNotEmpty) 'coachId': coachId,
       'testTypes': testTypes,
     };
   }

@@ -100,7 +100,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
                   end: Alignment.bottomRight,
                   colors: [
                     const Color(0xFF020617),
-                    OdinTheme.primaryBlue.withOpacity(0.4),
+                    OdinTheme.primaryBlue.withValues(alpha: 0.4),
                   ],
                 ),
               ),
@@ -113,9 +113,9 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: OdinTheme.primaryBlue.withOpacity(0.2),
+                          color: OdinTheme.primaryBlue.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: OdinTheme.primaryBlue.withOpacity(0.5)),
+                          border: Border.all(color: OdinTheme.primaryBlue.withValues(alpha: 0.5)),
                         ),
                         child: const Row(
                           children: [
@@ -132,7 +132,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
@@ -198,7 +198,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                           decoration: BoxDecoration(
                             color: _filterRisk
-                                ? const Color(0xFFEF4444).withOpacity(0.15)
+                                ? const Color(0xFFEF4444).withValues(alpha: 0.15)
                                 : OdinTheme.surface,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
@@ -304,7 +304,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF4F46E5).withOpacity(0.4),
+              color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -336,9 +336,9 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF4F46E5).withOpacity(0.15),
+        color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF4F46E5).withOpacity(0.4)),
+        border: Border.all(color: const Color(0xFF4F46E5).withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
@@ -446,7 +446,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF111827),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,7 +559,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
                 Container(
                   height: 6,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -603,7 +603,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
         decoration: BoxDecoration(
           color: OdinTheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,8 +643,8 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isExpanded
-                ? result.statusColor.withOpacity(0.5)
-                : Colors.white.withOpacity(0.05),
+                ? result.statusColor.withValues(alpha: 0.5)
+                : Colors.white.withValues(alpha: 0.05),
             width: isExpanded ? 1.5 : 1,
           ),
         ),
@@ -677,7 +677,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: result.statusColor.withOpacity(0.15),
+                                color: result.statusColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -739,7 +739,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
                               : f.type == 'warn'
                                   ? const Color(0xFFF59E0B)
                                   : const Color(0xFFEF4444))
-                              .withOpacity(0.1),
+                              .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: (f.type == 'ok'
@@ -747,7 +747,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
                                     : f.type == 'warn'
                                         ? const Color(0xFFF59E0B)
                                         : const Color(0xFFEF4444))
-                                .withOpacity(0.3),
+                                .withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text('${f.icon} ${f.label}',
@@ -771,9 +771,9 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: result.statusColor.withOpacity(0.08),
+                          color: result.statusColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: result.statusColor.withOpacity(0.3)),
+                          border: Border.all(color: result.statusColor.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
@@ -819,7 +819,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF111827),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.04)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
       ),
       child: Row(
         children: [
@@ -827,7 +827,7 @@ class _ReadinessScreenState extends State<ReadinessScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.06),
+              color: Colors.white.withValues(alpha: 0.06),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.hourglass_top_rounded,
@@ -952,7 +952,7 @@ class _RingPainter extends CustomPainter {
       center,
       radius,
       Paint()
-        ..color = color.withOpacity(0.1)
+        ..color = color.withValues(alpha: 0.1)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 4,
     );
@@ -988,7 +988,7 @@ class _GaugePainter extends CustomPainter {
 
     // Background track
     final bgPaint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
+      ..color = Colors.white.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 12
       ..strokeCap = StrokeCap.round;

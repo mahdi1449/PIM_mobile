@@ -32,19 +32,10 @@ class AppButton extends StatelessWidget {
         return OutlinedButton(onPressed: onPressed, child: child);
       case AppButtonVariant.ghost:
         return TextButton(onPressed: onPressed, child: child);
-      case AppButtonVariant.danger:
-        return ElevatedButton(
-          onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-          ),
-          child: child,
-        );
       case AppButtonVariant.filled:
         return ElevatedButton(onPressed: onPressed, child: child);
     }
   }
 }
 
-enum AppButtonVariant { filled, outlined, ghost, danger }
+enum AppButtonVariant { filled, outlined, ghost }

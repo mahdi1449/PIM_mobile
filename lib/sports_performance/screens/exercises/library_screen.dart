@@ -33,79 +33,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   bool _isGif(String? url) => url != null && (url.contains('giphy.com') || url.contains('.gif'));
 
-  Color _getCategoryColor(ExerciseCategory category) {
-    switch (category) {
-      case ExerciseCategory.physical:
-        return const Color(0xFFFF3B30); // Neon Red
-      case ExerciseCategory.technical:
-        return const Color(0xFF00C7BE); // Neon Cyan
-      case ExerciseCategory.tactical:
-        return const Color(0xFF34C759); // Neon Green
-      case ExerciseCategory.cognitive:
-        return const Color(0xFFAF52DE); // Neon Purple
-    }
-  }
-
-  IconData _getCategoryIcon(ExerciseCategory category) {
-    switch (category) {
-      case ExerciseCategory.physical:
-        return Icons.fitness_center;
-      case ExerciseCategory.technical:
-        return Icons.sports_soccer;
-      case ExerciseCategory.tactical:
-        return Icons.map_outlined;
-      case ExerciseCategory.cognitive:
-        return Icons.psychology;
-    }
-  }
-
-  Widget _buildDetailPlaceholder(Exercise exercise) {
-    final catColor = _getCategoryColor(exercise.category);
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            catColor.withOpacity(0.2),
-            SPColors.backgroundSecondary.withOpacity(0.9),
-            SPColors.backgroundPrimary,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: catColor.withOpacity(0.15),
-                shape: BoxShape.circle,
-                border: Border.all(color: catColor.withOpacity(0.3), width: 1.5),
-              ),
-              child: Icon(
-                _getCategoryIcon(exercise.category),
-                size: 48,
-                color: catColor.withOpacity(0.9),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              exercise.category.label.toUpperCase(),
-              style: TextStyle(
-                color: catColor.withOpacity(0.9),
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 3,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -372,6 +299,33 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     return Scaffold(
       backgroundColor: SPColors.backgroundPrimary,
+      appBar: AppBar(
+        title: Column(
+          children: [
+            Text(
+              'EXERCISE LIBRARY',
+              style: SPTypography.overline.copyWith(
+                color: SPColors.primaryBlue,
+                letterSpacing: 1.5,
+              ),
+            ),
+            Text(
+              'Odin Intelligent ERP',
+              style: SPTypography.caption.copyWith(
+                color: SPColors.textTertiary,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_none),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: Column(
         children: [
           // Search and AI Toggle
@@ -380,24 +334,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: SPColors.backgroundSecondary.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: SPColors.borderPrimary.withOpacity(0.3)),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (value) => setState(() => _searchQuery = value),
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                      decoration: const InputDecoration(
-                        hintText: 'Rechercher un exercice...',
-                        hintStyle: TextStyle(color: SPColors.textTertiary, fontSize: 14),
-                        prefixIcon: Icon(Icons.search, size: 20, color: SPColors.textSecondary),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    decoration: InputDecoration(
+                      hintText: 'Rechercher un exercice...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
                     ),
                   ),
                 ),
@@ -411,7 +354,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: SizedBox(
-              height: 44, // Increased height for better tap area
+              height: 40,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -422,44 +365,29 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       (_selectedCategory == category);
 
                   return Padding(
-                    padding: const EdgeInsets.only(right: 12.0),
-                    child: GestureDetector(
-                      onTap: () {
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: ChoiceChip(
+                      label: Text(category),
+                      selected: isSelected,
+                      onSelected: (selected) {
                         setState(() {
                           _selectedCategory = category == 'All' ? null : category;
                         });
                       },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 0),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFFAF52DE).withOpacity(0.15) : SPColors.backgroundSecondary.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isSelected ? const Color(0xFFAF52DE).withOpacity(0.8) : SPColors.borderPrimary.withOpacity(0.4),
-                            width: 1.5,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFFAF52DE).withOpacity(0.2),
-                                    blurRadius: 12,
-                                    spreadRadius: 1,
-                                  )
-                                ]
-                              : [],
-                        ),
-                        child: Text(
-                          category,
-                          style: TextStyle(
-                            color: isSelected ? const Color(0xFFAF52DE) : SPColors.textSecondary,
-                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
-                            fontSize: 14,
-                            letterSpacing: 0.5,
-                          ),
+                      selectedColor: SPColors.badgeTechnical.withOpacity(0.3),
+                      backgroundColor: SPColors.backgroundSecondary,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : SPColors.textSecondary,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: isSelected ? SPColors.badgeTechnical : SPColors.borderPrimary,
                         ),
                       ),
+                      showCheckmark: false,
                     ),
                   );
                 },
@@ -596,32 +524,29 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget _buildAiToggle() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      height: 48,
       decoration: BoxDecoration(
-        color: _aiOnly ? const Color(0xFFAF52DE).withOpacity(0.1) : SPColors.backgroundSecondary.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(14),
+        color: _aiOnly ? SPColors.badgeTechnical.withOpacity(0.1) : SPColors.backgroundSecondary,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _aiOnly ? const Color(0xFFAF52DE).withOpacity(0.5) : SPColors.borderPrimary.withOpacity(0.3),
+          color: _aiOnly ? SPColors.badgeTechnical : SPColors.borderPrimary,
         ),
       ),
       child: InkWell(
         onTap: () => setState(() => _aiOnly = !_aiOnly),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
              Icon(
               Icons.auto_awesome,
-              size: 18,
-              color: _aiOnly ? const Color(0xFFAF52DE) : SPColors.textTertiary,
+              size: 16,
+              color: _aiOnly ? Colors.white : SPColors.textTertiary,
             ),
             const SizedBox(width: 8),
             Text(
               'AI ONLY',
               style: TextStyle(
-                color: _aiOnly ? const Color(0xFFAF52DE) : SPColors.textTertiary,
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
+                color: _aiOnly ? Colors.white : SPColors.textTertiary,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
@@ -726,33 +651,44 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   children: [
                     // Hero GIF Section with Overlays
-                    Stack(
-                      children: [
-                        Container(
-                          height: 220,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: _getCategoryColor(exercise.category).withOpacity(0.3)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: _getCategoryColor(exercise.category).withOpacity(0.1),
-                                blurRadius: 20,
-                                spreadRadius: 2,
+                    if (exercise.imageUrl != null)
+                      Stack(
+                        children: [
+                          Container(
+                            height: 220,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: SPColors.primaryBlue.withOpacity(0.3)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: SPColors.primaryBlue.withOpacity(0.2),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(19),
+                              child: Image.network(
+                                exercise.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  color: SPColors.backgroundSecondary,
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.broken_image_outlined, color: SPColors.primaryBlue.withOpacity(0.5), size: 40),
+                                        const SizedBox(height: 8),
+                                        Text('Image indisponible', style: SPTypography.caption),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ],
+                            ),
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(19),
-                            child: exercise.imageUrl != null && exercise.imageUrl!.isNotEmpty
-                                ? Image.network(
-                                    exercise.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => _buildDetailPlaceholder(exercise),
-                                  )
-                                : _buildDetailPlaceholder(exercise),
-                          ),
-                        ),
                           Positioned(
                             bottom: 16,
                             left: 16,
@@ -837,75 +773,65 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     const SizedBox(height: 16),
                     ...exercise.technicalData!.steps.asMap().entries.map((entry) {
                       final index = entry.key + 1;
-                      final catColor = _getCategoryColor(exercise.category);
-                      
+                      final isFirst = index == 1;
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: SPColors.backgroundSecondary.withOpacity(0.5),
-                              border: Border.all(
-                                color: SPColors.borderPrimary.withOpacity(0.5),
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.circular(16),
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isFirst ? SPColors.primaryBlue.withOpacity(0.05) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isFirst ? SPColors.primaryBlue.withOpacity(0.3) : SPColors.borderPrimary.withOpacity(0.5),
                             ),
-                            child: IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  // Colored side stripe
-                                  Container(
-                                    width: 4,
-                                    color: catColor,
-                                  ),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.all(6),
-                                                decoration: BoxDecoration(
-                                                  color: catColor.withOpacity(0.15),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Icon(Icons.bolt, color: catColor, size: 14),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                'ÉTAPE $index',
-                                                style: TextStyle(
-                                                  color: catColor,
-                                                  fontWeight: FontWeight.w900,
-                                                  fontSize: 11,
-                                                  letterSpacing: 2.0,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 12),
-                                          Text(
-                                            entry.value,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              height: 1.7,
-                                              letterSpacing: 0.2,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: isFirst ? SPColors.primaryBlue : SPColors.backgroundTertiary,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '$index',
+                                    style: TextStyle(
+                                      color: isFirst ? Colors.white : SPColors.textTertiary,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'ÉTAPE $index'.toUpperCase(),
+                                      style: TextStyle(
+                                        color: isFirst ? SPColors.primaryBlue : Colors.white,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 12,
+                                        letterSpacing: 2.0,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      entry.value,
+                                      style: SPTypography.bodySmall.copyWith(
+                                        color: isFirst ? Colors.white : SPColors.textSecondary,
+                                        height: 1.5,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );

@@ -29,10 +29,10 @@ class AppDrawer extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       width: 2,
                     ),
                   ),
@@ -62,7 +62,7 @@ class AppDrawer extends StatelessWidget {
                 Text(
                   user?.role ?? '',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 13,
                   ),
                 ),
@@ -144,7 +144,7 @@ class AppDrawer extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(
-                    color: OdinTheme.accentRed.withOpacity(0.3)),
+                    color: OdinTheme.accentRed.withValues(alpha: 0.3)),
               ),
               onTap: () {
                 Navigator.of(context).pop(); // close drawer
@@ -171,7 +171,7 @@ class AppDrawer extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
         color: isActive
-            ? OdinTheme.primaryBlue.withOpacity(0.15)
+            ? OdinTheme.primaryBlue.withValues(alpha: 0.15)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),

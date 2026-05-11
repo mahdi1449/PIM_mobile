@@ -5,11 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/player_model.dart';
 import 'api_config.dart';
 
-/// Service d'accès aux données des joueurs via l'API REST.
-/// Utilisé par les modules médicaux pour lier l'analyse IA au profil correct du joueur.
 class PlayerService {
-  /// Récupère la liste de tous les joueurs enregistrés dans le club.
-  /// Gère deux formats de réponse : tableau direct ou objet avec clé `data`.
   Future<List<PlayerModel>> fetchPlayers() async {
     final url = Uri.parse('${ApiConfig.baseUrl}/players');
     final response = await http.get(url);
@@ -34,7 +30,6 @@ class PlayerService {
     return const [];
   }
 
-  /// Récupère le profil complet d'un joueur par son identifiant unique.
   Future<PlayerModel> fetchPlayer(String playerId) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/players/$playerId');
     final response = await http.get(url);
@@ -51,8 +46,6 @@ class PlayerService {
     throw Exception('Unexpected player response format');
   }
 
-  /// Efface le statut médical actif d'un joueur (ex: après validation du retour à l'entraînement).
-  /// Retourne le profil mis à jour avec le nouveau statut.
   Future<PlayerModel> clearMedical(String playerId) async {
     final url = Uri.parse(
       '${ApiConfig.baseUrl}/players/$playerId/clear-medical',

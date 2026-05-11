@@ -17,44 +17,37 @@ class ReportParser {
     RegExp(r'(\d{1,2})\s*(?:ans|years?\s*old)', caseSensitive: false),
   ];
 
-/// Patterns de vitesse (km/h ou label explicite).
   static final _speedPatterns = [
     RegExp(r'(?:speed|vitesse|pace|rapidité)\s*[:\-–]\s*([\d.]+)',
         caseSensitive: false),
     RegExp(r'([\d.]+)\s*(?:km/?h|speed)', caseSensitive: false),
   ];
 
-  /// Patterns d'endurance (label explicite).
   static final _endurancePatterns = [
     RegExp(r'(?:endurance|stamina|endur)\s*[:\-–]\s*([\d.]+)',
         caseSensitive: false),
   ];
 
-  /// Patterns de distance parcourue (km ou label).
   static final _distancePatterns = [
     RegExp(r'(?:distance|dist)\s*[:\-–]\s*([\d.]+)', caseSensitive: false),
     RegExp(r'([\d.]+)\s*km', caseSensitive: false),
   ];
 
-  /// Patterns de nombre de dribbles réussis.
   static final _dribblesPatterns = [
     RegExp(r'(?:dribbles?|dribbling)\s*[:\-–]\s*([\d.]+)',
         caseSensitive: false),
   ];
 
-  /// Patterns de tirs tentés.
   static final _shotsPatterns = [
     RegExp(r'(?:shots?|tirs?|shooting|frappe)\s*[:\-–]\s*([\d.]+)',
         caseSensitive: false),
   ];
 
-  /// Patterns du nombre de blessures historiques.
   static final _injuriesPatterns = [
     RegExp(r'(?:injur(?:ies|y)|blessure?s?)\s*[:\-–]\s*(\d+)',
         caseSensitive: false),
   ];
 
-  /// Patterns de fréquence cardiaque (BPM).
   static final _heartRatePatterns = [
     RegExp(
         r'(?:heart[_\s]?rate|bpm|rythme?\s*cardiaque|fc|fréquence?\s*cardiaque)\s*[:\-–]\s*([\d.]+)',
@@ -62,8 +55,6 @@ class ReportParser {
     RegExp(r'([\d.]+)\s*bpm', caseSensitive: false),
   ];
 
-  /// Extrait un [AiPlayer] depuis un bloc de texte de rapport de scouting.
-  /// Retourne `null` si aucun nom de joueur ne peut être identifié dans le texte.
   static AiPlayer? extractFromText(String text) {
     final name = _extractString(text, _namePatterns);
     if (name == null || name.isEmpty) return null;
@@ -82,7 +73,6 @@ class ReportParser {
     );
   }
 
-  /// Extrait plusieurs joueurs depuis un rapport contenant des sections séparées par `---`, `===` ou `___`.
   static List<AiPlayer> extractMultiple(String text) {
     final sections = text.split(RegExp(r'\n\s*(?:---|===|___)\s*\n'));
     final players = <AiPlayer>[];
@@ -94,7 +84,6 @@ class ReportParser {
     return players;
   }
 
-  /// Retourne la première capture de chaîne trouvée parmi les [patterns] fournis.
   static String? _extractString(String text, List<RegExp> patterns) {
     for (final pattern in patterns) {
       final match = pattern.firstMatch(text);
@@ -105,7 +94,6 @@ class ReportParser {
     return null;
   }
 
-  /// Retourne la première valeur [double] trouvée parmi les [patterns] fournis.
   static double? _extractDouble(String text, List<RegExp> patterns) {
     for (final pattern in patterns) {
       final match = pattern.firstMatch(text);
@@ -116,7 +104,6 @@ class ReportParser {
     return null;
   }
 
-  /// Retourne le premier entier trouvé parmi les [patterns] fournis.
   static int? _extractInt(String text, List<RegExp> patterns) {
     for (final pattern in patterns) {
       final match = pattern.firstMatch(text);

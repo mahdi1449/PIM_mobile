@@ -114,7 +114,7 @@ class _ScoutingScreenState extends State<ScoutingScreen> {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: OdinTheme.primaryBlue.withOpacity(0.2),
+                  backgroundColor: OdinTheme.primaryBlue.withValues(alpha: 0.2),
                   child: Text(
                     player.initials,
                     style: const TextStyle(
@@ -152,9 +152,9 @@ class _ScoutingScreenState extends State<ScoutingScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: OdinTheme.primaryBlue.withOpacity(0.15),
+                      color: OdinTheme.primaryBlue.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: OdinTheme.primaryBlue.withOpacity(0.4)),
+                      border: Border.all(color: OdinTheme.primaryBlue.withValues(alpha: 0.4)),
                     ),
                     child: Column(
                       children: [
