@@ -17,7 +17,7 @@ class AppConfig {
       final host = Uri.base.host.isEmpty ? 'localhost' : Uri.base.host;
       return 'http://$host:3000';
     }
-    return 'http://192.168.1.123:3000';
+    return 'https://odin-erp-club-g3cgghgthnaagver.francecentral-01.azurewebsites.net';
   }
 
   // Player Value AI service
@@ -35,7 +35,7 @@ class AppConfig {
       final host = Uri.base.host.isEmpty ? 'localhost' : Uri.base.host;
       return 'http://$host:8002';
     }
-    return 'http://192.168.1.123:8002';
+    return 'https://odin-erp-club-g3cgghgthnaagver.francecentral-01.azurewebsites.net';
   }
 
   static String get apiBaseUrl => '$baseUrl/api';
