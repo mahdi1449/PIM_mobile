@@ -12,7 +12,6 @@ import '../../screens/roles/staff_medical_dashboard_screen.dart';
 import '../../screens/roles/finance_dashboard_screen.dart';
 import '../../screens/roles/scout_dashboard_screen.dart';
 import '../../screens/medical/medical_analysis_detail_screen.dart';
-import '../../screens/medical/medical_vision_screen.dart';
 import '../../erp/screens/events/event_detail_screen.dart';
 import '../../erp/screens/events/event_form_screen.dart';
 import '../../erp/screens/events/event_convocations_screen.dart';
@@ -25,7 +24,6 @@ import '../../screens/medical/medical_players_screen.dart';
 import '../../screens/medical/medical_recovery_calendar_screen.dart';
 import '../../screens/medical/simulation_history_screen.dart';
 import '../../screens/medical/simulation_screen.dart';
-import '../../screens/medical/medical_wearable_screen.dart';
 import '../../sports_performance/screens/calendar/calendar_screen.dart';
 import '../../sports_performance/screens/players/players_list_screen.dart';
 import '../../sports_performance/screens/reports/all_events_reports_screen.dart';
@@ -46,6 +44,9 @@ import '../../learning/screens/learning_home_screen.dart';
 import 'package:odinclub/sports_performance/travel/screens/travel_list_screen.dart';
 import 'package:odinclub/sports_performance/gamification/screens/gamification_dashboard_screen.dart';
 import '../../erp/screens/events/events_screen.dart';
+import '../../erp/providers/events_provider.dart';
+import '../../erp/providers/teams_provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 class AppRouteData {
   const AppRouteData({
@@ -84,10 +85,7 @@ class AppRoutes {
   static const String uploadVideo = '/analysis/upload';
   static const String medicalPlayers = '/medical/players';
   static const String medicalAnalysisDetail = '/medical/analysis';
-  static const String medicalVision = '/medical/vision';
-  static const String medicalGymVision = '/medical/vision-gym';
   static const String medicalSimulation = '/medical/simulation';
-  static const String medicalWearable = '/medical/wearable';
   static const String medicalRecoveryCalendar = '/medical/recovery-calendar';
   static const String medicalMatchHistory = '/medical/match-history';
   static const String players = '/players';
@@ -267,39 +265,17 @@ class AppRoutes {
       case medicalPlayers:
         return AppRouteData(
           title: 'Medical Players',
-          builder: (_) => MedicalPlayersScreen(),
+          builder: (_) => const MedicalPlayersScreen(),
         );
       case medicalAnalysisDetail:
         return AppRouteData(
           title: 'Medical Analysis Detail',
           builder: (_) => const MedicalAnalysisDetailScreen(),
         );
-      case medicalVision:
-        return AppRouteData(
-          title: 'Injury Camera AI',
-          builder: (_) => const MedicalVisionScreen(),
-          showAppBar: true,
-          usePadding: false,
-        );
-      case medicalGymVision:
-        return AppRouteData(
-          title: 'Gym Equipment AI',
-          builder: (_) =>
-              const MedicalVisionScreen(mode: MedicalVisionMode.gym),
-          showAppBar: true,
-          usePadding: false,
-        );
       case medicalSimulation:
         return AppRouteData(
           title: 'Injury Simulation',
-          builder: (_) => SimulationScreen(),
-          showAppBar: true,
-          usePadding: false,
-        );
-      case medicalWearable:
-        return AppRouteData(
-          title: 'Bracelet Medical',
-          builder: (_) => const MedicalWearableScreen(),
+          builder: (_) => const SimulationScreen(),
           showAppBar: true,
           usePadding: false,
         );
@@ -451,68 +427,49 @@ class AppRoutes {
       case erpEventDetail:
         return AppRouteData(
           title: 'Détails de l\'événement',
-          builder: (context) => EventDetailScreen(
-            eventId: ModalRoute.of(context)?.settings.arguments as String?,
-          ),
+          builder: (context) => EventDetailScreen(eventId: ModalRoute.of(context)?.settings.arguments as String?),
           showAppBar: false,
           usePadding: false,
         );
       case erpEventForm:
         return AppRouteData(
           title: 'Formulaire d\'événement',
-          builder: (context) => EventFormScreen(
-            eventId: ModalRoute.of(context)?.settings.arguments as String?,
-          ),
+          builder: (context) => EventFormScreen(eventId: ModalRoute.of(context)?.settings.arguments as String?),
           showAppBar: false,
           usePadding: false,
         );
       case erpEventConvocations:
         return AppRouteData(
           title: 'Convocations',
-          builder: (context) => EventConvocationsScreen(
-            eventId:
-                ModalRoute.of(context)?.settings.arguments as String? ?? '',
-          ),
+          builder: (context) => EventConvocationsScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
           showAppBar: false,
           usePadding: false,
         );
       case erpMatchSheet:
         return AppRouteData(
           title: 'Feuille de Match',
-          builder: (context) => MatchSheetScreen(
-            eventId:
-                ModalRoute.of(context)?.settings.arguments as String? ?? '',
-          ),
+          builder: (context) => MatchSheetScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
           showAppBar: false,
           usePadding: false,
         );
       case erpEventTimeline:
         return AppRouteData(
           title: 'Timeline Live',
-          builder: (context) => EventTimelineLiveScreen(
-            eventId:
-                ModalRoute.of(context)?.settings.arguments as String? ?? '',
-          ),
+          builder: (context) => EventTimelineLiveScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
           showAppBar: false,
           usePadding: false,
         );
       case erpEventResult:
         return AppRouteData(
           title: 'Résultat du Match',
-          builder: (context) => EventMatchResultScreen(
-            eventId:
-                ModalRoute.of(context)?.settings.arguments as String? ?? '',
-          ),
+          builder: (context) => EventMatchResultScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
           showAppBar: false,
           usePadding: false,
         );
       case erpEventPicker:
         return AppRouteData(
           title: 'Sélectionner des joueurs',
-          builder: (context) => EventPlayerPickerScreen(
-            eventId:
-                ModalRoute.of(context)?.settings.arguments as String? ?? '',
-          ),
+          builder: (context) => EventPlayerPickerScreen(eventId: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
           showAppBar: false,
           usePadding: false,
         );

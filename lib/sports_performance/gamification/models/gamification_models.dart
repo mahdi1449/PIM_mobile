@@ -6,6 +6,8 @@ class GamificationProfile {
   final int monthlyPoints;
   final String currentLevel;
   final int activeStreak;
+  final int badgesCount;
+  final int rank;
   final DateTime? lastActionDate;
 
   GamificationProfile({
@@ -14,6 +16,8 @@ class GamificationProfile {
     required this.monthlyPoints,
     required this.currentLevel,
     required this.activeStreak,
+    this.badgesCount = 0,
+    this.rank = 0,
     this.lastActionDate,
   });
 
@@ -24,6 +28,8 @@ class GamificationProfile {
       monthlyPoints: json['monthlyPoints'] ?? 0,
       currentLevel: json['currentLevel'] ?? 'Recrue',
       activeStreak: json['activeStreak'] ?? 0,
+      badgesCount: json['badgesCount'] ?? 0,
+      rank: json['rank'] ?? 0,
       lastActionDate: json['lastActionDate'] != null ? DateTime.parse(json['lastActionDate']) : null,
     );
   }

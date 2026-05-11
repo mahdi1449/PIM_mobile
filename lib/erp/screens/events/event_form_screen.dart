@@ -112,17 +112,16 @@ class _EventFormScreenState extends State<EventFormScreen> {
 
   Future<void> _pickDateTime(bool isStart) async {
     final initial = isStart ? _startDate : _endDate;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pickerBaseTheme = isDark ? OdinTheme.darkTheme : OdinTheme.lightTheme;
     final date = await showDatePicker(
       context: context,
       initialDate: initial,
       firstDate: DateTime.now().subtract(const Duration(days: 1)),
       lastDate: DateTime(2030),
       builder: (ctx, child) => Theme(
-        data: pickerBaseTheme.copyWith(
-          colorScheme: pickerBaseTheme.colorScheme.copyWith(
+        data: OdinTheme.darkTheme.copyWith(
+          colorScheme: const ColorScheme.dark(
             primary: OdinTheme.primaryBlue,
+            surface: OdinTheme.surface,
           ),
         ),
         child: child!,
@@ -134,9 +133,10 @@ class _EventFormScreenState extends State<EventFormScreen> {
       context: context,
       initialTime: TimeOfDay.fromDateTime(initial),
       builder: (ctx, child) => Theme(
-        data: pickerBaseTheme.copyWith(
-          colorScheme: pickerBaseTheme.colorScheme.copyWith(
+        data: OdinTheme.darkTheme.copyWith(
+          colorScheme: const ColorScheme.dark(
             primary: OdinTheme.primaryBlue,
+            surface: OdinTheme.surface,
           ),
         ),
         child: child!,
@@ -897,17 +897,16 @@ class _EventFormScreenState extends State<EventFormScreen> {
   }
 
   Future<void> _pickRecurUntil() async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pickerBaseTheme = isDark ? OdinTheme.darkTheme : OdinTheme.lightTheme;
     final date = await showDatePicker(
       context: context,
       initialDate: _recurUntil,
       firstDate: _startDate,
       lastDate: DateTime(2030),
       builder: (ctx, child) => Theme(
-        data: pickerBaseTheme.copyWith(
-          colorScheme: pickerBaseTheme.colorScheme.copyWith(
+        data: OdinTheme.darkTheme.copyWith(
+          colorScheme: const ColorScheme.dark(
             primary: OdinTheme.accentPurple,
+            surface: OdinTheme.surface,
           ),
         ),
         child: child!,

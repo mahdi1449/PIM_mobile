@@ -2,11 +2,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'api_service.dart';
 
+/// Service global de Gamification, utilisé par [GamificationProvider].
+/// Communique directement avec le backend via HTTP en gérant l'authentification JWT.
 class GamificationService {
   final ApiService _apiService = ApiService();
 
   static String get baseUrl => ApiService.baseUrl;
 
+  /// Construit les en-têtes HTTP avec le token JWT.
+  /// Si le token est absent, retourne des headers sans Authorization
+  /// (le backend répondra avec une erreur 401).
   Future<Map<String, String>> _headers() async {
     final token = await _apiService.getToken();
     if (token == null || token.isEmpty) {
@@ -22,7 +27,8 @@ class GamificationService {
     };
   }
 
-  // Récupérer le profil de gamification d'un utilisateur
+  /// Récupère le profil XP/niveau d'un joueur.
+  /// Gère les erreurs 401 (session expirée) et les erreurs réseau de manière explicite.
   Future<Map<String, dynamic>> getPlayerProfile(String userId) async {
     try {
       final headers = await _headers();
@@ -48,7 +54,7 @@ class GamificationService {
     }
   }
 
-  // Récupérer le classement général
+  /// Récupère le classement global de tous les joueurs triés par XP.
   Future<Map<String, dynamic>> getLeaderboard() async {
     try {
       final headers = await _headers();
@@ -71,7 +77,8 @@ class GamificationService {
     }
   }
 
-  // Ajouter une action
+  /// Enregistre une action récompensée (ex: voyage terminé, test complété).
+  /// Le backend met à jour le profil du joueur et vérifie si un passage de niveau est déclenché.
   Future<Map<String, dynamic>> addAction({
     required String userId,
     required String actionType,
@@ -99,6 +106,53 @@ class GamificationService {
         return {'success': true, 'payload': data};
       }
       return {'success': false, 'message': data['message'] ?? 'Erreur action'};
+    } catch (e) {
+      return {'success': false, 'message': 'Erreur réseau'};
+    }
+  }
+
+  /// Permet à un joueur d'échanger ses points XP contre un article de la boutique.
+  Future<Map<String, dynamic>> redeemReward({
+    required String userId,
+    required String item,
+    required int points,
+  }) async {
+    try {
+      final body = {
+        'userId': userId,
+        'item': item,
+        'points': points,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/gamification/redeem'),
+        headers: await _headers(),
+        body: jsonEncode(body),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return {'success': true, 'payload': data};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Erreur lors de l\'échange'};
+    } catch (e) {
+      return {'success': false, 'message': 'Erreur réseau'};
+    }
+  }
+
+  /// Récupère tous les achats effectués en boutique (vue réservée aux administrateurs).
+  Future<Map<String, dynamic>> getAdminPurchases() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/gamification/admin/purchases'),
+        headers: await _headers(),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'payload': data};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Erreur admin'};
     } catch (e) {
       return {'success': false, 'message': 'Erreur réseau'};
     }

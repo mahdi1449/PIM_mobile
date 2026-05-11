@@ -4,54 +4,56 @@ import '../models/player_report.dart';
 import '../services/api_client.dart';
 import '../services/reports_service.dart';
 
-// Service Provider
+/// Fournit une instance de [ReportsService] à l'ensemble des providers de rapports.
 final reportsServiceProvider = Provider((ref) {
   final apiClient = ApiClient();
   return ReportsService(apiClient);
 });
 
-// Event Report Provider
+/// Provider qui récupère le rapport de synthèse d'un événement.
 final eventReportProvider =
     FutureProvider.family<EventReport, String>((ref, eventId) async {
   final service = ref.read(reportsServiceProvider);
   return service.getEventReport(eventId);
 });
 
-// Player Report Provider
+/// Provider qui récupère le rapport individuel d'un participant (EventPlayer).
 final playerReportProvider =
     FutureProvider.family<PlayerReport, String>((ref, eventPlayerId) async {
   final service = ref.read(reportsServiceProvider);
   return service.getPlayerReport(eventPlayerId);
 });
 
-// Event Ranking Provider
+/// Provider qui récupère le classement des joueurs par score normalisé pour un événement.
 final eventRankingProvider =
     FutureProvider.family<List<RankedPlayer>, String>((ref, eventId) async {
   final service = ref.read(reportsServiceProvider);
   return service.getEventRanking(eventId);
 });
 
-// Top Players Provider
+/// Provider qui identifie les meilleurs performeurs d'un événement.
 final topPlayersProvider =
     FutureProvider.family<List<TopPlayer>, String>((ref, eventId) async {
   final service = ref.read(reportsServiceProvider);
   return service.getTopPlayers(eventId);
 });
 
-// Player Progression Provider
+/// Provider qui récupère la courbe de progression historique d'un joueur.
 final playerProgressionProvider =
     FutureProvider.family<Map<String, dynamic>, String>((ref, playerId) async {
   final service = ref.read(reportsServiceProvider);
   return service.getPlayerProgression(playerId);
 });
 
-// Report Generation State Provider
+/// Provider d'état gérant la génération massive de rapports après un événement.
 final reportGenerationProvider =
     StateNotifierProvider<ReportGenerationNotifier, AsyncValue<bool>>((ref) {
   final service = ref.read(reportsServiceProvider);
   return ReportGenerationNotifier(service, ref);
 });
 
+/// Notifier qui orchestre la génération de tous les rapports d'un événement.
+/// Invalide automatiquement les caches liés (classement, top players, rapport) après génération.
 class ReportGenerationNotifier extends StateNotifier<AsyncValue<bool>> {
   final ReportsService _service;
   final Ref _ref;
@@ -59,6 +61,7 @@ class ReportGenerationNotifier extends StateNotifier<AsyncValue<bool>> {
   ReportGenerationNotifier(this._service, this._ref)
       : super(const AsyncValue.data(false));
 
+  /// Lance la génération de tous les rapports et rafraîchit les providers liés.
   Future<bool> generateAllReports(String eventId) async {
     state = const AsyncValue.loading();
     try {
@@ -77,6 +80,7 @@ class ReportGenerationNotifier extends StateNotifier<AsyncValue<bool>> {
     }
   }
 
+  /// Réinitialise l'état de génération à `false` (pour réafficher le bouton de génération).
   void reset() {
     state = const AsyncValue.data(false);
   }

@@ -55,16 +55,26 @@ class EventsProvider with ChangeNotifier {
 
       final data = await _api.get('/events', queryParams: params);
 
-      if (data is Map && data['data'] != null && data['data']['events'] != null) {
-        _events = (data['data']['events'] as List)
-            .map((e) => Event.fromJson(e))
-            .toList();
-      } else if (data is Map && data['data'] is List) {
-        _events = (data['data'] as List)
-            .map((e) => Event.fromJson(e))
-            .toList();
-      } else if (data is List) {
-        _events = data.map((e) => Event.fromJson(e)).toList();
+      dynamic rawList;
+      if (data is List) {
+        rawList = data;
+      } else if (data is Map) {
+        // Handle cases like { "data": [...] } or { "data": { "events": [...] } } or { "events": [...] }
+        if (data['data'] != null) {
+          if (data['data'] is List) {
+            rawList = data['data'];
+          } else if (data['data'] is Map && data['data']['events'] is List) {
+            rawList = data['data']['events'];
+          }
+        } else if (data['events'] is List) {
+          rawList = data['events'];
+        }
+      }
+
+      if (rawList != null) {
+        _events = (rawList as List).map((e) => Event.fromJson(e)).toList();
+      } else {
+        _events = [];
       }
     } on ApiException catch (e) {
       _error = e.message;

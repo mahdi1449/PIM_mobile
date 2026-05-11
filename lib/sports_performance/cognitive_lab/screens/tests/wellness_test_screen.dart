@@ -147,28 +147,33 @@ class _WellnessTestScreenState extends State<WellnessTestScreen> {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
               child: Container(
                 decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.cyanAccent, Color(0xFF00B8D4)], // Cyan accent to deeper cyan
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.cyanAccent.withOpacity(0.15),
+                      color: Colors.cyanAccent.withOpacity(0.3),
                       blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
-                child: ElevatedButton(
-                  onPressed: _nextPage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyanAccent,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    elevation: 0,
-                  ),
-                  child: Center(
-                    child: Text(
-                      _currentPage < 7 ? 'CONTINUE →' : 'COMPLETE ASSESSMENT ✓',
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _nextPage,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          _currentPage < 7 ? 'CONTINUE →' : 'COMPLETE ASSESSMENT ✓',
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1.5, color: Colors.black),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -196,9 +201,23 @@ class _WellnessTestScreenState extends State<WellnessTestScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.cyanAccent.withOpacity(0.15),
+                  Colors.cyanAccent.withOpacity(0.02),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.cyanAccent.withOpacity(0.3), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.cyanAccent.withOpacity(0.05),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -241,14 +260,27 @@ class _WellnessTestScreenState extends State<WellnessTestScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.cyanAccent.withOpacity(0.1)
-                              : Colors.white.withOpacity(0.02),
+                          gradient: isSelected ? LinearGradient(
+                            colors: [
+                              Colors.cyanAccent.withOpacity(0.2),
+                              Colors.cyanAccent.withOpacity(0.05),
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ) : null,
+                          color: isSelected ? null : Colors.white.withOpacity(0.03),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: isSelected ? Colors.cyanAccent : Colors.white12,
-                            width: isSelected ? 2 : 1,
+                            color: isSelected ? Colors.cyanAccent.withOpacity(0.8) : Colors.white.withOpacity(0.1),
+                            width: isSelected ? 1.5 : 1,
                           ),
+                          boxShadow: isSelected ? [
+                            BoxShadow(
+                              color: Colors.cyanAccent.withOpacity(0.1),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                            )
+                          ] : [],
                         ),
                         child: Row(
                           children: [
@@ -295,9 +327,23 @@ class _WellnessTestScreenState extends State<WellnessTestScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.cyanAccent.withOpacity(0.15),
+                  Colors.cyanAccent.withOpacity(0.02),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.cyanAccent.withOpacity(0.3), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.cyanAccent.withOpacity(0.05),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: Column(
               children: [

@@ -56,14 +56,19 @@ class MenuConfig {
             route: AppRoutes.communication,
           ),
           MenuItemConfig(
-            title: 'Users & Clubs',
-            icon: Icons.manage_accounts_outlined,
-            route: AppRoutes.adminUsers,
+            title: 'Players',
+            icon: Icons.people_outline,
+            route: AppRoutes.players,
           ),
           MenuItemConfig(
-            title: 'Audit Trail',
-            icon: Icons.receipt_long_outlined,
-            route: AppRoutes.auditLog,
+            title: 'Reports',
+            icon: Icons.analytics_outlined,
+            route: AppRoutes.reports,
+          ),
+          MenuItemConfig(
+            title: 'Team Chemistry',
+            icon: Icons.hub_outlined,
+            route: AppRoutes.chemistry,
           ),
         ];
       case RoleMapper.clubResponsable:
@@ -201,16 +206,6 @@ class MenuConfig {
             title: 'Medical Players List',
             icon: Icons.groups_outlined,
             route: AppRoutes.medicalPlayers,
-          ),
-          MenuItemConfig(
-            title: 'Injury Camera AI',
-            icon: Icons.camera_alt_outlined,
-            route: AppRoutes.medicalVision,
-          ),
-          MenuItemConfig(
-            title: 'Gym Equipment AI',
-            icon: Icons.fitness_center_outlined,
-            route: AppRoutes.medicalGymVision,
           ),
           MenuItemConfig(
             title: 'Medical Analysis Detail',

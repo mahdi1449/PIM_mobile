@@ -31,8 +31,9 @@ class AuthProvider with ChangeNotifier {
       }
 
       // Try to fetch profile if we have token but no cached user
-      final data = await _api.get('/auth/me');
-      _user = User.fromJson(data);
+      final response = await _api.get('/auth/me');
+      final userDataMap = (response is Map && response['data'] != null) ? response['data'] : response;
+      _user = User.fromJson(userDataMap);
       await _cacheUser();
       notifyListeners();
       return true;
@@ -53,7 +54,8 @@ class AuthProvider with ChangeNotifier {
         'password': password,
       }, auth: false);
 
-      await _api.saveTokens(data['accessToken']);
+      final token = data['accessToken'] ?? data['access_token'];
+      await _api.saveTokens(token);
 
       _user = User.fromJson(data['user']);
       await _cacheUser();

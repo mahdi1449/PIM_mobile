@@ -10,9 +10,6 @@ import 'screens/login_screen.dart';
 import 'theme/dark_theme.dart';
 import 'theme/light_theme.dart';
 import 'theme/theme_controller.dart';
-import 'finance/theme/finance_theme.dart';
-import 'analysis/theme/analysis_theme.dart';
-import 'communication/communication_theme.dart';
 
 // Providers
 import 'providers/campaign_provider.dart';
@@ -24,29 +21,13 @@ import 'erp/providers/staff_provider.dart';
 import 'erp/providers/notifications_provider.dart';
 import 'erp/providers/readiness_provider.dart';
 import 'erp/providers/auth_provider.dart';
+import 'sports_performance/gamification/providers/gamification_provider.dart';
+import 'sports_performance/cognitive_lab/providers/cognitive_lab_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    debugPrint('Flutter framework error: ${details.exceptionAsString()}');
-    debugPrintStack(stackTrace: details.stack);
-  };
-
-  try {
-    await initializeDateFormatting('fr_FR', null);
-  } catch (error, stackTrace) {
-    debugPrint('Date locale init failed (fr_FR): $error');
-    debugPrintStack(stackTrace: stackTrace);
-  }
-
-  try {
-    await ThemeController.load();
-  } catch (error, stackTrace) {
-    debugPrint('Theme init failed, falling back to default mode: $error');
-    debugPrintStack(stackTrace: stackTrace);
-  }
-
+  await initializeDateFormatting('fr_FR', null);
+  await ThemeController.load();
   runApp(const ProviderScope(child: RootApp()));
 }
 
@@ -66,15 +47,12 @@ class RootApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NotificationsProvider()),
         ChangeNotifierProvider(create: (_) => ReadinessProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => GamificationProvider()),
+        ChangeNotifierProvider(create: (_) => CognitiveLabProvider()),
       ],
       child: ValueListenableBuilder<ThemeMode>(
         valueListenable: ThemeController.mode,
         builder: (context, themeMode, _) {
-          final isDark = themeMode == ThemeMode.dark;
-          FinancePalette.setDarkMode(isDark);
-          AnalysisPalette.setDarkMode(isDark);
-          CommunicationPalette.setDarkMode(isDark);
-
           return MaterialApp(
             title: 'ODINCLUB PIM',
             debugShowCheckedModeBanner: false,
@@ -111,33 +89,22 @@ class _AuthCheckState extends State<AuthCheck> {
 
   Future<void> _checkAuth() async {
     try {
-      final token = await _apiService.getToken();
-      if (token == null) {
-        if (mounted) setState(() => _checking = false);
-        return;
-      }
-
-      // Try to get profile to verify token and get user info
-      final profileResponse = await _apiService.getUserProfile();
-      if (profileResponse['success'] == true) {
-        final userData = profileResponse['data'];
-
-        // Construct SessionModel from profile and token
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final isLoggedIn = await authProvider.tryAutoLogin();
+      
+      if (isLoggedIn) {
+        final userData = authProvider.user!;
+        final token = await _apiService.getToken();
+        
         _session = SessionModel(
-          token: token,
-          userId: (userData['_id'] ?? userData['id'] ?? '').toString(),
-          role: (userData['role'] ?? '').toString(),
-          email: (userData['email'] ?? '').toString(),
-          status: (userData['status'] ?? '').toString(),
-          clubId:
-              (userData['clubId'] ??
-                      (userData['club'] is Map
-                          ? userData['club']['_id']
-                          : null))
-                  ?.toString(),
-          firstName: userData['firstName']?.toString(),
-          lastName: userData['lastName']?.toString(),
-          photoUrl: userData['photoUrl']?.toString(),
+          token: token ?? '',
+          userId: userData.id,
+          role: userData.role,
+          email: userData.email,
+          status: userData.status,
+          clubId: userData.clubId,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
         );
       }
     } catch (e) {
@@ -156,12 +123,7 @@ class _AuthCheckState extends State<AuthCheck> {
     }
 
     if (_session != null) {
-      try {
-        return buildRoleHome(_session!);
-      } catch (error, stackTrace) {
-        debugPrint('Role home build failed, redirecting to login: $error');
-        debugPrintStack(stackTrace: stackTrace);
-      }
+      return buildRoleHome(_session!);
     }
 
     return const LoginScreen();

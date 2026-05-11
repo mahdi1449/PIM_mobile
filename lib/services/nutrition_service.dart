@@ -2,7 +2,14 @@ import '../models/medical_result_model.dart';
 import '../models/nutrition_model.dart';
 import '../models/player_model.dart';
 
+/// Service de calcul nutritionnel côté client (pas de réseau).
+/// Génère un [NutritionPlan] personnalisé en fonction du diagnostic médical de l'IA,
+/// du poids du joueur et de son niveau de fatigue.
+/// Les repas sont adaptés selon le type de blessure (genou, muscle, cheville).
 class NutritionService {
+  /// Construit un plan nutritionnel complet pour un joueur.
+  /// Calcule les calories de base (35 kcal/kg), les ajuste selon la sévérité de la blessure
+  /// et ajoute 200 kcal supplémentaires si la fatigue dépasse 70%.
   NutritionPlan buildPlan({
     required MedicalResultModel result,
     required PlayerModel player,
@@ -43,6 +50,8 @@ class NutritionService {
     );
   }
 
+  /// Retourne le multiplicateur calorique selon la sévérité de la blessure.
+  /// Severe = +15%, Modéré = +10%, Léger = +5%.
   double _severityBoost(String severity) {
     if (severity.contains('severe')) {
       return 0.15;
@@ -53,6 +62,8 @@ class NutritionService {
     return 0.05;
   }
 
+  /// Calcule les besoins en protéines (g/kg) selon la sévérité de la blessure.
+  /// Les blessés graves ont besoin de plus de protéines pour la réparation musculaire.
   double _proteinPerKg(String severity, bool injured) {
     if (!injured) {
       return 1.8;
@@ -66,6 +77,8 @@ class NutritionService {
     return 1.8;
   }
 
+  /// Calcule les besoins en glucides (g/kg), plafonnés à 5g/kg.
+  /// Augmentés si la fatigue est élevée (>70%) pour favoriser la reconstitution du glycogène.
   double _carbsPerKg(String severity, int fatigue) {
     double carbs = 3.0;
     if (fatigue > 70) {
@@ -84,6 +97,8 @@ class NutritionService {
     return carbs;
   }
 
+  /// Calcule les lipides en grammes à partir des calories restantes après protéines et glucides.
+  /// Utilise le facteur 9 kcal/g pour les graisses. Minimum de 40g si le résidu est négatif.
   int _fatFromCalories(int calories, int proteinGrams, int carbsGrams) {
     final proteinCalories = proteinGrams * 4;
     final carbsCalories = carbsGrams * 4;
@@ -92,6 +107,7 @@ class NutritionService {
     return fatGrams;
   }
 
+  /// Détermine l'objectif nutritionnel principal du plan.
   String _goalFor(bool injured, String severity, int fatigue) {
     if (injured) {
       return 'Recovery';
@@ -105,6 +121,8 @@ class NutritionService {
     return 'Maintenance';
   }
 
+  /// Construit les menus de repas adaptés au type de blessure et à la fatigue.
+  /// Les aliments spécifiques (collagène, magnésium, zinc) sont ajoutés selon le diagnostic.
   NutritionMeals _buildMeals(String injuryType, bool injured, int fatigue) {
     final breakfast = <String>[
       'Greek yogurt with berries',

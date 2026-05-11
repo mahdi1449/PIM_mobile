@@ -14,234 +14,289 @@ class ExerciseCard extends StatelessWidget {
     this.onAdd,
   }) : super(key: key);
 
+  Color _getCategoryColor(ExerciseCategory category) {
+    switch (category) {
+      case ExerciseCategory.physical:
+        return const Color(0xFFFF3B30); // Neon Red
+      case ExerciseCategory.technical:
+        return const Color(0xFF00C7BE); // Neon Cyan
+      case ExerciseCategory.tactical:
+        return const Color(0xFF34C759); // Neon Green
+      case ExerciseCategory.cognitive:
+        return const Color(0xFFAF52DE); // Neon Purple
+    }
+  }
+
+  IconData _getCategoryIcon(ExerciseCategory category) {
+    switch (category) {
+      case ExerciseCategory.physical:
+        return Icons.fitness_center_rounded;
+      case ExerciseCategory.technical:
+        return Icons.sports_soccer_rounded;
+      case ExerciseCategory.tactical:
+        return Icons.map_outlined;
+      case ExerciseCategory.cognitive:
+        return Icons.psychology_rounded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final isAi = exercise.aiGenerated;
+    final catColor = _getCategoryColor(exercise.category);
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: exercise.aiGenerated
-              ? SPColors.primaryBlue.withOpacity(0.5)
-              : SPColors.borderPrimary,
-          width: exercise.aiGenerated ? 1.5 : 1,
+      decoration: BoxDecoration(
+        color: SPColors.backgroundSecondary.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isAi ? const Color(0xFFAF52DE).withOpacity(0.4) : SPColors.borderPrimary.withOpacity(0.3),
+          width: 1,
         ),
+        boxShadow: isAi
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFAF52DE).withOpacity(0.1),
+                  blurRadius: 15,
+                  spreadRadius: -5,
+                )
+              ]
+            : [],
       ),
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with AI Badge and Image Placeholder
-            Stack(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: 150, // Increased height for better visibility
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        SPColors.backgroundTertiary,
-                        SPColors.backgroundSecondary.withOpacity(0.8),
-                        SPColors.backgroundPrimary,
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                // Header with AI Badge and Image Placeholder
+                Stack(
+                  children: [
+                    SizedBox(
+                      height: 160,
+                      width: double.infinity,
+                      child: exercise.imageUrl != null && exercise.imageUrl!.isNotEmpty
+                          ? Image.network(
+                              exercise.imageUrl!,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: catColor.withOpacity(0.5),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(catColor),
+                            )
+                          : _buildImagePlaceholder(catColor),
                     ),
-                  ),
-                  child: exercise.imageUrl != null && exercise.imageUrl!.isNotEmpty
-                      ? Image.network(
-                          exercise.imageUrl!,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: SPColors.primaryBlue.withOpacity(0.5),
+                    
+                    // Top Right - AI Badge
+                    if (isAi)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFAF52DE), Color(0xFF5E5CE6)],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFAF52DE).withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
                               ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(),
-                        )
-                      : _buildImagePlaceholder(),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.auto_awesome, color: Colors.white, size: 12),
+                              SizedBox(width: 4),
+                              Text(
+                                'AI POWERED',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    
+                    // Bottom Left - Duration Badge
+                    Positioned(
+                      bottom: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.timer_outlined, color: Colors.white, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              exercise.duration < 1
+                                  ? '${(exercise.duration * 60).toInt()} sec'
+                                  : '${exercise.duration % 1 == 0 ? exercise.duration.toInt() : exercise.duration} min',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                if (exercise.aiGenerated)
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: SPColors.badgeTechnical,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: SPColors.badgeTechnical.withOpacity(0.3),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.auto_awesome,
-                            color: Colors.white,
-                            size: 12,
-                          ),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'AI POWERED',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                          Expanded(
+                            child: Text(
+                              exercise.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.3,
+                                height: 1.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (onAdd != null)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: SPColors.primaryBlue.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: IconButton(
+                                  onPressed: onAdd,
+                                  icon: const Icon(Icons.add),
+                                  color: SPColors.primaryBlue,
+                                  padding: const EdgeInsets.all(8),
+                                  constraints: const BoxConstraints(),
+                                  iconSize: 20,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
-                    ),
-                  ),
-                Positioned(
-                  bottom: 8,
-                  left: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.timer_outlined,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          exercise.duration < 1
-                              ? '${(exercise.duration * 60).toInt()} sec'
-                              : '${exercise.duration % 1 == 0 ? exercise.duration.toInt() : exercise.duration} min',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                      const SizedBox(height: 12),
+                      
+                      // Metrics Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Difficulty Stars
+                          Row(
+                            children: List.generate(5, (index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 2),
+                                child: Icon(
+                                  index < exercise.difficulty ? Icons.star_rounded : Icons.star_outline_rounded,
+                                  color: index < exercise.difficulty ? const Color(0xFFFFD60A) : SPColors.textTertiary.withOpacity(0.3),
+                                  size: 16,
+                                ),
+                              );
+                            }),
                           ),
-                        ),
-                      ],
-                    ),
+                          
+                          // Position Tags
+                          _buildPositionIcons(exercise.targetPositions),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Intensity Bar
+                      _buildIntensityBar(exercise.intensity),
+                    ],
                   ),
                 ),
               ],
             ),
-
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          exercise.name,
-                          style: const TextStyle(
-                            color: SPColors.textPrimary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (onAdd != null)
-                        IconButton(
-                          onPressed: onAdd,
-                          icon: const Icon(Icons.add_circle),
-                          color: SPColors.primaryBlue,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  
-                  // Difficulty Stars
-                  Row(
-                    children: List.generate(5, (index) {
-                      return Icon(
-                        index < exercise.difficulty
-                            ? Icons.star_rounded
-                            : Icons.star_outline_rounded,
-                        color: SPColors.warning,
-                        size: 16,
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Metrics Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildIntensityGauge(exercise.intensity),
-                      _buildPositionIcons(exercise.targetPositions),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildIntensityGauge(IntensityLevel intensity) {
-    return Row(
+  Widget _buildIntensityBar(IntensityLevel intensity) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Intensité',
-          style: TextStyle(
-            color: SPColors.textSecondary,
-            fontSize: 12,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'INTENSITÉ',
+              style: TextStyle(
+                color: SPColors.textTertiary,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
+              ),
+            ),
+            Text(
+              intensity.label.toUpperCase(),
+              style: TextStyle(
+                color: intensity.color,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
+        const SizedBox(height: 8),
         Container(
-          height: 6,
-          width: 60,
+          height: 4,
+          width: double.infinity,
           decoration: BoxDecoration(
             color: SPColors.backgroundTertiary,
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: BorderRadius.circular(2),
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
-            widthFactor: intensity == IntensityLevel.low
-                ? 0.3
-                : (intensity == IntensityLevel.medium ? 0.6 : 1.0),
+            widthFactor: intensity == IntensityLevel.low ? 0.3 : (intensity == IntensityLevel.medium ? 0.6 : 1.0),
             child: Container(
               decoration: BoxDecoration(
                 color: intensity.color,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(2),
                 boxShadow: [
                   BoxShadow(
                     color: intensity.color.withOpacity(0.5),
-                    blurRadius: 4,
+                    blurRadius: 6,
                   ),
                 ],
               ),
@@ -253,65 +308,97 @@ class ExerciseCard extends StatelessWidget {
   }
 
   Widget _buildPositionIcons(List<PitchPosition> positions) {
+    if (positions.isEmpty) return const SizedBox.shrink();
+    
+    // Only show up to 3 positions to avoid overflow
+    final displayPositions = positions.take(3).toList();
+    final hasMore = positions.length > 3;
+
     return Row(
-      children: positions.map((p) {
-        return Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: Container(
-            padding: const EdgeInsets.all(4),
+      children: [
+        ...displayPositions.map((p) {
+          return Container(
+            margin: const EdgeInsets.only(left: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: SPColors.backgroundTertiary,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: SPColors.borderPrimary.withOpacity(0.5)),
             ),
             child: Text(
               p.value,
               style: const TextStyle(
                 color: SPColors.textSecondary,
-                fontSize: 8,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          );
+        }).toList(),
+        if (hasMore)
+          Container(
+            margin: const EdgeInsets.only(left: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: BoxDecoration(
+              color: SPColors.backgroundTertiary,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Text(
+              '+',
+              style: TextStyle(
+                color: SPColors.textSecondary,
+                fontSize: 9,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-        );
-      }).toList(),
+      ],
     );
   }
 
-  Widget _buildImagePlaceholder() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            _getCategoryIcon(exercise.category),
-            size: 48,
-            color: SPColors.primaryBlue.withOpacity(0.2),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            exercise.category.label.toUpperCase(),
-            style: TextStyle(
-              color: SPColors.primaryBlue.withOpacity(0.3),
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+  Widget _buildImagePlaceholder(Color catColor) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            catColor.withOpacity(0.15),
+            SPColors.backgroundSecondary.withOpacity(0.8),
+            SPColors.backgroundPrimary,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: catColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(color: catColor.withOpacity(0.2), width: 1),
+              ),
+              child: Icon(
+                _getCategoryIcon(exercise.category),
+                size: 36,
+                color: catColor.withOpacity(0.8),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              exercise.category.label.toUpperCase(),
+              style: TextStyle(
+                color: catColor.withOpacity(0.8),
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2,
+              ),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  IconData _getCategoryIcon(ExerciseCategory category) {
-    switch (category) {
-      case ExerciseCategory.physical:
-        return Icons.fitness_center;
-      case ExerciseCategory.technical:
-        return Icons.sports_soccer;
-      case ExerciseCategory.tactical:
-        return Icons.map_outlined;
-      case ExerciseCategory.cognitive:
-        return Icons.psychology;
-    }
   }
 }

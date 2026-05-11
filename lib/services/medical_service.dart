@@ -8,7 +8,14 @@ import '../models/medical_history_record_model.dart';
 import '../models/medical_result_model.dart';
 import 'api_config.dart';
 
+/// Service de communication avec le module médical du backend.
+/// Envoie les indicateurs de fatigue/charge au moteur d'analyse IA
+/// et récupère l'historique des blessures pour chaque joueur.
 class MedicalService {
+  /// Soumet les indicateurs de performance d'un joueur à l'IA médicale.
+  /// Le backend analyse la [fatigue], les [minutes] jouées et la [load] pour
+  /// évaluer le risque de blessure et proposer un plan de récupération.
+  /// Gère plusieurs formats de réponse JSON (wrapper `data`, `result`, ou direct).
   Future<MedicalResultModel> analyze({
     required String playerId,
     required double fatigue,
@@ -61,6 +68,7 @@ class MedicalService {
     throw Exception('Unexpected response format');
   }
 
+  /// Récupère l'historique complet des blessures et analyses médicales d'un joueur.
   Future<List<MedicalHistoryRecordModel>> fetchHistory({
     required String playerId,
   }) async {

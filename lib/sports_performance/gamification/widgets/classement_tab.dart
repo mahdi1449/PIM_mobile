@@ -10,9 +10,7 @@ class ClassementTab extends StatelessWidget {
     return Consumer<GamificationProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading && provider.leaderboard.isEmpty) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.purpleAccent),
-          );
+          return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
         }
 
         final leaderboard = provider.leaderboard;
@@ -66,20 +64,9 @@ class ClassementTab extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        gradient: isActive
-            ? const LinearGradient(
-                colors: [Colors.purpleAccent, Color(0xFF6366F1)],
-              )
-            : null,
+        gradient: isActive ? const LinearGradient(colors: [Colors.purpleAccent, Color(0xFF6366F1)]) : null,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: Colors.purpleAccent.withOpacity(0.2),
-                  blurRadius: 8,
-                ),
-              ]
-            : null,
+        boxShadow: isActive ? [BoxShadow(color: Colors.purpleAccent.withOpacity(0.2), blurRadius: 8)] : null,
       ),
       child: Center(
         child: Text(
@@ -116,18 +103,11 @@ class ClassementTab extends StatelessWidget {
     );
   }
 
-  Widget _podiumItem(
-    dynamic player,
-    int rank,
-    double height,
-    Color accentColor,
-  ) {
+  Widget _podiumItem(dynamic player, int rank, double height, Color accentColor) {
     bool isFirst = rank == 1;
     String name = player['fullName'] ?? player['firstName'] ?? 'JOUEUR';
     String pts = '${player['monthlyPoints']} PTS';
-    String initials = name.isNotEmpty
-        ? name.substring(0, 1).toUpperCase()
-        : '?';
+    String initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
 
     return Column(
       children: [
@@ -139,38 +119,19 @@ class ClassementTab extends StatelessWidget {
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [accentColor, accentColor.withOpacity(0.3)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: accentColor.withOpacity(0.3),
-                    blurRadius: 15,
-                    spreadRadius: -2,
-                  ),
-                ],
+                gradient: LinearGradient(colors: [accentColor, accentColor.withOpacity(0.3)]),
+                boxShadow: [BoxShadow(color: accentColor.withOpacity(0.3), blurRadius: 15, spreadRadius: -2)],
               ),
               child: CircleAvatar(
                 radius: isFirst ? 34 : 26,
                 backgroundColor: const Color(0xFF161926),
-                child: Text(
-                  initials,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                  ),
-                ),
+                child: Text(initials, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
               ),
             ),
             if (isFirst)
               const Positioned(
                 top: -22,
-                child: Icon(
-                  Icons.workspace_premium,
-                  color: Colors.amber,
-                  size: 32,
-                ),
+                child: Icon(Icons.workspace_premium, color: Colors.amber, size: 32),
               ),
           ],
         ),
@@ -180,10 +141,7 @@ class ClassementTab extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                accentColor.withOpacity(0.2),
-                accentColor.withOpacity(0.05),
-              ],
+              colors: [accentColor.withOpacity(0.2), accentColor.withOpacity(0.05)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -194,43 +152,26 @@ class ClassementTab extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                '#$rank',
-                style: TextStyle(
-                  color: accentColor,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 24,
-                  fontStyle: FontStyle.italic,
-                ),
+                '#$rank', 
+                style: TextStyle(color: accentColor, fontWeight: FontWeight.w900, fontSize: 24, fontStyle: FontStyle.italic)
               ),
             ],
           ),
         ),
         const SizedBox(height: 10),
         Text(
-          name.toUpperCase(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.5,
-          ),
+          name.toUpperCase(), 
+          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)
         ),
         Text(
-          pts,
-          style: TextStyle(
-            color: accentColor,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
+          pts, 
+          style: TextStyle(color: accentColor, fontSize: 10, fontWeight: FontWeight.bold)
         ),
       ],
     );
   }
 
-  Widget _buildLeaderboardList(
-    List<dynamic> leaderboard,
-    String? currentUserId,
-  ) {
+  Widget _buildLeaderboardList(List<dynamic> leaderboard, String? currentUserId) {
     return Column(
       children: List.generate(leaderboard.length, (index) {
         final player = leaderboard[index];
@@ -239,68 +180,33 @@ class ClassementTab extends StatelessWidget {
         final isTop3 = rank <= 3;
         final isHidden = !isTop3 && !isSelf;
 
-        String name = isHidden
-            ? 'POSITION MASQUÉE'
-            : (player['fullName'] ?? player['firstName'] ?? 'JOUEUR')
-                  .toString()
-                  .toUpperCase();
+        String name = isHidden ? 'POSITION MASQUÉE' : (player['fullName'] ?? player['firstName'] ?? 'JOUEUR').toString().toUpperCase();
         if (isSelf) name += ' (VOUS)';
-
+        
         String pts = isHidden ? '--' : '${player['monthlyPoints']}';
-        Color rankColor = rank == 1
-            ? Colors.amber
-            : (rank == 2
-                  ? Colors.blueGrey
-                  : (rank == 3 ? Colors.brown : Colors.white38));
+        Color rankColor = rank == 1 ? Colors.amber : (rank == 2 ? Colors.blueGrey : (rank == 3 ? Colors.brown : Colors.white38));
 
-        return _leaderboardTile(
-          rank,
-          name,
-          pts,
-          rankColor,
-          isTop3,
-          isSelf: isSelf,
-          isHidden: isHidden,
-        );
+        return _leaderboardTile(rank, name, pts, rankColor, isTop3, isSelf: isSelf, isHidden: isHidden);
       }),
     );
   }
 
-  Widget _leaderboardTile(
-    int rank,
-    String name,
-    String pts,
-    Color rankColor,
-    bool isTop, {
-    bool isSelf = false,
-    bool isHidden = false,
-  }) {
+  Widget _leaderboardTile(int rank, String name, String pts, Color rankColor, bool isTop, {bool isSelf = false, bool isHidden = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isSelf
-            ? Colors.purpleAccent.withOpacity(0.1)
-            : const Color(0xFF1E2130).withOpacity(0.4),
+        color: isSelf ? Colors.purpleAccent.withOpacity(0.1) : const Color(0xFF1E2130).withOpacity(0.4),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isSelf
-              ? Colors.purpleAccent.withOpacity(0.3)
-              : Colors.white.withOpacity(0.05),
-        ),
+        border: Border.all(color: isSelf ? Colors.purpleAccent.withOpacity(0.3) : Colors.white.withOpacity(0.05)),
       ),
       child: Row(
         children: [
           SizedBox(
             width: 32,
             child: Text(
-              '$rank',
-              style: TextStyle(
-                color: rankColor,
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-                fontStyle: FontStyle.italic,
-              ),
+              '$rank', 
+              style: TextStyle(color: rankColor, fontWeight: FontWeight.w900, fontSize: 16, fontStyle: FontStyle.italic)
             ),
           ),
           Container(
@@ -311,16 +217,10 @@ class ClassementTab extends StatelessWidget {
             ),
             child: CircleAvatar(
               radius: 18,
-              backgroundColor: isHidden
-                  ? Colors.white10
-                  : const Color(0xFF161926),
+              backgroundColor: isHidden ? Colors.white10 : const Color(0xFF161926),
               child: Text(
-                isHidden ? '?' : name[0],
-                style: TextStyle(
-                  fontSize: 14,
-                  color: rankColor,
-                  fontWeight: FontWeight.bold,
-                ),
+                isHidden ? '?' : name[0], 
+                style: TextStyle(fontSize: 14, color: rankColor, fontWeight: FontWeight.bold)
               ),
             ),
           ),
@@ -341,20 +241,9 @@ class ClassementTab extends StatelessWidget {
             children: [
               Text(
                 pts,
-                style: TextStyle(
-                  color: isHidden ? Colors.white10 : Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 15,
-                ),
+                style: TextStyle(color: isHidden ? Colors.white10 : Colors.white, fontWeight: FontWeight.w900, fontSize: 15),
               ),
-              const Text(
-                'PTS',
-                style: TextStyle(
-                  color: Colors.white24,
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const Text('PTS', style: TextStyle(color: Colors.white24, fontSize: 8, fontWeight: FontWeight.bold)),
             ],
           ),
         ],
@@ -377,12 +266,7 @@ class ClassementTab extends StatelessWidget {
           Expanded(
             child: Text(
               'Seul le top 3 est visible de tous. Les autres ne voient que leur propre position. Le classement se remet à zéro chaque mois.',
-              style: TextStyle(
-                color: Colors.white24,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                height: 1.4,
-              ),
+              style: TextStyle(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.bold, height: 1.4),
             ),
           ),
         ],

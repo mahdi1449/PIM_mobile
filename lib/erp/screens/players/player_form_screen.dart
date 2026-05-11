@@ -77,17 +77,16 @@ class _PlayerFormScreenState extends State<PlayerFormScreen> {
 
   Future<void> _pickDate(String field) async {
     final now = DateTime.now();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pickerBaseTheme = isDark ? OdinTheme.darkTheme : OdinTheme.lightTheme;
     final picked = await showDatePicker(
       context: context,
       initialDate: field == 'dob' ? DateTime(2000) : now,
       firstDate: field == 'dob' ? DateTime(1970) : DateTime(2020),
       lastDate: field == 'contractEnd' ? DateTime(2035) : now,
       builder: (ctx, child) => Theme(
-        data: pickerBaseTheme.copyWith(
-          colorScheme: pickerBaseTheme.colorScheme.copyWith(
+        data: OdinTheme.darkTheme.copyWith(
+          colorScheme: const ColorScheme.dark(
             primary: OdinTheme.primaryBlue,
+            surface: OdinTheme.surface,
           ),
         ),
         child: child!,

@@ -76,7 +76,7 @@ class AiPlayerCard extends StatelessWidget {
                                       }
                                       return Colors.transparent;
                                     }),
-                                    side: BorderSide(
+                                    side: const BorderSide(
                                         color: AiColors.borderDark, width: 1.5),
                                   ),
                                 ),
@@ -85,7 +85,7 @@ class AiPlayerCard extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               _buildInfoLine(),
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 12,
                                   color: AiColors.textSecondary),
                             ),

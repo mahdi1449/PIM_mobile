@@ -11,7 +11,7 @@ import '../../ui/theme/medical_theme.dart';
 import 'medical_analysis_screen.dart';
 
 class MedicalPlayersScreen extends StatefulWidget {
-  MedicalPlayersScreen({super.key});
+  const MedicalPlayersScreen({super.key});
 
   @override
   State<MedicalPlayersScreen> createState() => _MedicalPlayersScreenState();
@@ -45,17 +45,17 @@ class _MedicalPlayersScreenState extends State<MedicalPlayersScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSectionHeader(
+          const AppSectionHeader(
             title: 'Medical Players',
             subtitle: 'Track injury risk, fatigue, and recovery status.',
           ),
-          SizedBox(height: AppSpacing.s16),
+          const SizedBox(height: AppSpacing.s16),
           Expanded(
             child: FutureBuilder<List<PlayerModel>>(
               future: _playersFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return LoadingState(message: 'Loading players...');
+                  return const LoadingState(message: 'Loading players...');
                 }
                 if (snapshot.hasError) {
                   return EmptyState(
@@ -65,7 +65,7 @@ class _MedicalPlayersScreenState extends State<MedicalPlayersScreen> {
                   );
                 }
 
-                final players = snapshot.data ?? [];
+                final players = snapshot.data ?? const [];
                 if (players.isEmpty) {
                   return EmptyState(
                     title: 'No players available',
@@ -79,10 +79,10 @@ class _MedicalPlayersScreenState extends State<MedicalPlayersScreen> {
                   onRefresh: _refresh,
                   child: ListView.separated(
                     padding: EdgeInsets.zero,
-                    physics: AlwaysScrollableScrollPhysics(),
+                    physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: players.length,
                     separatorBuilder: (_, __) =>
-                        SizedBox(height: AppSpacing.s12),
+                        const SizedBox(height: AppSpacing.s12),
                     itemBuilder: (context, index) {
                       final player = players[index];
                       return AppCard(
@@ -93,12 +93,12 @@ class _MedicalPlayersScreenState extends State<MedicalPlayersScreen> {
                               radius: 22,
                               backgroundColor: MedicalTheme.accentBlue
                                   .withValues(alpha: 0.16),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.person,
                                 color: MedicalTheme.primaryBlue,
                               ),
                             ),
-                            SizedBox(width: AppSpacing.s16),
+                            const SizedBox(width: AppSpacing.s16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +114,7 @@ class _MedicalPlayersScreenState extends State<MedicalPlayersScreen> {
                             ),
                             if (player.isInjured == true)
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: AppSpacing.s8,
                                   vertical: AppSpacing.s4,
                                 ),
@@ -129,7 +129,7 @@ class _MedicalPlayersScreenState extends State<MedicalPlayersScreen> {
                                     ),
                                   ),
                                 ),
-                                child: Text(
+                                child: const Text(
                                   'Injured',
                                   style: TextStyle(
                                     color: MedicalTheme.danger,

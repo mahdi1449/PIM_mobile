@@ -7,7 +7,7 @@ import '../../widgets/status_badge.dart';
 import '../players/player_detail_screen.dart';
 
 class MedicalVaultScreen extends StatefulWidget {
-  MedicalVaultScreen({super.key});
+  const MedicalVaultScreen({super.key});
 
   @override
   State<MedicalVaultScreen> createState() => _MedicalVaultScreenState();
@@ -17,7 +17,7 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch all players to filter locally for now,
+    // Fetch all players to filter locally for now, 
     // or we could add an API filter for medical specific.
     Provider.of<PlayersProvider>(context, listen: false).fetchPlayers();
   }
@@ -26,91 +26,76 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<PlayersProvider>(context);
     // Medical Vault shows players who are injured OR have medical notes
-    final medicalCases = provider.players
-        .where(
-          (p) =>
-              p.status == 'injured' ||
-              (p.medicalNotes != null && p.medicalNotes!.isNotEmpty),
-        )
-        .toList();
+    final medicalCases = provider.players.where((p) => 
+        p.status == 'injured' || (p.medicalNotes != null && p.medicalNotes!.isNotEmpty)
+    ).toList();
 
     return MedicalThemeScope(
       child: Scaffold(
         backgroundColor: MedicalTheme.background,
-        body: Column(
-          children: [
-            // ─── Vault Overview ─────────────────────────────
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: MedicalTheme.surfaceAlt.withOpacity(0.6),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: MedicalTheme.cardBorder),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetric(
-                        label: 'Dossiers Actifs',
-                        value: '${medicalCases.length}',
-                        color: MedicalTheme.primaryBlue,
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildMetric(
-                        label: 'Blessés',
-                        value:
-                            '${medicalCases.where((p) => p.status == 'injured').length}',
-                        color: MedicalTheme.danger,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+      body: Column(
+        children: [
+          // ─── Vault Overview ─────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Container(
+               padding: const EdgeInsets.all(16),
+               decoration: BoxDecoration(
+                 color: MedicalTheme.surfaceAlt.withOpacity(0.6),
+                 borderRadius: BorderRadius.circular(16),
+                 border: Border.all(color: MedicalTheme.cardBorder),
+               ),
+               child: Row(
+                 children: [
+                   Expanded(
+                     child: _buildMetric(
+                       label: 'Dossiers Actifs',
+                       value: '${medicalCases.length}',
+                       color: MedicalTheme.primaryBlue,
+                     ),
+                   ),
+                   Expanded(
+                     child: _buildMetric(
+                       label: 'Blessés',
+                       value: '${medicalCases.where((p) => p.status == 'injured').length}',
+                       color: MedicalTheme.danger,
+                     ),
+                   ),
+                 ],
+               ),
             ),
+          ),
 
-            // ─── Case List ─────────────────────────────
-            Expanded(
-              child: provider.isLoading
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: MedicalTheme.primaryBlue,
+          // ─── Case List ─────────────────────────────
+          Expanded(
+            child: provider.isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: MedicalTheme.primaryBlue))
+                : medicalCases.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.health_and_safety_outlined,
+                                size: 64, color: MedicalTheme.textMuted),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Aucun dossier médical nécessitant attention',
+                              style: TextStyle(color: MedicalTheme.textMuted),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        itemCount: medicalCases.length,
+                        itemBuilder: (context, i) => _buildMedicalCard(medicalCases[i]),
                       ),
-                    )
-                  : medicalCases.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.health_and_safety_outlined,
-                            size: 64,
-                            color: MedicalTheme.textMuted,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Aucun dossier médical nécessitant attention',
-                            style: TextStyle(color: MedicalTheme.textMuted),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      itemCount: medicalCases.length,
-                      itemBuilder: (context, i) =>
-                          _buildMedicalCard(medicalCases[i]),
-                    ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildMedicalCard(dynamic player) {
@@ -124,8 +109,8 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
         ),
       ),
       child: Container(
-        margin: EdgeInsets.only(bottom: 12),
-        padding: EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: MedicalTheme.surface,
           borderRadius: BorderRadius.circular(16),
@@ -140,8 +125,8 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
               BoxShadow(
                 color: MedicalTheme.danger.withOpacity(0.1),
                 blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
+                offset: const Offset(0, 4),
+              )
           ],
         ),
         child: Column(
@@ -151,40 +136,37 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor:
-                      (isInjured
-                              ? MedicalTheme.danger
-                              : MedicalTheme.primaryBlue)
-                          .withOpacity(0.2),
+                  backgroundColor: (isInjured
+                          ? MedicalTheme.danger
+                          : MedicalTheme.primaryBlue)
+                      .withOpacity(0.2),
                   child: Icon(
-                    isInjured
-                        ? Icons.local_hospital_rounded
-                        : Icons.medical_information_rounded,
+                    isInjured ? Icons.local_hospital_rounded : Icons.medical_information_rounded,
                     color: isInjured
                         ? MedicalTheme.danger
                         : MedicalTheme.primaryBlue,
                     size: 20,
                   ),
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         player.fullName,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: MedicalTheme.textPrimary,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Row(
                         children: [
                           StatusBadge(status: player.status, fontSize: 10),
                           if (player.returnDate != null) ...[
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Text(
                               'Retour: ${df.format(player.returnDate!)}',
                               style: TextStyle(
@@ -199,16 +181,12 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: MedicalTheme.textMuted,
-                ),
+                Icon(Icons.chevron_right_rounded, color: MedicalTheme.textMuted),
               ],
             ),
-            if (player.medicalNotes != null &&
-                player.medicalNotes!.isNotEmpty) ...[
+            if (player.medicalNotes != null && player.medicalNotes!.isNotEmpty) ...[
               Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Divider(color: MedicalTheme.cardBorder),
               ),
               Row(
@@ -219,11 +197,11 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
                     size: 16,
                     color: MedicalTheme.textMuted,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       player.medicalNotes!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: MedicalTheme.textSecondary,
                         fontSize: 13,
                         fontStyle: FontStyle.italic,
@@ -257,7 +235,7 @@ class _MedicalVaultScreenState extends State<MedicalVaultScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           value,
           style: TextStyle(

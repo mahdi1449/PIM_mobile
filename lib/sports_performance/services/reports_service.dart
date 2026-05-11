@@ -7,7 +7,8 @@ class ReportsService {
 
   ReportsService(this._apiClient);
 
-  // Generate all reports (event report + all player reports)
+  /// Déclenche la génération de tous les rapports pour un événement donné.
+  /// Cela inclut le rapport global de l'événement et les rapports individuels de chaque participant.
   Future<Map<String, dynamic>> generateAllReports(String eventId) async {
     try {
       final response =
@@ -18,7 +19,7 @@ class ReportsService {
     }
   }
 
-  // Get event report
+  /// Récupère le rapport de synthèse d'un événement (moyennes d'équipe, points forts/faibles collectifs).
   Future<EventReport> getEventReport(String eventId) async {
     try {
       final response = await _apiClient.get('/events/$eventId/report');
@@ -29,7 +30,7 @@ class ReportsService {
     }
   }
 
-  // Get player report
+  /// Récupère le rapport d'analyse détaillé pour un joueur spécifique durant un événement.
   Future<PlayerReport> getPlayerReport(String eventPlayerId) async {
     try {
       final response =
@@ -41,7 +42,7 @@ class ReportsService {
     }
   }
 
-  // Get event ranking
+  /// Récupère le classement des joueurs pour un événement basé sur leurs scores normalisés.
   Future<List<RankedPlayer>> getEventRanking(String eventId) async {
     try {
       final response = await _apiClient.get('/events/$eventId/ranking');
@@ -52,7 +53,7 @@ class ReportsService {
     }
   }
 
-  // Get top players
+  /// Identifie les meilleurs performeurs (Top Players) de l'événement.
   Future<List<TopPlayer>> getTopPlayers(String eventId) async {
     try {
       final response = await _apiClient.get('/events/$eventId/top-players');
@@ -63,7 +64,9 @@ class ReportsService {
           'Erreur lors de la récupération des top players: $e');
     }
   }
-  // Get player progression (Tests vs Matches)
+
+  /// Récupère l'historique de progression d'un joueur.
+  /// Analyse l'évolution des scores entre les tests physiques et les performances en match réel.
   Future<Map<String, dynamic>> getPlayerProgression(String playerId) async {
     try {
       final response = await _apiClient.get('/players/$playerId/progression');

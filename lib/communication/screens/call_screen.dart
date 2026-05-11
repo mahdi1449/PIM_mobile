@@ -513,16 +513,9 @@ class _WebrtcCallScreenState extends State<WebrtcCallScreen> {
       }
     } catch (error) {
       _disposePeer();
-      final errorText = error.toString();
-      final deniedMediaPermission =
-          errorText.contains('NotAllowedError') ||
-          errorText.contains('Permission') ||
-          errorText.contains('permission');
       _safeSetState(() {
         _state = _CallUiState.failed;
-        _statusMessage = deniedMediaPermission
-            ? 'Camera/microphone permission is required'
-            : 'Media setup failed';
+        _statusMessage = 'Media setup failed';
       });
     }
   }

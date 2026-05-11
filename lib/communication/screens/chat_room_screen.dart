@@ -130,23 +130,18 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       if (conversationId == widget.conversationId) {
         final messageRaw = payloadMap['message'];
         if (messageRaw is Map) {
-          final messageMap = Map<String, dynamic>.from(messageRaw);
-          final realtimeMessage = ChatMessageModel.fromJson(messageMap);
-          final inserted = _upsertMessage(realtimeMessage);
-          if (inserted &&
-              realtimeMessage.senderId.isNotEmpty &&
-              realtimeMessage.senderId != widget.session.userId) {
-            final senderLabel = _resolveSenderLabel(
-              realtimeMessage.senderId,
-              mine: false,
-            );
-            final preview = _messagePreview(messageMap);
+          final message = Map<String, dynamic>.from(messageRaw);
+          final senderId = (message['senderId'] ?? '').toString();
+          if (senderId.isNotEmpty && senderId != widget.session.userId) {
+            final senderLabel = _resolveSenderLabel(senderId, mine: false);
+            final preview = _messagePreview(message);
             final label = senderLabel.isEmpty
                 ? 'New message'
                 : 'New message from $senderLabel';
             _showInfo('$label: $preview');
           }
         }
+        _loadMessages();
       }
     });
 
@@ -157,10 +152,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       final payloadMap = Map<String, dynamic>.from(payload);
       final conversationId = (payloadMap['conversationId'] ?? '').toString();
       if (conversationId == widget.conversationId) {
-        final userId = (payloadMap['userId'] ?? '').toString().trim();
-        if (userId.isNotEmpty) {
-          _applyReadReceipt(userId);
-        }
+        _loadMessages();
       }
     });
   }
@@ -173,15 +165,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
     setState(() => _sending = true);
     try {
-      final sentMessage = await widget.api.sendChatMessage(
+      await widget.api.sendChatMessage(
         token: widget.session.token,
         conversationId: widget.conversationId,
         text: text,
       );
       _textController.clear();
-      if (mounted) {
-        _upsertMessage(sentMessage);
-      }
+      await _loadMessages();
     } catch (error) {
       if (mounted) {
         _showError(error.toString());
@@ -215,14 +205,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         filename: file.name,
       );
 
-      final sentMessage = await widget.api.sendChatMessage(
+      await widget.api.sendChatMessage(
         token: widget.session.token,
         conversationId: widget.conversationId,
         file: uploaded,
       );
-      if (mounted) {
-        _upsertMessage(sentMessage);
-      }
+
+      await _loadMessages();
     } catch (error) {
       if (mounted) {
         _showError(error.toString());
@@ -232,73 +221,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         setState(() => _sending = false);
       }
     }
-  }
-
-  bool _upsertMessage(ChatMessageModel message) {
-    var inserted = false;
-    setState(() {
-      final existingIndex = _messages.indexWhere((m) => m.id == message.id);
-      if (existingIndex >= 0) {
-        _messages[existingIndex] = message;
-      } else {
-        _messages.add(message);
-        inserted = true;
-      }
-
-      _messages.sort((a, b) {
-        final createdAtCompare = a.createdAt.compareTo(b.createdAt);
-        if (createdAtCompare != 0) {
-          return createdAtCompare;
-        }
-        return a.id.compareTo(b.id);
-      });
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    return inserted;
-  }
-
-  void _applyReadReceipt(String readerUserId) {
-    if (readerUserId == widget.session.userId) {
-      return;
-    }
-
-    final shouldUpdate = _messages.any(
-      (message) =>
-          message.senderId == widget.session.userId &&
-          !message.readBy.contains(readerUserId),
-    );
-    if (!shouldUpdate) {
-      return;
-    }
-
-    setState(() {
-      _messages = _messages
-          .map((message) {
-            final mine = message.senderId == widget.session.userId;
-            final alreadyRead = message.readBy.contains(readerUserId);
-            if (!mine || alreadyRead) {
-              return message;
-            }
-
-            final updatedReadBy = <String>{
-              ...message.readBy,
-              readerUserId,
-            }.toList();
-            return ChatMessageModel(
-              id: message.id,
-              senderId: message.senderId,
-              senderRole: message.senderRole,
-              contentType: message.contentType,
-              createdAt: message.createdAt,
-              text: message.text,
-              file: message.file,
-              deletedAt: message.deletedAt,
-              readBy: updatedReadBy,
-            );
-          })
-          .toList(growable: false);
-    });
   }
 
   void _scrollToBottom() {

@@ -14,33 +14,10 @@ enum EventType {
   const EventType(this.value);
 
   static EventType fromString(String value) {
-    final normalized = switch (value) {
-      'entrainement' => 'test_session',
-      'test_physique' => 'test_session',
-      'autre' => 'test_session',
-      _ => value,
-    };
     return EventType.values.firstWhere(
-      (e) => e.value == normalized,
+      (e) => e.value == value,
       orElse: () => EventType.testSession,
     );
-  }
-
-  String get backendValue {
-    switch (this) {
-      case EventType.testSession:
-        return 'entrainement';
-      case EventType.evaluation:
-        return 'test_physique';
-      case EventType.aiAnalysis:
-        return 'autre';
-      case EventType.match:
-      case EventType.detection:
-        return value;
-      case EventType.medical:
-      case EventType.recovery:
-        return 'autre';
-    }
   }
 
   TestCategory get recommendedCategory {
@@ -91,27 +68,10 @@ enum EventStatus {
   const EventStatus(this.value);
 
   static EventStatus fromString(String value) {
-    final normalized = switch (value) {
-      'scheduled' => 'draft',
-      'ongoing' => 'in_progress',
-      'cancelled' => 'draft',
-      _ => value,
-    };
     return EventStatus.values.firstWhere(
-      (e) => e.value == normalized,
+      (e) => e.value == value,
       orElse: () => EventStatus.draft,
     );
-  }
-
-  String get backendValue {
-    switch (this) {
-      case EventStatus.draft:
-        return 'scheduled';
-      case EventStatus.inProgress:
-        return 'ongoing';
-      case EventStatus.completed:
-        return 'completed';
-    }
   }
 }
 
@@ -126,6 +86,7 @@ class Event {
   final EventStatus status;
   final String? description;
   final String? coachId;
+  final String? clubId;
   final List<String> testTypes;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -140,22 +101,22 @@ class Event {
     required this.status,
     this.description,
     this.coachId,
+    this.clubId,
     required this.testTypes,
     this.createdAt,
     this.updatedAt,
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
-    final startDateRaw = json['startDate'] ?? json['date'];
-    final endDateRaw = json['endDate'] ?? json['date'];
     return Event(
       id: json['_id'] ?? json['id'],
       title: json['title'],
-      type: EventType.fromString((json['eventType'] ?? json['type']).toString()),
-      date: DateTime.parse(startDateRaw ?? DateTime.now().toIso8601String()),
-      endDate: endDateRaw != null ? DateTime.parse(endDateRaw) : null,
-      location: json['location'] ?? '',
-      status: EventStatus.fromString((json['status'] ?? 'draft').toString()),
+      type: EventType.fromString(json['type']),
+      date: DateTime.parse(json['date']),
+      endDate:
+          json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
+      location: json['location'],
+      status: EventStatus.fromString(json['status']),
       description: json['description'],
       // Handle coachId whether it's populated (Map), ID string, or null
       coachId: json['coachId'] is Map
@@ -163,6 +124,7 @@ class Event {
           : (json['coachId'] != null && json['coachId'].toString().isNotEmpty
               ? json['coachId'].toString()
               : null),
+      clubId: json['clubId']?.toString(),
       // Handle testTypes whether they are populated objects or ID strings
       testTypes: (json['testTypes'] as List?)?.map((item) {
             if (item is Map) {
@@ -183,12 +145,14 @@ class Event {
   Map<String, dynamic> toJson() {
     return {
       'title': title,
-      'eventType': type.backendValue,
-      'startDate': date.toIso8601String(),
-      'endDate': (endDate ?? date.add(const Duration(hours: 1))).toIso8601String(),
+      'type': type.value,
+      'date': date.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
       'location': location,
+      'status': status.value,
       'description': description,
-      if (coachId != null && coachId!.isNotEmpty) 'coachId': coachId,
+      'coachId': (coachId != null && coachId!.isNotEmpty && coachId != 'unknown_coach') ? coachId.toString() : '000000000000000000000000',
+      if (clubId != null && clubId!.isNotEmpty && clubId != 'unknown_club') 'clubId': clubId.toString(),
       'testTypes': testTypes,
     };
   }

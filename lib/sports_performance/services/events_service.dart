@@ -7,7 +7,8 @@ class EventsService {
 
   EventsService(this._apiClient);
 
-  // Get all events with optional filters
+  /// Récupère la liste des événements sportifs avec des filtres optionnels.
+  /// Gère dynamiquement différents formats de réponse JSON (List ou Map avec clé 'data').
   Future<List<Event>> getEvents({
     DateTime? startDate,
     DateTime? endDate,
@@ -26,83 +27,101 @@ class EventsService {
       }
 
       final response = await _apiClient.get(
-        '/events',
+        '/sports-events',
         queryParameters: queryParams,
       );
-      final List<dynamic> data = _extractEventsList(response.data);
-      return data.map((json) => Event.fromJson(json)).toList();
+      
+      dynamic rawData = response.data;
+      List<dynamic> listData = [];
+      
+      if (rawData is List) {
+        listData = rawData;
+      } else if (rawData is Map) {
+        if (rawData['data'] != null) {
+          if (rawData['data'] is List) {
+            listData = rawData['data'];
+          } else if (rawData['data'] is Map && rawData['data']['events'] is List) {
+            listData = rawData['data']['events'];
+          }
+        } else if (rawData['events'] is List) {
+          listData = rawData['events'];
+        }
+      }
+      
+      return listData.map((json) => Event.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Erreur lors de la récupération des événements: $e');
     }
   }
 
-  // Get event by ID
+  /// Récupère les détails d'un événement unique par son identifiant.
   Future<Event> getEvent(String id) async {
     try {
-      final response = await _apiClient.get('/events/$id');
-      return Event.fromJson(_extractEventObject(response.data));
+      final response = await _apiClient.get('/sports-events/$id');
+      return Event.fromJson(response.data);
     } catch (e) {
       throw Exception('Erreur lors de la récupération de l\'événement: $e');
     }
   }
 
-  // Create event
+  /// Crée un nouvel événement (match ou entraînement) sur le backend.
   Future<Event> createEvent(Event event) async {
     try {
       final response = await _apiClient.post(
-        '/events',
+        '/sports-events',
         data: event.toJson(),
       );
-      return Event.fromJson(_extractEventObject(response.data));
+      return Event.fromJson(response.data);
     } catch (e) {
       throw Exception('Erreur lors de la création de l\'événement: $e');
     }
   }
 
-  // Update event
+  /// Met à jour les informations d'un événement existant.
   Future<Event> updateEvent(String id, Event event) async {
     try {
       final response = await _apiClient.patch(
-        '/events/$id',
+        '/sports-events/$id',
         data: event.toJson(),
       );
-      return Event.fromJson(_extractEventObject(response.data));
+      return Event.fromJson(response.data);
     } catch (e) {
       throw Exception('Erreur lors de la mise à jour de l\'événement: $e');
     }
   }
 
-  // Delete event
+  /// Supprime un événement de la base de données.
   Future<void> deleteEvent(String id) async {
     try {
-      await _apiClient.delete('/events/$id');
+      await _apiClient.delete('/sports-events/$id');
     } catch (e) {
       throw Exception('Erreur lors de la suppression de l\'événement: $e');
     }
   }
 
-  // Close event
+  /// Clôture un événement, empêchant toute modification ultérieure des participants.
   Future<Event> closeEvent(String id) async {
     try {
-      final response = await _apiClient.post('/events/$id/close');
-      return Event.fromJson(_extractEventObject(response.data));
+      final response = await _apiClient.post('/sports-events/$id/close');
+      return Event.fromJson(response.data);
     } catch (e) {
       throw Exception('Erreur lors de la clôture de l\'événement: $e');
     }
   }
 
-  /// Lance l'analyse IA sur tous les joueurs complétés d'un event.
-  /// Retourne un récapitulatif {analyzed, failed, results}.
+  /// Lance l'analyse IA sur tous les joueurs complétés d'un événement.
+  /// L'IA va traiter les résultats des tests pour générer des recommandations de recrutement.
+  /// Retourne un récapitulatif : {analyzed, failed, results}.
   Future<Map<String, dynamic>> analyzeEvent(String eventId) async {
     try {
-      final response = await _apiClient.post('/events/$eventId/analyze');
+      final response = await _apiClient.post('/sports-events/$eventId/analyze');
       return Map<String, dynamic>.from(response.data);
     } catch (e) {
       throw Exception('Erreur lors de l\'analyse IA: $e');
     }
   }
 
-  /// Enregistre la décision finale du coach pour un joueur.
+  /// Enregistre la décision finale de recrutement prise par le coach pour un joueur.
   Future<void> setRecruitmentDecision(
     String eventId,
     String playerId, {
@@ -110,7 +129,7 @@ class EventsService {
   }) async {
     try {
       await _apiClient.patch(
-        '/events/$eventId/players/$playerId/decision',
+        '/sports-events/$eventId/players/$playerId/decision',
         data: {'decision': decision},
       );
     } catch (e) {
@@ -118,19 +137,37 @@ class EventsService {
     }
   }
 
-  // Get event players
+  /// Récupère la liste des joueurs (participants) associés à un événement.
+  /// Gère différents formats de parsing pour assurer la compatibilité avec le backend.
   Future<List<EventPlayer>> getEventPlayers(String eventId) async {
     try {
-      final response = await _apiClient.get('/events/$eventId/players');
-      final List<dynamic> data = response.data;
-      return data.map((json) => EventPlayer.fromJson(json)).toList();
+      final response = await _apiClient.get('/sports-events/$eventId/players');
+      
+      dynamic rawData = response.data;
+      List<dynamic> listData = [];
+      
+      if (rawData is List) {
+        listData = rawData;
+      } else if (rawData is Map) {
+        if (rawData['data'] != null) {
+          if (rawData['data'] is List) {
+            listData = rawData['data'];
+          } else if (rawData['data'] is Map && rawData['data']['players'] is List) {
+            listData = rawData['data']['players'];
+          }
+        } else if (rawData['players'] is List) {
+          listData = rawData['players'];
+        }
+      }
+      
+      return listData.map((json) => EventPlayer.fromJson(json)).toList();
     } catch (e) {
       throw Exception(
           'Erreur lors de la récupération des joueurs de l\'événement: $e');
     }
   }
 
-  // Add player to event
+  /// Ajoute un joueur à la liste des participants d'un événement.
   Future<EventPlayer> addPlayerToEvent(
     String eventId,
     String playerId, {
@@ -138,7 +175,7 @@ class EventsService {
   }) async {
     try {
       final response = await _apiClient.post(
-        '/events/$eventId/players',
+        '/sports-events/$eventId/players',
         data: {
           'playerId': playerId,
           'status': status,
@@ -151,17 +188,17 @@ class EventsService {
     }
   }
 
-  // Remove player from event
+  /// Retire un joueur d'un événement spécifique.
   Future<void> removePlayerFromEvent(String eventId, String playerId) async {
     try {
-      await _apiClient.delete('/events/$eventId/players/$playerId');
+      await _apiClient.delete('/sports-events/$eventId/players/$playerId');
     } catch (e) {
       throw Exception(
           'Erreur lors de la suppression du joueur de l\'événement: $e');
     }
   }
 
-  // Update event player status
+  /// Met à jour le statut (présent, blessé, exclu) ou les notes du coach pour un participant.
   Future<EventPlayer> updateEventPlayer(
     String eventId,
     String playerId, {
@@ -170,7 +207,7 @@ class EventsService {
   }) async {
     try {
       final response = await _apiClient.patch(
-        '/events/$eventId/players/$playerId',
+        '/sports-events/$eventId/players/$playerId',
         data: {
           if (status != null) 'status': status,
           if (coachNotes != null) 'coachNotes': coachNotes,
@@ -182,25 +219,5 @@ class EventsService {
           'Erreur lors de la mise à jour du statut du joueur: $e');
     }
   }
-
-  List<dynamic> _extractEventsList(dynamic payload) {
-    if (payload is List) return payload;
-    if (payload is Map) {
-      final data = payload['data'];
-      if (data is Map && data['events'] is List) return data['events'] as List;
-      if (data is List) return data;
-      if (payload['events'] is List) return payload['events'] as List;
-    }
-    return const [];
-  }
-
-  Map<String, dynamic> _extractEventObject(dynamic payload) {
-    if (payload is Map<String, dynamic>) {
-      final data = payload['data'];
-      if (data is Map<String, dynamic>) return data;
-      return payload;
-    }
-    if (payload is Map) return Map<String, dynamic>.from(payload);
-    return <String, dynamic>{};
-  }
 }
+

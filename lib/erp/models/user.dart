@@ -28,13 +28,28 @@ class User {
   String get fullName => '$firstName $lastName';
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Robustly extract ID
+    final id = (json['id'] ?? json['_id'] ?? json['sub'] ?? json['userId'] ?? '').toString();
+    
+    // Robustly extract Club ID
+    String clubId = '';
+    if (json['clubId'] != null) {
+      clubId = json['clubId'].toString();
+    } else if (json['club'] != null) {
+      if (json['club'] is Map) {
+        clubId = (json['club']['id'] ?? json['club']['_id'] ?? '').toString();
+      } else {
+        clubId = json['club'].toString();
+      }
+    }
+
     return User(
-      id: json['id'] ?? '',
+      id: id,
       email: json['email'] ?? '',
       firstName: json['firstName'] ?? '',
       lastName: json['lastName'] ?? '',
       phone: json['phone'],
-      clubId: json['clubId'] ?? '',
+      clubId: clubId,
       role: json['role'] ?? '',
       userType: json['userType'],
       status: json['status'] ?? 'active',

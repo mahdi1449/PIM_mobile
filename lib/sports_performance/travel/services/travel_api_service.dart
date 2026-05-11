@@ -7,6 +7,8 @@ import '../models/travel_model.dart';
 class TravelApiService {
   final String baseUrl = AppConfig.apiBaseUrl;
 
+  /// Construit les en-têtes HTTP avec le token JWT récupéré depuis SharedPreferences.
+  /// Lève une exception si l'utilisateur n'est pas authentifié.
   Future<Map<String, String>> _authHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
@@ -19,7 +21,7 @@ class TravelApiService {
     };
   }
 
-  // ─── Récupérer tous les voyages ─────────────────────────────────────────
+  /// Récupère la liste de tous les voyages du club depuis le backend.
   Future<List<TravelModel>> fetchTravels(String clubId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/travel?clubId=$clubId'),
@@ -32,7 +34,7 @@ class TravelApiService {
     throw Exception('Erreur lors du chargement des voyages: ${response.statusCode}');
   }
 
-  // ─── Matchs à venir ──────────────────────────────────────────────────────
+  /// Récupère les matchs à venir du club pour permettre la liaison voyage-match.
   Future<List<Map<String, dynamic>>> fetchUpcomingMatches(String clubId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/matches?clubId=$clubId&upcoming=true'),
@@ -44,7 +46,7 @@ class TravelApiService {
     return [];
   }
 
-  // ─── Voyages d'un joueur ────────────────────────────────────────────────
+  /// Récupère uniquement les voyages dans lesquels un joueur spécifique est inscrit.
   Future<List<TravelModel>> fetchPlayerTravels(String clubId, String playerId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/travel/player/$playerId?clubId=$clubId'),
@@ -57,7 +59,7 @@ class TravelApiService {
     throw Exception('Erreur voyages joueur: ${response.statusCode}');
   }
 
-  // ─── Détail d'un voyage ──────────────────────────────────────────────────
+  /// Récupère les détails complets d'un voyage, incluant les occupants des chambres.
   Future<TravelModel> fetchTravelDetail(String id, String clubId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/travel/$id?clubId=$clubId'),
@@ -69,7 +71,7 @@ class TravelApiService {
     throw Exception('Voyage non trouvé');
   }
 
-  // ─── Créer un voyage ─────────────────────────────────────────────────────
+  /// Crée un nouveau voyage. Le backend enrichit automatiquement les données GPS.
   Future<TravelModel> createTravel(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse('$baseUrl/travel'),
@@ -82,7 +84,7 @@ class TravelApiService {
     throw Exception('Erreur création voyage: ${response.body}');
   }
 
-  // ─── Mettre à jour un voyage ──────────────────────────────────────────────
+  /// Met à jour les informations d'un voyage existant.
   Future<TravelModel> updateTravel(String id, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$baseUrl/travel/$id'),
@@ -95,7 +97,8 @@ class TravelApiService {
     throw Exception('Erreur mise à jour voyage: ${response.body}');
   }
 
-  // ─── Mettre à jour le statut ──────────────────────────────────────────────
+  /// Change le statut d'un voyage (ex: 'draft' → 'confirmed' → 'completed').
+  /// Le passage à 'completed' déclenche les récompenses XP pour les participants.
   Future<void> updateTravelStatus(String id, String clubId, String status) async {
     final response = await http.patch(
       Uri.parse('$baseUrl/travel/$id/status?clubId=$clubId'),
@@ -107,7 +110,7 @@ class TravelApiService {
     }
   }
 
-  // ─── Statistiques ─────────────────────────────────────────────────────────
+  /// Récupère les statistiques de voyage du club (statuts, modes de transport).
   Future<List<dynamic>> fetchTravelStats(String clubId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/travel/stats?clubId=$clubId'),
@@ -119,7 +122,7 @@ class TravelApiService {
     return [];
   }
 
-  // ─── Rechercher des aéroports (IA géo) ──────────────────────────────────
+  /// Recherche des aéroports proches d'une ville via l'IA géographique du backend.
   Future<List<AirportInfo>> searchAirports(String city) async {
     final response = await http.get(
       Uri.parse('$baseUrl/travel/airports?city=${Uri.encodeComponent(city)}'),
@@ -132,7 +135,7 @@ class TravelApiService {
     return [];
   }
 
-  // ─── Géocoder une adresse ────────────────────────────────────────────────
+  /// Convertit une adresse textuelle en coordonnées GPS (lat/lng).
   Future<Map<String, double>?> geocodeAddress(String address) async {
     final response = await http.get(
       Uri.parse('$baseUrl/travel/geocode?address=${Uri.encodeComponent(address)}'),
@@ -147,7 +150,7 @@ class TravelApiService {
     return null;
   }
 
-  // ─── Modifier une chambre ────────────────────────────────────────────────
+  /// Assigne des occupants à une chambre d'hôtel spécifique d'un voyage.
   Future<void> updateRoomAssignment({
     required String travelId,
     required String clubId,
@@ -165,7 +168,7 @@ class TravelApiService {
     }
   }
 
-  // ─── Supprimer un voyage ─────────────────────────────────────────────────
+  /// Supprime définitivement un voyage et toutes ses données associées.
   Future<void> deleteTravel(String id, String clubId) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/travel/$id?clubId=$clubId'),
@@ -178,7 +181,8 @@ class TravelApiService {
 
   String? lastError; // Pour le diagnostic UI
 
-  // ─── Recherche de lieux (Géo-IA Hybride : Direct Photon + Proxy Backend) ──
+  /// Recherche de lieux en mode hybride : tente d'abord Photon directement (plus rapide),
+  /// puis bascule sur le proxy backend si l'appel direct échoue (ex: en émulateur).
   Future<List<Map<String, dynamic>>> searchPlaces(String query) async {
     lastError = null;
     try {
@@ -217,6 +221,7 @@ class TravelApiService {
     return [];
   }
 
+  /// Transforme la réponse GeoJSON de l'API Photon en une liste de lieux normalisés.
   List<Map<String, dynamic>> _parsePhotonResults(String body) {
     final data = jsonDecode(body);
     final List features = data['features'] ?? [];
@@ -236,13 +241,14 @@ class TravelApiService {
     }).toList();
   }
 
-  // ─── Recherche d'hôtels (Géo-IA) ─────────────────────────────────────────
+  /// Recherche des hôtels par nom, en affinant la recherche avec la ville si fournie.
   Future<List<Map<String, dynamic>>> searchHotels(String hotelName, {String? city}) async {
     final query = city != null ? '$hotelName, $city' : hotelName;
     return searchPlaces(query);
   }
 
-  // ─── Recherche directe d'aéroports (AI-Hybrid) ────────────────────────────
+  /// Version directe de la recherche d'aéroports, passant par le backend Photon.
+  /// Inclut un timeout de 10 secondes pour ne pas bloquer l'UI.
   Future<List<AirportInfo>> searchAirportsDirect(String city) async {
     try {
       // On passe par le backend qui est maintenant migré vers Photon pour plus de fiabilité

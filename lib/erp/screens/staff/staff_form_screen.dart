@@ -77,17 +77,16 @@ class _StaffFormScreenState extends State<StaffFormScreen> {
   }
 
   Future<void> _pickDate() async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pickerBaseTheme = isDark ? OdinTheme.darkTheme : OdinTheme.lightTheme;
     final picked = await showDatePicker(
       context: context,
       initialDate: _contractEnd ?? DateTime.now().add(const Duration(days: 365)),
       firstDate: DateTime.now(),
       lastDate: DateTime(2035),
       builder: (ctx, child) => Theme(
-        data: pickerBaseTheme.copyWith(
-          colorScheme: pickerBaseTheme.colorScheme.copyWith(
+        data: OdinTheme.darkTheme.copyWith(
+          colorScheme: const ColorScheme.dark(
             primary: OdinTheme.accentRed,
+            surface: OdinTheme.surface,
           ),
         ),
         child: child!,

@@ -23,7 +23,7 @@ class WarningBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.warning_amber_rounded, color: MedicalTheme.danger),
+          const Icon(Icons.warning_amber_rounded, color: MedicalTheme.danger),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

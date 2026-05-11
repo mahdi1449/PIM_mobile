@@ -36,13 +36,8 @@ class ResponsableApprovalScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final financeTheme = isDark
-        ? buildFinanceDarkTheme()
-        : buildFinanceLightTheme();
-
     return Theme(
-      data: financeTheme,
+      data: buildFinanceDarkTheme(),
       child: ResponsableApprovalMobilePage(
         api: _api,
         session: session,
